@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora 3D - Custos e Vendas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Calculadora de Impressão 3D</h1>
+        </header>
+
+        <main class="grid">
+            <section class="card inputs">
+                <h3>Dados da Peça</h3>
+                <div class="input-group">
+                    <label>Peso da Peça (g)</label>
+                    <input type="number" id="peso" placeholder="0" step="0.1" class="calc-trigger">
+                </div>
+
+                <div class="input-group">
+                    <label>Tempo de Impressão (Horas)</label>
+                    <input type="number" id="tempo" placeholder="0" step="0.1" class="calc-trigger">
+                </div>
+
+                <div class="input-group">
+                    <label>Custo do Filamento (R$/kg)</label>
+                    <input type="number" id="custoKg" value="80.00" step="0.01" class="calc-trigger">
+                </div>
+
+                <div class="input-group">
+                    <label>Custo Hora Máquina (Energia/Depreciação)</label>
+                    <input type="number" id="custoHora" value="1.50" step="0.01" class="calc-trigger">
+                </div>
+
+                <div class="input-group">
+                    <label>Margem de Lucro (%)</label>
+                    <input type="number" id="margem" value="100" class="calc-trigger">
+                </div>
+
+                <h3>Acessórios</h3>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" class="calc-trigger" data-valor="0.50"> Chaveiro (+R$ 0,50)</label>
+                    <label><input type="checkbox" class="calc-trigger" data-valor="1.00"> Imã (+R$ 1,00)</label>
+                    <label><input type="checkbox" class="calc-trigger" data-valor="2.00"> Embalagem Papel (+R$
+                        2,00)</label>
+                    <label><input type="checkbox" class="calc-trigger" data-valor="0.50"> Embalagem Plástica (+R$
+                        0,50)</label>
+                    <label><input type="checkbox" class="calc-trigger" data-valor="0.20"> Adesivo (+R$ 0,20)</label>
+                </div>
+            </section>
+
+            <section class="card results">
+                <h3>Resumo de Custos</h3>
+                <div class="result-line">
+                    <span>Custo de Material:</span>
+                    <span id="resMaterial">R$ 0,00</span>
+                </div>
+                <div class="result-line">
+                    <span>Despesas (Máquina/Energia):</span>
+                    <span id="resDespesas">R$ 0,00</span>
+                </div>
+                <div class="result-line">
+                    <span>Total Acessórios:</span>
+                    <span id="resAcessorios">R$ 0,00</span>
+                </div>
+                <div class="result-line highlight">
+                    <span>Custo Total de Produção:</span>
+                    <span id="resCustoTotal">R$ 0,00</span>
+                </div>
+                <hr>
+                <div class="final-price">
+                    <label>Preço de Venda Sugerido</label>
+                    <div id="resVenda">R$ 0,00</div>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>
