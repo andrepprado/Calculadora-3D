@@ -1,66 +1,117 @@
-function calcular() {
-    // Inputs
-    const peso = parseFloat(document.getElementById('peso').value) || 0;
-    const tempo = parseFloat(document.getElementById('tempo').value) || 0;
-    const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
-    const custoHora = parseFloat(document.getElementById('custoHora').value) || 0;
-    const margemPercentual = parseFloat(document.getElementById('margem').value) || 0;
+const filamentos = [
+    { nome: "MASTERPRINT - PETG PRETO BRILHANTE", custo: 58.38, cor: "#000000" },
+    { nome: "MASTERPRINT - PETG VERMELHO BRILHANTE", custo: 77.74, cor: "#C12E1F" },
+    { nome: "VOOLT - PETG HF ROXO TRANSLUCIDO", custo: 84.74, cor: "#660099" },
+    { nome: "VOOLT - PETG HF ROSA CEREJA TRANSLUCIDO", custo: 84.74, cor: "#DE3163" },
+    { nome: "VOOLT - PLA VELVET PRETO HF", custo: 104.38, cor: "#1A1A1A" },
+    { nome: "VOOLT - PETG AZUL HF", custo: 79.48, cor: "#0086D6" },
+    { nome: "VOOLT - PETG LARANJA HF", custo: 79.48, cor: "#FF6A13" },
+    { nome: "SUNLU - PETG AZUL BRILHANTE", custo: 75.20, cor: "#0068AB" },
+    { nome: "SUNLU - PETG VERMELHO BRILHANTE", custo: 75.20, cor: "#C12E1F" },
+    { nome: "SUNLU - PETG BRANCO BRILHANTE", custo: 75.20, cor: "#FFFFFF" },
+    { nome: "SUNLU - PETG CINZA BRILHANTE", custo: 75.20, cor: "#8E9089" },
+    { nome: "SUNLU - PETG PRETO BRILHANTE", custo: 75.20, cor: "#000000" },
+    { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#E0E0E0" },
+    { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#F4EE2A" },
+    { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
+    { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00AE42" }
+];
 
-    // Cálculo Material
-    const custoMaterial = (peso * custoKg) / 1000;
+const CUSTO_HORA_FIXO = 0.12;
 
-    // Cálculo Despesas (Tempo x Custo Hora Máquina)
-    const custoDespesas = tempo * custoHora;
-
-    // Cálculo Acessórios
-    let custoAcessorios = 0;
-    document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
-        custoAcessorios += parseFloat(checkbox.getAttribute('data-valor'));
+function popularFilamentos() {
+    const select = document.getElementById('filamentoSelect');
+    filamentos.forEach((f, index) => {
+        let opt = document.createElement('option');
+        opt.value = index; opt.text = f.nome; select.add(opt);
     });
-
-    // Totais
-    const custoTotalProducao = custoMaterial + custoDespesas + custoAcessorios;
-    const valorMargem = custoTotalProducao * (margemPercentual / 100);
-    const precoVenda = custoTotalProducao + valorMargem;
-
-    // Atualização do DOM
-    document.getElementById('resMaterial').innerText = formatarMoeda(custoMaterial);
-    document.getElementById('resDespesas').innerText = formatarMoeda(custoDespesas);
-    document.getElementById('resAcessorios').innerText = formatarMoeda(custoAcessorios);
-    document.getElementById('resCustoTotal').innerText = formatarMoeda(custoTotalProducao);
-    document.getElementById('resVenda').innerText = formatarMoeda(precoVenda);
-
-    // Guardar configurações no LocalStorage
-    salvarConfiguracoes(custoKg, custoHora, margemPercentual);
+    carregarConfiguracoes();
+    atualizarFilamento();
 }
 
-function formatarMoeda(valor) {
-    return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+function atualizarFilamento() {
+    const index = document.getElementById('filamentoSelect').value;
+    const fil = filamentos[index];
+    document.getElementById('custoKg').value = fil.custo.toFixed(2);
+    document.getElementById('colorPreview').style.backgroundColor = fil.cor;
+    document.getElementById('resNomeFilamento').innerText = fil.nome;
+    calcular();
 }
 
-function salvarConfiguracoes(custoKg, custoHora, margem) {
-    const config = { custoKg, custoHora, margem };
-    localStorage.setItem('configCalculadora3D', JSON.stringify(config));
+function calcular() {
+    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const tempoRaw = document.getElementById('tempo').value || "00:00";
+    const tVal = tempoRaw.split(':');
+    const horasDec = (parseInt(tVal[0]) || 0) + (parseInt(tVal[1]) || 0) / 60;
+    const qtd = parseInt(document.getElementById('quantidade').value) || 1;
+    const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
+    const margem = parseFloat(document.getElementById('margem').value) || 0;
+
+    // 1. Custo Material Unitário e Total
+    const cMatUnit = (peso / 1000) * custoKg;
+    const cMatTotal = cMatUnit * qtd;
+
+    // 2. Custo Operação (Energia) Unitário e Total
+    const cEneUnit = horasDec * CUSTO_HORA_FIXO;
+    const cEneTotal = cEneUnit * qtd;
+
+    // 3. Acessórios Unitários (Plástico + Chav/Ima/Acab)
+    let plastUnit = parseFloat(document.getElementById('selPlastica').value) || 0;
+    let extrasUnit = 0;
+    extrasUnit += document.getElementById('chkChaveiro').checked ? 0.30 : 0;
+    extrasUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
+    extrasUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
+
+    // 4. Custos Fixos do Pedido (Sacola + Adesivo)
+    let fixoPedido = parseFloat(document.getElementById('selPapelFixo').value) || 0;
+    fixoPedido += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
+
+    // 5. Custo Produção Total (O que sai do seu bolso)
+    const totalProd = (cMatUnit + cEneUnit + plastUnit + extrasUnit) * qtd + fixoPedido;
+
+    // 6. Preço de Venda
+    const vendaTotal = totalProd * (1 + (margem / 100));
+    const vendaUnit = vendaTotal / qtd;
+
+    // --- ATUALIZAÇÃO DA INTERFACE ---
+    document.getElementById('resQtd').innerText = qtd + " unid.";
+
+    // Discriminação Privada
+    document.getElementById('resMatUnit').innerText = format(cMatUnit);
+    document.getElementById('resEneUnit').innerText = format(cEneUnit);
+    document.getElementById('resPlastUnit').innerText = format(plastUnit);
+    document.getElementById('resExtUnit').innerText = format(extrasUnit);
+    document.getElementById('resFixoTotal').innerText = format(fixoPedido);
+    document.getElementById('resCustoTotal').innerText = format(totalProd);
+
+    // Venda
+    document.getElementById('resVendaUnid').innerText = format(vendaUnit);
+    document.getElementById('resVendaTotal').innerText = format(vendaTotal);
+    document.getElementById('dataAtual').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
+
+    salvarConfiguracoes(margem);
+}
+
+function format(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+
+function salvarConfiguracoes(margem) {
+    localStorage.setItem('cal3d_andre', JSON.stringify({ margem, filIndex: document.getElementById('filamentoSelect').value }));
 }
 
 function carregarConfiguracoes() {
-    const salvo = localStorage.getItem('configCalculadora3D');
+    const salvo = JSON.parse(localStorage.getItem('cal3d_andre'));
     if (salvo) {
-        const config = JSON.parse(salvo);
-        document.getElementById('custoKg').value = config.custoKg;
-        document.getElementById('custoHora').value = config.custoHora;
-        document.getElementById('margem').value = config.margem;
+        document.getElementById('margem').value = salvo.margem;
+        document.getElementById('filamentoSelect').value = salvo.filIndex || 0;
     }
 }
 
-// Event Listeners para recálculo instantâneo
-document.querySelectorAll('.calc-trigger').forEach(elemento => {
-    elemento.addEventListener('input', calcular);
-    elemento.addEventListener('change', calcular);
+document.querySelectorAll('.calc-trigger').forEach(el => {
+    el.addEventListener('input', calcular);
+    el.addEventListener('change', (e) => {
+        if (e.target.id === 'filamentoSelect') atualizarFilamento();
+        else calcular();
+    });
 });
 
-// Inicialização
-window.onload = () => {
-    carregarConfiguracoes();
-    calcular();
-};
+window.onload = popularFilamentos;
