@@ -6,15 +6,22 @@
     --text: #1e293b;
 }
 
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: 'Segoe UI', system-ui, sans-serif;
     background-color: var(--bg-base);
     color: var(--text);
-    margin: 0;
     padding: 20px;
     min-height: 100vh;
+    position: relative;
 }
 
+/* Background Pattern Original */
 body::before {
     content: "";
     position: fixed;
@@ -22,7 +29,8 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%), url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
+    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%),
+        url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
     background-repeat: no-repeat, repeat;
     background-size: cover, 450px;
     opacity: 0.15;
@@ -35,6 +43,13 @@ body::before {
     max-width: 1000px;
     margin: 0 auto;
     position: relative;
+}
+
+header h1 {
+    text-align: center;
+    color: var(--primary);
+    font-weight: 800;
+    margin-bottom: 20px;
 }
 
 .grid {
@@ -51,6 +66,52 @@ body::before {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* --- INPUTS E PROPORÇÕES --- */
+.input-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    width: 100%;
+}
+
+/* Fix para Peso, Tempo e Qtd ficarem iguais */
+.input-row .input-group {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+h3 {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin: 15px 0 10px;
+    border-bottom: 1px solid #f1f5f9;
+    padding-bottom: 5px;
+}
+
+label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+/* Aplica 100% de largura apenas para campos de texto/número/select */
+input:not([type="checkbox"]),
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 1rem;
+    background: #fff;
+    height: 42px;
+}
+
+/* Bolinha do Filamento */
 .filament-select-wrapper {
     display: flex;
     align-items: center;
@@ -67,44 +128,7 @@ body::before {
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-h3 {
-    font-size: 0.75rem;
-    text-transform: uppercase;
-    color: #94a3b8;
-    margin: 15px 0 10px;
-    border-bottom: 1px solid #f1f5f9;
-    padding-bottom: 5px;
-}
-
-.input-row {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 12px;
-}
-
-.input-group {
-    flex: 1;
-}
-
-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #64748b;
-    margin-bottom: 5px;
-}
-
-input,
-select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    font-size: 1rem;
-    box-sizing: border-box;
-    background: #fff;
-}
-
+/* --- FIX DAS CHECKBOXES --- */
 .chk-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -123,12 +147,13 @@ select {
 }
 
 input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
     cursor: pointer;
 }
 
-/* RESUMO DARK MODE */
+/* --- RESUMO DARK BLUE --- */
 .results {
     background: var(--dark-card);
     color: white;
@@ -160,6 +185,12 @@ input[type="checkbox"] {
     margin-bottom: 12px;
     font-size: 1rem;
     color: #cbd5e1;
+}
+
+.info-row .val {
+    color: #fff;
+    font-weight: 600;
+    text-align: right;
 }
 
 .internal-box {
@@ -201,7 +232,7 @@ input[type="checkbox"] {
 }
 
 .txt-venda-unid {
-    font-size: 1.8rem;
+    font-size: 2rem;
     font-weight: 600;
     margin-bottom: 15px;
 }
@@ -226,12 +257,18 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
+/* Responsividade Celular */
 @media (max-width: 768px) {
     .grid {
         grid-template-columns: 1fr;
     }
+
+    .input-row {
+        gap: 8px;
+    }
 }
 
+/* CONFIGURAÇÃO DE IMPRESSÃO */
 @media print {
     @page {
         margin: 1cm;
@@ -281,17 +318,12 @@ input[type="checkbox"] {
         margin-top: 30px !important;
         background: #f8fafc !important;
         border: 1px solid #ddd;
-        padding: 25px !important;
+        padding: 30px !important;
     }
 
-    .txt-venda-unid {
-        font-size: 1.4rem !important;
-        color: black !important;
-        margin-bottom: 5px !important;
-    }
-
+    .txt-venda-unid,
     .txt-venda-total {
-        font-size: 2.5rem !important;
         color: black !important;
+        text-shadow: none;
     }
 }

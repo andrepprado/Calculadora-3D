@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Duo.Lab</title>
+    <link rel="icon" type="image/svg+xml" href="img/Sem-título-_3_.svg">
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -15,7 +16,7 @@
         <main class="grid">
             <section class="card no-print">
                 <h3>1. Filamento e Margem</h3>
-                <div class="input-group">
+                <div class="input-group full-width">
                     <div class="filament-select-wrapper">
                         <div id="colorPreview" class="color-dot"></div>
                         <select id="filamentoSelect" class="calc-trigger"></select>
@@ -34,7 +35,7 @@
                 </div>
 
                 <h3>2. Dados da Peça e Pedido</h3>
-                <div class="input-row">
+                <div class="input-row equal-inputs">
                     <div class="input-group">
                         <label>Peso Unit. (g)</label>
                         <input type="number" id="peso" placeholder="0.0" step="0.01" class="calc-trigger">
@@ -50,10 +51,10 @@
                 </div>
 
                 <h3>3. Adicionais</h3>
-                <div class="input-group">
+                <div class="input-group full-width">
                     <select id="selPlastica" class="calc-trigger">
                         <option value="0">Sem Embalagem Plástica</option>
-                        <option value="0.128">Plástica 8x8 (0,128)</option>
+                        <option value="0.128">8x8 (0,128)</option>
                         <option value="0.168">10x14 (0,168)</option>
                         <option value="0.11">15x20 (0,11)</option>
                     </select>
@@ -66,13 +67,18 @@
                         Acabamento</label>
                 </div>
                 <div class="input-row">
-                    <select id="selPapelFixo" class="calc-trigger">
-                        <option value="0">Sem Sacola de Papel</option>
-                        <option value="0.80">Sacola P (0,80)</option>
-                        <option value="1.20">Sacola M (1,20)</option>
-                    </select>
-                    <label class="chk-single"><input type="checkbox" id="chkAdesivoFixo" class="calc-trigger"
-                            data-valor="0.13"> Adesivo</label>
+                    <div class="input-group" style="flex: 2;">
+                        <select id="selPapelFixo" class="calc-trigger">
+                            <option value="0">Sem Sacola de Papel</option>
+                            <option value="0.80">Sacola P (0,80)</option>
+                            <option value="1.20">Sacola M (1,20)</option>
+                        </select>
+                    </div>
+                    <div class="input-group"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <label class="chk-single" style="margin-bottom: 0;"><input type="checkbox" id="chkAdesivoFixo"
+                                class="calc-trigger" data-valor="0.13"> Adesivo</label>
+                    </div>
                 </div>
             </section>
 
@@ -87,29 +93,29 @@
                         <span class="lbl">Filamento:</span> <span id="resNomeFilamento" class="val">-</span>
                     </div>
                     <div class="info-row">
-                        <span class="lbl">Quantidade:</span> <span id="resQtd" class="val">-</span>
+                        <span class="lbl">Quantidade Total:</span> <span id="resQtd" class="val">-</span>
                     </div>
 
                     <div class="internal-box no-print">
-                        <span class="internal-tag">DISCRIMINAÇÃO DE CUSTOS (PRIVADO)</span>
-                        <div class="res-item-small"><span>Material (Unit.):</span> <span id="resMatUnit">R$ 0,00</span>
+                        <span class="internal-tag">ANATOMIA DOS CUSTOS (PRIVADO)</span>
+                        <div class="res-item-small"><span>Material (Total):</span> <span id="resMatDetalhe">R$
+                                0,00</span></div>
+                        <div class="res-item-small"><span>Energia (R$ 0,12/h):</span> <span id="resEneDetalhe">R$
+                                0,00</span></div>
+                        <div class="res-item-small"><span>Emb. Plástica:</span> <span id="resPlaDetalhe">R$ 0,00</span>
                         </div>
-                        <div class="res-item-small"><span>Energia/Hora (Unit.):</span> <span id="resEneUnit">R$
-                                0,00</span></div>
-                        <div class="res-item-small"><span>Emb. Plástica (Unit.):</span> <span id="resPlastUnit">R$
-                                0,00</span></div>
-                        <div class="res-item-small"><span>Extras Unit. (Chav/Ima/Acab):</span> <span id="resExtUnit">R$
-                                0,00</span></div>
-                        <div class="res-item-small"><span>Custos Fixos (Sacola/Adesivo):</span> <span
-                                id="resFixoTotal">R$ 0,00</span></div>
-                        <hr style="border: 0; border-top: 1px solid #334155; margin: 8px 0;">
-                        <div class="res-total-interno"><span>Custo Total de Produção:</span> <span id="resCustoTotal">R$
-                                0,00</span></div>
+                        <div class="res-item-small"><span>Extras (Unit.):</span> <span id="resExtDetalhe">R$ 0,00</span>
+                        </div>
+                        <div class="res-item-small"><span>Custos Fixos:</span> <span id="resFixDetalhe">R$ 0,00</span>
+                        </div>
+                        <div class="res-total-interno">
+                            <span>Custo Produção Total:</span> <span id="resCustoTotal">R$ 0,00</span>
+                        </div>
                     </div>
 
                     <div class="venda-container">
                         <div class="venda-block">
-                            <small>Preço Sugerido (Unitário)</small>
+                            <small>Valor Unitário Sugerido</small>
                             <div id="resVendaUnid" class="txt-venda-unid">R$ 0,00</div>
                         </div>
                         <div class="venda-block highlight">
