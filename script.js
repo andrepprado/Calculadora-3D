@@ -47,45 +47,38 @@ function calcular() {
     const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
     const margem = parseFloat(document.getElementById('margem').value) || 0;
 
-    // 1. Custo Material Unitário e Total
-    const cMatUnit = (peso / 1000) * custoKg;
-    const cMatTotal = cMatUnit * qtd;
+    // 1. Cálculos de Produção
+    const cMatTotal = (peso / 1000) * custoKg * qtd;
+    const cEneTotal = horasDec * CUSTO_HORA_FIXO * qtd;
 
-    // 2. Custo Operação (Energia) Unitário e Total
-    const cEneUnit = horasDec * CUSTO_HORA_FIXO;
-    const cEneTotal = cEneUnit * qtd;
+    const pUnit = parseFloat(document.getElementById('selPlastica').value) || 0;
+    let extUnit = 0;
+    extUnit += document.getElementById('chkChaveiro').checked ? 0.30 : 0;
+    extUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
+    extUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
 
-    // 3. Acessórios Unitários (Plástico + Chav/Ima/Acab)
-    let plastUnit = parseFloat(document.getElementById('selPlastica').value) || 0;
-    let extrasUnit = 0;
-    extrasUnit += document.getElementById('chkChaveiro').checked ? 0.30 : 0;
-    extrasUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
-    extrasUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
+    let cFixoTotal = parseFloat(document.getElementById('selPapelFixo').value) || 0;
+    cFixoTotal += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
 
-    // 4. Custos Fixos do Pedido (Sacola + Adesivo)
-    let fixoPedido = parseFloat(document.getElementById('selPapelFixo').value) || 0;
-    fixoPedido += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
+    const custoTotalProducao = cMatTotal + cEneTotal + ((pUnit + extUnit) * qtd) + cFixoTotal;
 
-    // 5. Custo Produção Total (O que sai do seu bolso)
-    const totalProd = (cMatUnit + cEneUnit + plastUnit + extrasUnit) * qtd + fixoPedido;
+    // 2. Cálculo de Venda
+    const vendaTotal = custoTotalProducao * (1 + (margem / 100));
+    const vendaUnid = vendaTotal / qtd;
 
-    // 6. Preço de Venda
-    const vendaTotal = totalProd * (1 + (margem / 100));
-    const vendaUnit = vendaTotal / qtd;
-
-    // --- ATUALIZAÇÃO DA INTERFACE ---
+    // 3. Atualização da Interface
     document.getElementById('resQtd').innerText = qtd + " unid.";
 
-    // Discriminação Privada
-    document.getElementById('resMatUnit').innerText = format(cMatUnit);
-    document.getElementById('resEneUnit').innerText = format(cEneUnit);
-    document.getElementById('resPlastUnit').innerText = format(plastUnit);
-    document.getElementById('resExtUnit').innerText = format(extrasUnit);
-    document.getElementById('resFixoTotal').innerText = format(fixoPedido);
-    document.getElementById('resCustoTotal').innerText = format(totalProd);
+    // Detalhes Privados
+    document.getElementById('resMatDetalhe').innerText = format(cMatTotal);
+    document.getElementById('resEneDetalhe').innerText = format(cEneTotal);
+    document.getElementById('resPlaDetalhe').innerText = format(pUnit * qtd);
+    document.getElementById('resExtDetalhe').innerText = format(extUnit * qtd);
+    document.getElementById('resFixDetalhe').innerText = format(cFixoTotal);
+    document.getElementById('resCustoTotal').innerText = format(custoTotalProducao);
 
-    // Venda
-    document.getElementById('resVendaUnid').innerText = format(vendaUnit);
+    // Venda Final
+    document.getElementById('resVendaUnid').innerText = format(vendaUnid);
     document.getElementById('resVendaTotal').innerText = format(vendaTotal);
     document.getElementById('dataAtual').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
 
