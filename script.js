@@ -49,7 +49,7 @@ function calcular() {
     const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
     const margem = parseFloat(document.getElementById('margem').value) || 0;
 
-    // 1. CUSTOS DE PRODUÇÃO
+    // ===== CUSTOS =====
     const cMatTotal = (peso / 1000) * custoKg * qtd;
     const cEneTotal = horasDec * CUSTO_HORA_FIXO * qtd;
 
@@ -60,29 +60,24 @@ function calcular() {
     extUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
     extUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
 
-    // FIXO POR PEDIDO (CORRETO)
+    // FIXO POR PEDIDO
     let cFixoTotal = parseFloat(document.getElementById('selPapelFixo').value) || 0;
     cFixoTotal += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
 
-    // TOTAL PRODUÇÃO (mantido)
     const custoTotalProducao = cMatTotal + cEneTotal + ((pUnit + extUnit) * qtd) + cFixoTotal;
 
-    // =========================
-    // 🔥 CORREÇÃO AQUI
-    // =========================
+    // ===== CORREÇÃO DEFINITIVA =====
+    // inclui rateio do fixo no unitário
+    const custoUnitario = (cMatTotal / qtd) +
+                          (cEneTotal / qtd) +
+                          pUnit +
+                          extUnit +
+                          (cFixoTotal / qtd);
 
-    // custo unitário REAL (sem fixo)
-    const custoUnitario = (cMatTotal / qtd) + (cEneTotal / qtd) + pUnit + extUnit;
-
-    // aplica margem no unitário
     const vendaUnid = custoUnitario * (1 + (margem / 100));
+    const vendaTotal = vendaUnid * qtd;
 
-    // total final soma fixo no pedido
-    const vendaTotal = (vendaUnid * qtd) + cFixoTotal;
-
-    // =========================
-
-    // UI
+    // ===== UI =====
     document.getElementById('resQtd').innerText = qtd + " unid.";
 
     document.getElementById('resMatDetalhe').innerText = format(cMatTotal);
