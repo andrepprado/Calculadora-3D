@@ -23,7 +23,9 @@ function popularFilamentos() {
     const select = document.getElementById('filamentoSelect');
     filamentos.forEach((f, index) => {
         let opt = document.createElement('option');
-        opt.value = index; opt.text = f.nome; select.add(opt);
+        opt.value = index;
+        opt.text = f.nome;
+        select.add(opt);
     });
     carregarConfiguracoes();
     atualizarFilamento();
@@ -47,29 +49,42 @@ function calcular() {
     const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
     const margem = parseFloat(document.getElementById('margem').value) || 0;
 
-    // 1. Cálculos de Produção
+    // 1. CUSTOS DE PRODUÇÃO
     const cMatTotal = (peso / 1000) * custoKg * qtd;
     const cEneTotal = horasDec * CUSTO_HORA_FIXO * qtd;
 
     const pUnit = parseFloat(document.getElementById('selPlastica').value) || 0;
+
     let extUnit = 0;
     extUnit += document.getElementById('chkChaveiro').checked ? 0.30 : 0;
     extUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
     extUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
 
+    // FIXO POR PEDIDO (CORRETO)
     let cFixoTotal = parseFloat(document.getElementById('selPapelFixo').value) || 0;
     cFixoTotal += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
 
+    // TOTAL PRODUÇÃO (mantido)
     const custoTotalProducao = cMatTotal + cEneTotal + ((pUnit + extUnit) * qtd) + cFixoTotal;
 
-    // 2. Cálculo de Venda
-    const vendaTotal = custoTotalProducao * (1 + (margem / 100));
-    const vendaUnid = vendaTotal / qtd;
+    // =========================
+    // 🔥 CORREÇÃO AQUI
+    // =========================
 
-    // 3. Atualização da Interface
+    // custo unitário REAL (sem fixo)
+    const custoUnitario = (cMatTotal / qtd) + (cEneTotal / qtd) + pUnit + extUnit;
+
+    // aplica margem no unitário
+    const vendaUnid = custoUnitario * (1 + (margem / 100));
+
+    // total final soma fixo no pedido
+    const vendaTotal = (vendaUnid * qtd) + cFixoTotal;
+
+    // =========================
+
+    // UI
     document.getElementById('resQtd').innerText = qtd + " unid.";
 
-    // Detalhes Privados
     document.getElementById('resMatDetalhe').innerText = format(cMatTotal);
     document.getElementById('resEneDetalhe').innerText = format(cEneTotal);
     document.getElementById('resPlaDetalhe').innerText = format(pUnit * qtd);
@@ -77,7 +92,6 @@ function calcular() {
     document.getElementById('resFixDetalhe').innerText = format(cFixoTotal);
     document.getElementById('resCustoTotal').innerText = format(custoTotalProducao);
 
-    // Venda Final
     document.getElementById('resVendaUnid').innerText = format(vendaUnid);
     document.getElementById('resVendaTotal').innerText = format(vendaTotal);
     document.getElementById('dataAtual').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
@@ -85,10 +99,15 @@ function calcular() {
     salvarConfiguracoes(margem);
 }
 
-function format(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+function format(v) {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+}
 
 function salvarConfiguracoes(margem) {
-    localStorage.setItem('cal3d_andre', JSON.stringify({ margem, filIndex: document.getElementById('filamentoSelect').value }));
+    localStorage.setItem('cal3d_andre', JSON.stringify({
+        margem,
+        filIndex: document.getElementById('filamentoSelect').value
+    }));
 }
 
 function carregarConfiguracoes() {
