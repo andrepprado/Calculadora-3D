@@ -1,3 +1,18 @@
+// CONFIGURAÇÕES DE CUSTO EDITÁVEIS
+const CONFIG = {
+    depreciacao_impressora_hora: 0.65,
+    depreciacao_pc_hora: 0.25,
+    custo_energia_kwh: 0.95,
+    consumo_medio_impressora: 0.12,
+    custo_infra_hora: 0.40,
+    valor_acabamento_unit: 5.50,
+    margem_perda_material: 0.10,
+    valor_chaveiro: 0.30,
+    valor_ima: 0.20,
+    valor_adesivo: 0.13,
+    taxa_fixa_shopee: 3.00
+};
+
 const filamentos = [
     { nome: "MASTERPRINT - PETG PRETO BRILHANTE", custo: 58.38, cor: "#000000" },
     { nome: "MASTERPRINT - PETG VERMELHO BRILHANTE", custo: 77.74, cor: "#C12E1F" },
@@ -16,8 +31,6 @@ const filamentos = [
     { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
     { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00AE42" }
 ];
-
-const CUSTO_HORA_FIXO = 0.12;
 
 function popularFilamentos() {
     const select = document.getElementById('filamentoSelect');
@@ -47,66 +60,65 @@ function calcular() {
     const horasDec = (parseInt(tVal[0]) || 0) + (parseInt(tVal[1]) || 0) / 60;
     const qtd = parseInt(document.getElementById('quantidade').value) || 1;
     const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
-    const margem = parseFloat(document.getElementById('margem').value) || 0;
+    const margemLucro = parseFloat(document.getElementById('margem').value) || 0;
 
-    // ===== CUSTOS =====
-    const cMatTotal = (peso / 1000) * custoKg * qtd;
-    const cEneTotal = horasDec * CUSTO_HORA_FIXO * qtd;
+    // 1. MATERIAL
+    const cMatTotal = (peso / 1000) * custoKg * (1 + CONFIG.margem_perda_material) * qtd;
 
-    const pUnit = parseFloat(document.getElementById('selPlastica').value) || 0;
+    // 2. ENERGIA + INFRA
+    let cInfraHora = (CONFIG.consumo_medio_impressora * CONFIG.custo_energia_kwh);
+    if (document.getElementById('chkCustosFixos').checked) cInfraHora += CONFIG.custo_infra_hora;
+    const cInfraTotal = horasDec * cInfraHora * qtd;
 
-    let extUnit = 0;
-    extUnit += document.getElementById('chkChaveiro').checked ? 0.30 : 0;
-    extUnit += document.getElementById('chkIma').checked ? 0.20 : 0;
-    extUnit += document.getElementById('chkAcabamento').checked ? 0.50 : 0;
+    // 3. HARDWARE
+    let cDepreHora = 0;
+    if (document.getElementById('chkDepreciacao').checked) cDepreHora = CONFIG.depreciacao_impressora_hora + CONFIG.depreciacao_pc_hora;
+    const cDepreTotal = horasDec * cDepreHora * qtd;
 
-    // FIXO POR PEDIDO
-    let cFixoTotal = parseFloat(document.getElementById('selPapelFixo').value) || 0;
-    cFixoTotal += document.getElementById('chkAdesivoFixo').checked ? 0.13 : 0;
+    // 4. ADICIONAIS DISCRIMINADOS
+    const valChaveiro = document.getElementById('chkChaveiro').checked ? CONFIG.valor_chaveiro * qtd : 0;
+    const valIma = document.getElementById('chkIma').checked ? CONFIG.valor_ima * qtd : 0;
+    const valAcabamento = document.getElementById('chkAcabamento').checked ? CONFIG.valor_acabamento_unit * qtd : 0;
+    const valAdesivo = document.getElementById('chkAdesivoFixo').checked ? CONFIG.valor_adesivo : 0;
 
-    const custoTotalProducao = cMatTotal + cEneTotal + ((pUnit + extUnit) * qtd) + cFixoTotal;
+    // 5. EMBALAGENS (Plástica + Sacola de Papel)
+    const valPlastica = (parseFloat(document.getElementById('selPlastica').value) || 0) * qtd;
+    const valSacolaPapel = parseFloat(document.getElementById('selPapelFixo').value) || 0;
+    const totalEmbalagens = valPlastica + valSacolaPapel;
 
-    // ===== CORREÇÃO DEFINITIVA =====
-    // inclui rateio do fixo no unitário
-    const custoUnitario = (cMatTotal / qtd) +
-                          (cEneTotal / qtd) +
-                          pUnit +
-                          extUnit +
-                          (cFixoTotal / qtd);
+    // CUSTO PRODUÇÃO BRUTO
+    const custoProducaoSubtotal = cMatTotal + cInfraTotal + cDepreTotal + valChaveiro + valIma + valAcabamento + valAdesivo + totalEmbalagens;
 
-    const vendaUnid = custoUnitario * (1 + (margem / 100));
-    const vendaTotal = vendaUnid * qtd;
+    // 6. TAXAS CANAL
+    const percTaxaCanal = parseFloat(document.getElementById('canalVenda').value) || 0;
+    let valorTaxaFixaCanal = 0;
+    if (percTaxaCanal > 0 && document.getElementById('canalVenda').selectedOptions[0].text.includes("Shopee")) valorTaxaFixaCanal = CONFIG.taxa_fixa_shopee * qtd;
 
-    // ===== UI =====
-    document.getElementById('resQtd').innerText = qtd + " unid.";
+    const precoComLucro = custoProducaoSubtotal * (1 + (margemLucro / 100));
+    const vendaTotal = (precoComLucro / (1 - percTaxaCanal)) + valorTaxaFixaCanal;
+    const valorTaxasTotais = vendaTotal - precoComLucro;
 
+    // ATUALIZAÇÃO DA UI
     document.getElementById('resMatDetalhe').innerText = format(cMatTotal);
-    document.getElementById('resEneDetalhe').innerText = format(cEneTotal);
-    document.getElementById('resPlaDetalhe').innerText = format(pUnit * qtd);
-    document.getElementById('resExtDetalhe').innerText = format(extUnit * qtd);
-    document.getElementById('resFixDetalhe').innerText = format(cFixoTotal);
-    document.getElementById('resCustoTotal').innerText = format(custoTotalProducao);
+    document.getElementById('resEneDetalhe').innerText = format(cInfraTotal);
+    document.getElementById('resDepre').innerText = format(cDepreTotal);
+    document.getElementById('resMaoObra').innerText = format(valAcabamento);
+    document.getElementById('resChaveiro').innerText = format(valChaveiro);
+    document.getElementById('resIma').innerText = format(valIma);
+    document.getElementById('resAdesivo').innerText = format(valAdesivo);
+    document.getElementById('resPlaDetalhe').innerText = format(totalEmbalagens);
+    document.getElementById('resTaxas').innerText = format(valorTaxasTotais);
 
-    document.getElementById('resVendaUnid').innerText = format(vendaUnid);
+    document.getElementById('resCustoTotal').innerText = format(custoProducaoSubtotal);
+    document.getElementById('resVendaUnid').innerText = format(vendaTotal / qtd);
     document.getElementById('resVendaTotal').innerText = format(vendaTotal);
     document.getElementById('dataAtual').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
-
-    salvarConfiguracoes(margem);
 }
 
-function format(v) {
-    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-}
-
-function salvarConfiguracoes(margem) {
-    localStorage.setItem('cal3d_andre', JSON.stringify({
-        margem,
-        filIndex: document.getElementById('filamentoSelect').value
-    }));
-}
+function format(v) { return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 
 function carregarConfiguracoes() {
-    const salvo = JSON.parse(localStorage.getItem('cal3d_andre'));
+    const salvo = JSON.parse(localStorage.getItem('cal3d_duolab_final'));
     if (salvo) {
         document.getElementById('margem').value = salvo.margem;
         document.getElementById('filamentoSelect').value = salvo.filIndex || 0;
@@ -115,10 +127,7 @@ function carregarConfiguracoes() {
 
 document.querySelectorAll('.calc-trigger').forEach(el => {
     el.addEventListener('input', calcular);
-    el.addEventListener('change', (e) => {
-        if (e.target.id === 'filamentoSelect') atualizarFilamento();
-        else calcular();
-    });
+    el.addEventListener('change', calcular);
 });
 
 window.onload = popularFilamentos;
