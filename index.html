@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,6 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="img/Sem-título-_3_.svg">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
         <header class="no-print"></header>
@@ -63,10 +65,11 @@
                     <label><input type="checkbox" id="chkIma" class="calc-trigger"> Imã</label>
                     <label><input type="checkbox" id="chkAcabamento" class="calc-trigger" checked> Acabamento</label>
                 </div>
-                
+
                 <div class="chk-grid">
                     <label><input type="checkbox" id="chkDepreciacao" class="calc-trigger" checked> Depreciação</label>
-                    <label><input type="checkbox" id="chkCustosFixos" class="calc-trigger" checked> Infraestrutura</label>
+                    <label><input type="checkbox" id="chkCustosFixos" class="calc-trigger" checked>
+                        Infraestrutura</label>
                 </div>
 
                 <div class="input-row">
@@ -77,8 +80,10 @@
                             <option value="1.20">Sacola M (1,20)</option>
                         </select>
                     </div>
-                    <div class="input-group" style="flex: 1; display: flex; align-items: center; justify-content: center;">
-                        <label class="chk-single" style="margin-bottom: 0;"><input type="checkbox" id="chkAdesivoFixo" class="calc-trigger"> Adesivo</label>
+                    <div class="input-group"
+                        style="flex: 1; display: flex; align-items: center; justify-content: center;">
+                        <label class="chk-single" style="margin-bottom: 0;"><input type="checkbox" id="chkAdesivoFixo"
+                                class="calc-trigger"> Adesivo</label>
                     </div>
                 </div>
 
@@ -102,17 +107,21 @@
                     <div class="info-row-destaque">
                         <span class="lbl">Filamento:</span> <span id="resNomeFilamento" class="val">-</span>
                     </div>
-                    
+
                     <div class="internal-box no-print">
                         <span class="internal-tag">ANATOMIA DOS CUSTOS (PRIVADO)</span>
-                        <div class="res-item-small"><span>Material (+Perda):</span> <span id="resMatDetalhe">R$ 0,00</span></div>
-                        <div class="res-item-small"><span>Energia + Infra:</span> <span id="resEneDetalhe">R$ 0,00</span></div>
-                        <div class="res-item-small"><span>Hardware (Deprec.):</span> <span id="resDepre">R$ 0,00</span></div>
+                        <div class="res-item-small"><span>Material (+Perda):</span> <span id="resMatDetalhe">R$
+                                0,00</span></div>
+                        <div class="res-item-small"><span>Energia + Infra:</span> <span id="resEneDetalhe">R$
+                                0,00</span></div>
+                        <div class="res-item-small"><span>Hardware (Deprec.):</span> <span id="resDepre">R$ 0,00</span>
+                        </div>
                         <div class="res-item-small"><span>Acabamento:</span> <span id="resMaoObra">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Chaveiro:</span> <span id="resChaveiro">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Imã:</span> <span id="resIma">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Adesivo:</span> <span id="resAdesivo">R$ 0,00</span></div>
-                        <div class="res-item-small"><span>Embalagens:</span> <span id="resPlaDetalhe">R$ 0,00</span></div>
+                        <div class="res-item-small"><span>Embalagens:</span> <span id="resPlaDetalhe">R$ 0,00</span>
+                        </div>
                         <div class="res-item-small"><span>Taxas Canal:</span> <span id="resTaxas">R$ 0,00</span></div>
                         <div class="res-total-interno">
                             <span>Custo Produção Total:</span> <span id="resCustoTotal">R$ 0,00</span>
@@ -130,10 +139,87 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="window.print()" class="btn-print no-print">GERAR PDF / IMPRIMIR</button>
+
+                <!-- BOTÃO ANTIGO REMOVIDO -->
+                <!-- <button onclick="window.print()" class="btn-print no-print">GERAR PDF / IMPRIMIR</button> -->
+            </section>
+
+            <section class="card results" id="printCliente">
+
+                <div class="print-header">
+
+                    <div class="header-left">
+                        <h2>ORÇAMENTO</h2>
+                        <p id="dataAtualCliente"></p>
+                    </div>
+
+                    <div class="header-right">
+                        <img src="img/LOGO_SFUNDO.svg" alt="Logo" class="logo-cliente">
+                    </div>
+
+                </div>
+
+                <div class="resumo-corpo">
+
+                    <div class="info-row-destaque">
+                        <span class="lbl">Filamento:</span>
+                        <span id="cliFilamento" class="val">-</span>
+                    </div>
+
+                    <div class="info-row-destaque">
+                        <span class="lbl">Quantidade:</span>
+                        <span id="cliQtd" class="val">0</span>
+                    </div>
+
+                    <!-- BLOCO DE ADICIONAIS (SEM VALOR) -->
+                    <div class="internal-box">
+
+                        <div class="res-item-small">
+                            <span>Acabamento:</span>
+                            <span id="cliAcabamento">Não</span>
+                        </div>
+
+                        <div class="res-item-small">
+                            <span>Chaveiro:</span>
+                            <span id="cliChaveiro">Não</span>
+                        </div>
+
+                        <div class="res-item-small">
+                            <span>Imã:</span>
+                            <span id="cliIma">Não</span>
+                        </div>
+
+                        <div class="res-item-small">
+                            <span>Adesivo:</span>
+                            <span id="cliAdesivo">Não</span>
+                        </div>
+
+                        <div class="res-item-small">
+                            <span>Embalagens:</span>
+                            <span id="cliEmbalagem">Não</span>
+                        </div>
+
+                    </div>
+
+                    <!-- VALORES -->
+                    <div class="venda-container">
+                        <div class="venda-block">
+                            <small>Valor Unitário</small>
+                            <div id="cliValorUnid" class="txt-venda-unid">R$ 0,00</div>
+                        </div>
+
+                        <div class="venda-block highlight">
+                            <small>TOTAL DO ORÇAMENTO</small>
+                            <div id="cliValorTotal" class="txt-venda-total">R$ 0,00</div>
+                        </div>
+                    </div>
+
+                </div>
+
             </section>
         </main>
     </div>
     <script src="script.js"></script>
 </body>
+
 </html>
