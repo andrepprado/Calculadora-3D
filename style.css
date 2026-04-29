@@ -21,7 +21,7 @@ body {
     position: relative;
 }
 
-/* Background Pattern Original */
+/* Background Pattern Duo.Lab */
 body::before {
     content: "";
     position: fixed;
@@ -66,7 +66,7 @@ header h1 {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
-/* --- INPUTS E PROPORÇÕES --- */
+/* --- INPUTS --- */
 .input-row {
     display: flex;
     gap: 12px;
@@ -74,7 +74,6 @@ header h1 {
     width: 100%;
 }
 
-/* Fix para Peso, Tempo e Qtd ficarem iguais */
 .input-row .input-group {
     flex: 1 1 0;
     min-width: 0;
@@ -99,7 +98,6 @@ label {
     margin-bottom: 5px;
 }
 
-/* Aplica 100% de largura apenas para campos de texto/número/select */
 input:not([type="checkbox"]),
 select {
     width: 100%;
@@ -109,9 +107,16 @@ select {
     font-size: 1rem;
     background: #fff;
     height: 42px;
+    transition: border-color 0.2s;
 }
 
-/* Bolinha do Filamento */
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
 .filament-select-wrapper {
     display: flex;
     align-items: center;
@@ -128,7 +133,7 @@ select {
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* --- FIX DAS CHECKBOXES --- */
+/* --- CHECKBOXES --- */
 .chk-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -144,6 +149,7 @@ select {
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
+    color: #475569;
 }
 
 input[type="checkbox"] {
@@ -153,24 +159,14 @@ input[type="checkbox"] {
     cursor: pointer;
 }
 
-/* --- RESUMO DARK BLUE --- */
+/* --- RESULTADOS --- */
 .results {
     background: var(--dark-card);
     color: white;
     border: none;
     display: flex;
     flex-direction: column;
-}
-
-.info-row,
-.info-row-destaque,
-.res-item-small,
-.res-total-interno {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 15px;
-    width: 100%;
+    min-height: 600px;
 }
 
 .info-row-destaque {
@@ -181,23 +177,11 @@ input[type="checkbox"] {
     padding-bottom: 8px;
 }
 
-.info-row {
-    margin-bottom: 12px;
-    font-size: 1rem;
-    color: #cbd5e1;
-}
-
-.info-row .val {
-    color: #fff;
-    font-weight: 600;
-    text-align: right;
-}
-
 .internal-box {
     background: rgba(0, 0, 0, 0.25);
     padding: 15px;
     border-radius: 10px;
-    margin: 20px 0;
+    margin: 15px 0;
     border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -211,12 +195,16 @@ input[type="checkbox"] {
 }
 
 .res-item-small {
-    font-size: 0.9rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
     color: #94a3b8;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .res-total-interno {
+    display: flex;
+    justify-content: space-between;
     font-weight: bold;
     border-top: 1px solid #334155;
     margin-top: 10px;
@@ -231,10 +219,18 @@ input[type="checkbox"] {
     border-top: 1px solid #334155;
 }
 
+.venda-block small {
+    display: block;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+    margin-bottom: 5px;
+}
+
 .txt-venda-unid {
     font-size: 2rem;
     font-weight: 600;
-    margin-bottom: 15px;
 }
 
 .txt-venda-total {
@@ -255,23 +251,29 @@ input[type="checkbox"] {
     border-radius: 12px;
     font-weight: 800;
     cursor: pointer;
+    transition: background 0.3s;
 }
 
-/* Responsividade Celular */
+.btn-print:hover {
+    background: #1d4ed8;
+}
+
+/* --- RESPONSIVIDADE --- */
 @media (max-width: 768px) {
     .grid {
         grid-template-columns: 1fr;
     }
 
-    .input-row {
-        gap: 8px;
+    .chk-grid {
+        grid-template-columns: 1fr 1fr;
     }
 }
 
-/* CONFIGURAÇÃO DE IMPRESSÃO */
+/* --- IMPRESSÃO --- */
 @media print {
     @page {
         margin: 1cm;
+        size: A4;
     }
 
     .no-print {
@@ -281,7 +283,6 @@ input[type="checkbox"] {
     body {
         background: white !important;
         padding: 0 !important;
-        margin: 0 !important;
     }
 
     body::before {
@@ -292,36 +293,22 @@ input[type="checkbox"] {
         background: white !important;
         color: black !important;
         box-shadow: none;
-        padding: 25px !important;
         width: 100%;
-        border: none;
     }
 
     .print-header {
         display: block !important;
         text-align: center;
         border-bottom: 3px solid #000;
-        margin-bottom: 25px;
-        padding-bottom: 10px;
     }
 
-    .info-row-destaque,
-    .info-row {
+    .res-item-small,
+    .res-total-interno,
+    .info-row-destaque {
         color: black !important;
         border-bottom: 1px solid #eee;
-        padding: 10px 0 !important;
-        font-size: 1.1rem !important;
     }
 
-    .venda-container {
-        border-top: 2px solid #000;
-        margin-top: 30px !important;
-        background: #f8fafc !important;
-        border: 1px solid #ddd;
-        padding: 30px !important;
-    }
-
-    .txt-venda-unid,
     .txt-venda-total {
         color: black !important;
         text-shadow: none;
