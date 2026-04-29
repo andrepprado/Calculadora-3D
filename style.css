@@ -28,7 +28,8 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%),
+    background-image:
+        radial-gradient(circle, transparent 0%, var(--bg-base) 85%),
         url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
     background-repeat: no-repeat, repeat;
     background-size: cover, 450px;
@@ -39,9 +40,8 @@ body::before {
 }
 
 .container {
-    max-width: 1000px;
+    max-width: 1200px;
     margin: 0 auto;
-    position: relative;
 }
 
 .grid {
@@ -51,6 +51,10 @@ body::before {
     align-items: start;
 }
 
+/* ===================== */
+/* CARDS */
+/* ===================== */
+
 .card {
     background: rgba(255, 255, 255, 0.96);
     padding: 25px;
@@ -58,16 +62,18 @@ body::before {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* ===================== */
+/* INPUTS */
+/* ===================== */
+
 .input-row {
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
-    width: 100%;
 }
 
-.input-row .input-group {
-    flex: 1 1 0;
-    min-width: 0;
+.input-group {
+    flex: 1;
     display: flex;
     flex-direction: column;
 }
@@ -82,7 +88,6 @@ h3 {
 }
 
 label {
-    display: block;
     font-size: 0.75rem;
     font-weight: 700;
     color: #64748b;
@@ -91,20 +96,20 @@ label {
 
 input:not([type="checkbox"]),
 select {
-    width: 100%;
     padding: 10px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
-    font-size: 1rem;
-    background: #fff;
     height: 42px;
 }
+
+/* ===================== */
+/* FILAMENTO */
+/* ===================== */
 
 .filament-select-wrapper {
     display: flex;
     align-items: center;
     gap: 12px;
-    margin-bottom: 10px;
 }
 
 .color-dot {
@@ -112,9 +117,11 @@ select {
     height: 28px;
     border-radius: 50%;
     border: 1px solid #cbd5e1;
-    flex-shrink: 0;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
+
+/* ===================== */
+/* CHECKBOX */
+/* ===================== */
 
 .chk-grid {
     display: grid;
@@ -123,93 +130,144 @@ select {
     margin: 15px 0;
 }
 
-.chk-grid label,
-.chk-single {
+.chk-grid label {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
 }
 
-input[type="checkbox"] {
-    width: 18px !important;
-    height: 18px !important;
-    min-width: 18px !important;
-}
+/* ===================== */
+/* RESULTS */
+/* ===================== */
 
 .results {
     background: var(--dark-card);
     color: white;
 }
 
+/* ===================== */
+/* HEADER */
+/* ===================== */
+
+.print-header h2 {
+    font-size: 1.4rem;
+    margin-bottom: 5px;
+}
+
+.print-header p {
+    font-size: 0.9rem;
+    color: #cbd5e1;
+}
+
+/* ===================== */
+/* RESUMO */
+/* ===================== */
+
 .info-row-destaque {
-    margin-bottom: 15px;
     font-size: 1.1rem;
     font-weight: 700;
+    margin-bottom: 10px;
     border-bottom: 1px solid #334155;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
 }
+
+/* ===================== */
+/* BLOCO INTERNO */
+/* ===================== */
 
 .internal-box {
     background: rgba(0, 0, 0, 0.25);
     padding: 15px;
     border-radius: 10px;
-    margin: 20px 0;
-    border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.internal-tag {
-    font-size: 0.65rem;
-    color: #fbbf24;
-    font-weight: bold;
-    display: block;
-    margin-bottom: 10px;
+    margin: 15px 0;
 }
 
 .res-item-small {
     display: flex;
     justify-content: space-between;
-    font-size: 0.9rem;
-    color: #94a3b8;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
+    color: #cbd5e1;
 }
 
-.res-total-interno {
-    display: flex;
-    justify-content: space-between;
-    font-weight: bold;
-    border-top: 1px solid #334155;
-    margin-top: 10px;
-    padding-top: 10px;
+/* ===================== */
+/* 🔥 NOVO (CLIENTE SIM/NÃO) */
+/* ===================== */
+
+#printCliente .res-item-small span:last-child {
+    font-weight: 700;
+    color: #ffffff;
 }
+
+/* ===================== */
+/* VENDA */
+/* ===================== */
 
 .venda-container {
     text-align: center;
-    margin-top: auto;
-    padding-top: 20px;
-    border-top: 1px solid #334155;
+    margin-top: 20px;
 }
 
-.txt-venda-unid { font-size: 2rem; font-weight: 600; margin-bottom: 15px; }
-.txt-venda-total { font-size: 3.5rem; font-weight: 900; color: #2ecc71; text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3); }
-
-.btn-print {
-    width: 100%;
-    margin-top: 25px;
-    padding: 18px;
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    font-weight: 800;
-    cursor: pointer;
+.txt-venda-unid {
+    font-size: 2rem;
+    font-weight: 600;
 }
+
+.txt-venda-total {
+    font-size: 3rem;
+    font-weight: 900;
+    color: #2ecc71;
+}
+
+/* ===================== */
+/* CLIENTE FULL WIDTH */
+/* ===================== */
+
+#printCliente {
+    grid-column: 1 / -1;
+}
+
+/* ===================== */
+/* PRINT */
+/* ===================== */
 
 @media print {
-    .no-print { display: none !important; }
-    body::before { display: none !important; }
-    .card.results { background: white !important; color: black !important; padding: 25px !important; width: 100%; }
-    .txt-venda-total { color: black !important; text-shadow: none; }
+    .no-print {
+        display: none !important;
+    }
+
+    body::before {
+        display: none;
+    }
+
+    .card.results {
+        background: white !important;
+        color: black !important;
+    }
+
+    .txt-venda-total {
+        color: black !important;
+    }
+}
+
+#printCliente .print-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+#printCliente .header-left {
+    display: flex;
+    flex-direction: column;
+}
+
+#printCliente .header-right {
+    display: flex;
+    align-items: center;
+}
+
+.logo-cliente {
+    max-height: 120px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
 }
