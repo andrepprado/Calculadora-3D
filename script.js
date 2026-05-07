@@ -11,7 +11,7 @@ const CONFIG = {
     custo_infra_hora: 0.40,
     valor_acabamento_unit: 1.50,
     margem_perda_material: 0.10,
-    valor_chaveiro: 0.30,
+    valor_chaveiro: 0.47,
     valor_ima: 0.20,
     valor_adesivo: 0.13,
     taxa_fixa_shopee: 3.00
