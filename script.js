@@ -14,7 +14,8 @@ const CONFIG = {
     valor_chaveiro: 0.47,
     valor_ima: 0.20,
     valor_adesivo: 0.13,
-    taxa_fixa_shopee: 3.00
+    taxa_fixa_shopee: 3.00,
+    valor_embalagem_plastica_fixa: 0.20
 };
 
 
@@ -167,17 +168,26 @@ function calcular() {
             : 0;
 
 
-    // =========================
-    // EMBALAGENS
-    // =========================
-    const valPlastica =
-        (parseFloat(document.getElementById('selPlastica').value) || 0) * qtd;
+// =========================
+// EMBALAGENS
+// =========================
 
-    const valSacolaPapel =
-        parseFloat(document.getElementById('selPapelFixo').value) || 0;
+const embalagemSelecionada =
+    parseFloat(document.getElementById('selPlastica').value) || 0;
 
-    const totalEmbalagens =
-        valPlastica + valSacolaPapel;
+const maiorValorEmbalagem =
+    Math.max(CONFIG.valor_embalagem_plastica_fixa, embalagemSelecionada);
+
+const valPlastica =
+    embalagemSelecionada > 0
+        ? maiorValorEmbalagem * qtd
+        : 0;
+
+const valSacolaPapel =
+    parseFloat(document.getElementById('selPapelFixo').value) || 0;
+
+const totalEmbalagens =
+    valPlastica + valSacolaPapel;
 
 
     // =========================
