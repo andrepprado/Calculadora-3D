@@ -1,4 +1,3 @@
-
 // ==============================
 // CONFIGURAÇÕES
 // ==============================
@@ -6,16 +5,29 @@
 const CONFIG = {
     depreciacao_impressora_hora: 0.65,
     depreciacao_pc_hora: 0.25,
+
     custo_energia_kwh: 0.95,
     consumo_medio_impressora: 0.12,
+
     custo_infra_hora: 0.40,
+
     valor_acabamento_unit: 1.50,
+
     margem_perda_material: 0.10,
+
     valor_chaveiro: 0.47,
     valor_ima: 0.20,
-    valor_adesivo: 0.13,
+
+    // saco adesivado
+    valor_adesivo: 0.20,
+
     taxa_fixa_shopee: 3.00,
-    valor_embalagem_plastica_fixa: 0.20
+
+    // embalagem plastica
+    valor_embalagem_plastica_fixa: 0.20,
+
+    // sacola kraft
+    valor_sacola_kraft: 1.50
 };
 
 
@@ -48,14 +60,20 @@ const filamentos = [
 // ==============================
 
 function popularFilamentos() {
-    const select = document.getElementById('filamentoSelect');
+
+    const select =
+        document.getElementById('filamentoSelect');
 
     select.innerHTML = "";
 
     filamentos.forEach((f, index) => {
-        const opt = document.createElement('option');
+
+        const opt =
+            document.createElement('option');
+
         opt.value = index;
         opt.text = f.nome;
+
         select.add(opt);
     });
 
@@ -69,16 +87,25 @@ function popularFilamentos() {
 // ==============================
 
 function atualizarFilamento() {
-    const select = document.getElementById('filamentoSelect');
-    const index = parseInt(select.value);
+
+    const select =
+        document.getElementById('filamentoSelect');
+
+    const index =
+        parseInt(select.value);
 
     if (isNaN(index) || !filamentos[index]) return;
 
     const fil = filamentos[index];
 
-    document.getElementById('custoKg').value = fil.custo.toFixed(2);
-    document.getElementById('colorPreview').style.backgroundColor = fil.cor;
-    document.getElementById('resNomeFilamento').innerText = fil.nome;
+    document.getElementById('custoKg').value =
+        fil.custo.toFixed(2);
+
+    document.getElementById('colorPreview').style.backgroundColor =
+        fil.cor;
+
+    document.getElementById('resNomeFilamento').innerText =
+        fil.nome;
 
     calcular();
 }
@@ -90,23 +117,32 @@ function atualizarFilamento() {
 
 function calcular() {
 
-    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const peso =
+        parseFloat(document.getElementById('peso').value) || 0;
 
-    const tempoRaw = document.getElementById('tempo').value || "00:00";
+    const tempoRaw =
+        document.getElementById('tempo').value || "00:00";
+
     const tVal = tempoRaw.split(':');
+
     const horasDec =
         (parseInt(tVal[0]) || 0) +
         (parseInt(tVal[1]) || 0) / 60;
 
-    const qtd = parseInt(document.getElementById('quantidade').value) || 1;
+    const qtd =
+        parseInt(document.getElementById('quantidade').value) || 1;
 
-    const custoKg = parseFloat(document.getElementById('custoKg').value) || 0;
-    const margemLucro = parseFloat(document.getElementById('margem').value) || 0;
+    const custoKg =
+        parseFloat(document.getElementById('custoKg').value) || 0;
+
+    const margemLucro =
+        parseFloat(document.getElementById('margem').value) || 0;
 
 
     // =========================
     // MATERIAL
     // =========================
+
     const cMatTotal =
         (peso / 1000) *
         custoKg *
@@ -117,36 +153,46 @@ function calcular() {
     // =========================
     // ENERGIA + INFRA
     // =========================
+
     let cInfraHora =
         CONFIG.consumo_medio_impressora *
         CONFIG.custo_energia_kwh;
 
     if (document.getElementById('chkCustosFixos').checked) {
-        cInfraHora += CONFIG.custo_infra_hora;
+
+        cInfraHora +=
+            CONFIG.custo_infra_hora;
     }
 
     const cInfraTotal =
-        horasDec * cInfraHora * qtd;
+        horasDec *
+        cInfraHora *
+        qtd;
 
 
     // =========================
     // DEPRECIAÇÃO
     // =========================
+
     let cDepreHora = 0;
 
     if (document.getElementById('chkDepreciacao').checked) {
+
         cDepreHora =
             CONFIG.depreciacao_impressora_hora +
             CONFIG.depreciacao_pc_hora;
     }
 
     const cDepreTotal =
-        horasDec * cDepreHora * qtd;
+        horasDec *
+        cDepreHora *
+        qtd;
 
 
     // =========================
     // ADICIONAIS
     // =========================
+
     const valChaveiro =
         document.getElementById('chkChaveiro').checked
             ? CONFIG.valor_chaveiro * qtd
@@ -164,35 +210,54 @@ function calcular() {
 
     const valAdesivo =
         document.getElementById('chkAdesivoFixo').checked
-            ? CONFIG.valor_adesivo
+            ? CONFIG.valor_adesivo * qtd
             : 0;
 
 
-// =========================
-// EMBALAGENS
-// =========================
+    // =========================
+    // EMBALAGENS
+    // =========================
 
-const embalagemSelecionada =
-    parseFloat(document.getElementById('selPlastica').value) || 0;
+    // embalagem plastica
+    const embalagemSelecionada =
+        parseFloat(document.getElementById('selPlastica').value) || 0;
 
-const maiorValorEmbalagem =
-    Math.max(CONFIG.valor_embalagem_plastica_fixa, embalagemSelecionada);
+    const maiorValorEmbalagem =
+        Math.max(
+            CONFIG.valor_embalagem_plastica_fixa,
+            embalagemSelecionada
+        );
 
-const valPlastica =
-    embalagemSelecionada > 0
-        ? maiorValorEmbalagem * qtd
-        : 0;
+    const valPlastica =
+        embalagemSelecionada > 0
+            ? maiorValorEmbalagem * qtd
+            : 0;
 
-const valSacolaPapel =
-    parseFloat(document.getElementById('selPapelFixo').value) || 0;
 
-const totalEmbalagens =
-    valPlastica + valSacolaPapel;
+    // sacola kraft
+    const embalagemPapelSelecionada =
+        parseFloat(document.getElementById('selPapelFixo').value) || 0;
+
+    const maiorValorSacola =
+        Math.max(
+            CONFIG.valor_sacola_kraft,
+            embalagemPapelSelecionada
+        );
+
+    const valSacolaPapel =
+        embalagemPapelSelecionada > 0
+            ? maiorValorSacola * qtd
+            : 0;
+
+
+    const totalEmbalagens =
+        valPlastica + valSacolaPapel;
 
 
     // =========================
     // CUSTO TOTAL
     // =========================
+
     const custoProducaoSubtotal =
         cMatTotal +
         cInfraTotal +
@@ -207,6 +272,7 @@ const totalEmbalagens =
     // =========================
     // TAXAS
     // =========================
+
     const percTaxaCanal =
         parseFloat(document.getElementById('canalVenda').value) || 0;
 
@@ -219,7 +285,9 @@ const totalEmbalagens =
             .selectedOptions[0]
             .text.includes("Shopee")
     ) {
-        valorTaxaFixaCanal = CONFIG.taxa_fixa_shopee * qtd;
+
+        valorTaxaFixaCanal =
+            CONFIG.taxa_fixa_shopee * qtd;
     }
 
     const precoComLucro =
@@ -231,7 +299,9 @@ const totalEmbalagens =
         valorTaxaFixaCanal;
 
     const vendaUnitaria =
-        qtd > 0 ? vendaTotal / qtd : 0;
+        qtd > 0
+            ? vendaTotal / qtd
+            : 0;
 
     const valorTaxasTotais =
         vendaTotal - precoComLucro;
@@ -240,22 +310,46 @@ const totalEmbalagens =
     // =========================
     // UI INTERNA
     // =========================
-    document.getElementById('resMatDetalhe').innerText = format(cMatTotal);
-    document.getElementById('resEneDetalhe').innerText = format(cInfraTotal);
-    document.getElementById('resDepre').innerText = format(cDepreTotal);
-    document.getElementById('resMaoObra').innerText = format(valAcabamento);
-    document.getElementById('resChaveiro').innerText = format(valChaveiro);
-    document.getElementById('resIma').innerText = format(valIma);
-    document.getElementById('resAdesivo').innerText = format(valAdesivo);
-    document.getElementById('resPlaDetalhe').innerText = format(totalEmbalagens);
-    document.getElementById('resTaxas').innerText = format(valorTaxasTotais);
 
-    document.getElementById('resCustoTotal').innerText = format(custoProducaoSubtotal);
-    document.getElementById('resVendaUnid').innerText = format(vendaUnitaria);
-    document.getElementById('resVendaTotal').innerText = format(vendaTotal);
+    document.getElementById('resMatDetalhe').innerText =
+        format(cMatTotal);
+
+    document.getElementById('resEneDetalhe').innerText =
+        format(cInfraTotal);
+
+    document.getElementById('resDepre').innerText =
+        format(cDepreTotal);
+
+    document.getElementById('resMaoObra').innerText =
+        format(valAcabamento);
+
+    document.getElementById('resChaveiro').innerText =
+        format(valChaveiro);
+
+    document.getElementById('resIma').innerText =
+        format(valIma);
+
+    document.getElementById('resAdesivo').innerText =
+        format(valAdesivo);
+
+    document.getElementById('resPlaDetalhe').innerText =
+        format(totalEmbalagens);
+
+    document.getElementById('resTaxas').innerText =
+        format(valorTaxasTotais);
+
+    document.getElementById('resCustoTotal').innerText =
+        format(custoProducaoSubtotal);
+
+    document.getElementById('resVendaUnid').innerText =
+        format(vendaUnitaria);
+
+    document.getElementById('resVendaTotal').innerText =
+        format(vendaTotal);
 
     document.getElementById('dataAtual').innerText =
-        "Data: " + new Date().toLocaleDateString('pt-BR');
+        "Data: " +
+        new Date().toLocaleDateString('pt-BR');
 
 
     // =========================
@@ -265,7 +359,8 @@ const totalEmbalagens =
     document.getElementById('cliFilamento').innerText =
         document.getElementById('resNomeFilamento').innerText;
 
-    document.getElementById('cliQtd').innerText = qtd;
+    document.getElementById('cliQtd').innerText =
+        qtd;
 
     document.getElementById('cliValorUnid').innerText =
         format(vendaUnitaria);
@@ -274,7 +369,8 @@ const totalEmbalagens =
         format(vendaTotal);
 
     document.getElementById('dataAtualCliente').innerText =
-        "Data: " + new Date().toLocaleDateString('pt-BR');
+        "Data: " +
+        new Date().toLocaleDateString('pt-BR');
 
 
     // =========================
@@ -282,23 +378,33 @@ const totalEmbalagens =
     // =========================
 
     document.getElementById('cliAcabamento').innerText =
-        document.getElementById('chkAcabamento').checked ? "Sim" : "Não";
+        document.getElementById('chkAcabamento').checked
+            ? "Sim"
+            : "Não";
 
     document.getElementById('cliChaveiro').innerText =
-        document.getElementById('chkChaveiro').checked ? "Sim" : "Não";
+        document.getElementById('chkChaveiro').checked
+            ? "Sim"
+            : "Não";
 
     document.getElementById('cliIma').innerText =
-        document.getElementById('chkIma').checked ? "Sim" : "Não";
+        document.getElementById('chkIma').checked
+            ? "Sim"
+            : "Não";
 
     document.getElementById('cliAdesivo').innerText =
-        document.getElementById('chkAdesivoFixo').checked ? "Sim" : "Não";
+        document.getElementById('chkAdesivoFixo').checked
+            ? "Sim"
+            : "Não";
 
     const temEmbalagem =
         (parseFloat(document.getElementById('selPlastica').value) || 0) > 0 ||
         (parseFloat(document.getElementById('selPapelFixo').value) || 0) > 0;
 
     document.getElementById('cliEmbalagem').innerText =
-        temEmbalagem ? "Sim" : "Não";
+        temEmbalagem
+            ? "Sim"
+            : "Não";
 }
 
 
@@ -307,6 +413,7 @@ const totalEmbalagens =
 // ==============================
 
 function format(v) {
+
     return v.toLocaleString('pt-BR', {
         style: 'currency',
         currency: 'BRL'
@@ -319,11 +426,17 @@ function format(v) {
 // ==============================
 
 function carregarConfiguracoes() {
+
     const salvo =
-        JSON.parse(localStorage.getItem('cal3d_duolab_final'));
+        JSON.parse(
+            localStorage.getItem('cal3d_duolab_final')
+        );
 
     if (salvo) {
-        document.getElementById('margem').value = salvo.margem;
+
+        document.getElementById('margem').value =
+            salvo.margem;
+
         document.getElementById('filamentoSelect').value =
             salvo.filIndex || 0;
     }
@@ -335,14 +448,19 @@ function carregarConfiguracoes() {
 // ==============================
 
 document.querySelectorAll('.calc-trigger').forEach(el => {
+
     el.addEventListener('input', handleChange);
     el.addEventListener('change', handleChange);
 });
 
 function handleChange(e) {
+
     if (e.target.id === "filamentoSelect") {
+
         atualizarFilamento();
+
     } else {
+
         calcular();
     }
 }
