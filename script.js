@@ -51,7 +51,7 @@ const filamentos = [
     { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#F4EE2A" },
     { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
     { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#4B0082" },  
-    { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#4B0082" },
+    { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#D97A2B" },
     { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" },
     { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#4B0082" },
     { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#000000" },
