@@ -56,7 +56,7 @@ const filamentos = [
     { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#4B0082" },
     { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#000000" },
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#000000" },
-    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#000000" },
+    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#000000" }
 
     
 
