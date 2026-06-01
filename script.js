@@ -36,7 +36,6 @@ const CONFIG = {
 // ==============================
 
 const filamentos = [
-    { nome: "MASTERPRINT - PETG PRETO BRILHANTE", custo: 58.38, cor: "#000000" },
     { nome: "MASTERPRINT - PETG VERMELHO BRILHANTE", custo: 77.74, cor: "#C12E1F" },
     { nome: "VOOLT - PETG HF ROXO TRANSLUCIDO", custo: 84.74, cor: "#660099" },
     { nome: "VOOLT - PETG HF ROSA CEREJA TRANSLUCIDO", custo: 84.74, cor: "#DE3163" },
@@ -51,7 +50,17 @@ const filamentos = [
     { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#E0E0E0" },
     { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#F4EE2A" },
     { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
-    { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00AE42" }
+    { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#4B0082" },  
+    { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#4B0082" },
+    { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" },
+    { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#4B0082" },
+    { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#000000" },
+    { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#000000" },
+    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#000000" },
+
+    
+
+
 ];
 
 
