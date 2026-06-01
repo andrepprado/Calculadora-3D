@@ -54,7 +54,6 @@ const filamentos = [
     { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#D97A2B" }, 
     { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" }, 
     { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#000000" }, 
-    { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#6A0DAD" }, 
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6F4E37" }, 
     { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#DCC7A1" }, 
 
