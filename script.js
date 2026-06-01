@@ -50,6 +50,7 @@ const filamentos = [
     { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#E0E0E0" },
     { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#F4EE2A" },
     { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
+    { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00FF00" },
     { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#6A0DAD" }, 
     { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#D97A2B" }, 
     { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" }, 
