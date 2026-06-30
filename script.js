@@ -36,36 +36,32 @@ const CONFIG = {
 // ==============================
 
 const filamentos = [
-    { nome: "VOOLT - PETG AZUL HF", custo: 79.48, cor: "#0086D6" },
-    { nome: "VOOLT - PETG LARANJA HF", custo: 79.48, cor: "#FF6A13" },
+    { nome: "VOOLT - PETG AZUL HF", custo: 79.48, cor: "#0077C8" },
+    { nome: "VOOLT - PETG LARANJA HF", custo: 79.48, cor: "#F97316" },
 
-    { nome: "SUNLU - PETG AZUL BRILHANTE", custo: 75.20, cor: "#0068AB" },
-    { nome: "SUNLU - PETG BRANCO BRILHANTE", custo: 75.20, cor: "#FFFFFF" },
-    { nome: "SUNLU - PETG CINZA BRILHANTE", custo: 75.20, cor: "#8E9089" },
+    { nome: "SUNLU - PETG AZUL BRILHANTE", custo: 75.20, cor: "#005EB8" },
+    { nome: "SUNLU - PETG BRANCO BRILHANTE", custo: 75.20, cor: "#FAFAFA" },
+    { nome: "SUNLU - PETG CINZA BRILHANTE", custo: 75.20, cor: "#8B8D91" },
 
-    { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#E0E0E0" },
+    { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#ECEAE4" },
 
-    { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#F4EE2A" },
-    { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0A2989" },
-    { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00FF00" },
+    { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#FFD400" },
+    { nome: "BAMBU LAB - PLA AZUL", custo: 128.90, cor: "#0057B8" },
+    { nome: "BAMBU LAB - PLA VERDE", custo: 128.90, cor: "#00A651" },
 
-    { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#6A0DAD" },
-    { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#D97A2B" },
+    { nome: "ELEGOO - PLA SILK ROXO E PRETO", custo: 113.90, cor: "#5B2A86" },
+    { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#E67E22" },
     { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" },
-    { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#000000" },
+    { nome: "ELEGOO - PLA PRETO", custo: 102.75, cor: "#111111" },
 
-    { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6F4E37" },
-    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#DCC7A1" },
+    { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6B4423" },
+    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" },
 
-    { nome: "VELVET - PLA BEGE CAUCASIANO HIGH SPEED PREMIUM", custo: 89.37, cor: "#D8BFA3" },
-    { nome: "VELVET - PLA BRANCO HIGH SPEED PREMIUM", custo: 89.37, cor: "#F5F5F5" },
-    { nome: "VELVET - PLA PRETO HIGH SPEED PREMIUM", custo: 89.37, cor: "#111111" },
-    { nome: "VELVET - PLA VERMELHO HIGH SPEED PREMIUM", custo: 89.37, cor: "#C12E1F" }
+    { nome: "VELVET - PLA BEGE CAUCASIANO HIGH SPEED PREMIUM", custo: 89.37, cor: "#D6BC9B" },
+    { nome: "VELVET - PLA BRANCO HIGH SPEED PREMIUM", custo: 89.37, cor: "#F8F8F6" },
+    { nome: "VELVET - PLA PRETO HIGH SPEED PREMIUM", custo: 89.37, cor: "#181818" },
+    { nome: "VELVET - PLA VERMELHO HIGH SPEED PREMIUM", custo: 89.37, cor: "#C62828" }
 ];
-
-
-];
-
 
 // ==============================
 // INIT
