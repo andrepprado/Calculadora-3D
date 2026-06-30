@@ -38,7 +38,7 @@ const CONFIG = {
 const filamentos = [
     { nome: "VOOLT - PETG AZUL HF", custo: 79.48, cor: "#0077C8" },
     { nome: "VOOLT - PETG LARANJA HF", custo: 79.48, cor: "#F97316" },
-    { nome: "VOOLT - PLA BEGE CAUCASIANO VELVET HIGH SPEED PREMIUM", custo: 89.37, cor: "#D6BC9B" },
+        { nome: "VOOLT - PLA BEGE CAUCASIANO VELVET HIGH SPEED PREMIUM", custo: 89.37, cor: "#D6BC9B" },
     { nome: "VOOLT - PLA BRANCO VELVET HIGH SPEED PREMIUM", custo: 89.37, cor: "#F8F8F6" },
     { nome: "VOOLT - PLA PRETO VELVET HIGH SPEED PREMIUM", custo: 89.37, cor: "#181818" },
     { nome: "VOOLT - PLA VERMELHO VELVET HIGH SPEED PREMIUM", custo: 89.37, cor: "#C62828" },
@@ -46,6 +46,7 @@ const filamentos = [
     { nome: "SUNLU - PETG AZUL BRILHANTE", custo: 75.20, cor: "#005EB8" },
     { nome: "SUNLU - PETG BRANCO BRILHANTE", custo: 75.20, cor: "#FAFAFA" },
     { nome: "SUNLU - PETG CINZA BRILHANTE", custo: 75.20, cor: "#8B8D91" },
+
     { nome: "SUNLU - PLA MARMORE BRANCO", custo: 120.99, cor: "#ECEAE4" },
 
     { nome: "BAMBU LAB - PLA AMARELO", custo: 128.90, cor: "#FFD400" },
@@ -59,7 +60,6 @@ const filamentos = [
 
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6B4423" },
     { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" }
-
 
 ];
 
