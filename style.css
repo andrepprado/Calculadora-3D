@@ -28,9 +28,7 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image:
-        radial-gradient(circle, transparent 0%, var(--bg-base) 85%),
-        url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
+    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%), url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
     background-repeat: no-repeat, repeat;
     background-size: cover, 450px;
     opacity: 0.15;
@@ -51,20 +49,12 @@ body::before {
     align-items: start;
 }
 
-/* ===================== */
-/* CARDS */
-/* ===================== */
-
 .card {
     background: rgba(255, 255, 255, 0.96);
     padding: 25px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
-
-/* ===================== */
-/* INPUTS */
-/* ===================== */
 
 .input-row {
     display: flex;
@@ -102,10 +92,6 @@ select {
     height: 42px;
 }
 
-/* ===================== */
-/* FILAMENTO */
-/* ===================== */
-
 .filament-select-wrapper {
     display: flex;
     align-items: center;
@@ -118,10 +104,6 @@ select {
     border-radius: 50%;
     border: 1px solid #cbd5e1;
 }
-
-/* ===================== */
-/* CHECKBOX */
-/* ===================== */
 
 .chk-grid {
     display: grid;
@@ -137,18 +119,10 @@ select {
     font-size: 0.85rem;
 }
 
-/* ===================== */
-/* RESULTS */
-/* ===================== */
-
 .results {
     background: var(--dark-card);
     color: white;
 }
-
-/* ===================== */
-/* HEADER */
-/* ===================== */
 
 .print-header h2 {
     font-size: 1.4rem;
@@ -160,10 +134,6 @@ select {
     color: #cbd5e1;
 }
 
-/* ===================== */
-/* RESUMO */
-/* ===================== */
-
 .info-row-destaque {
     font-size: 1.1rem;
     font-weight: 700;
@@ -171,10 +141,6 @@ select {
     border-bottom: 1px solid #334155;
     padding-bottom: 6px;
 }
-
-/* ===================== */
-/* BLOCO INTERNO */
-/* ===================== */
 
 .internal-box {
     background: rgba(0, 0, 0, 0.25);
@@ -190,18 +156,10 @@ select {
     color: #cbd5e1;
 }
 
-/* ===================== */
-/* 🔥 NOVO (CLIENTE SIM/NÃO) */
-/* ===================== */
-
 #printCliente .res-item-small span:last-child {
     font-weight: 700;
     color: #ffffff;
 }
-
-/* ===================== */
-/* VENDA */
-/* ===================== */
 
 .venda-container {
     text-align: center;
@@ -219,17 +177,9 @@ select {
     color: #2ecc71;
 }
 
-/* ===================== */
-/* CLIENTE FULL WIDTH */
-/* ===================== */
-
 #printCliente {
     grid-column: 1 / -1;
 }
-
-/* ===================== */
-/* PRINT */
-/* ===================== */
 
 @media print {
     .no-print {
