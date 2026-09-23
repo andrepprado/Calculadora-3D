@@ -47,38 +47,17 @@
                     </div>
                 </div>
                 <h3>3. Adicionais e Canais</h3>
-                <div class="input-group full-width">
-                    <select id="selPlastica" class="calc-trigger">
-                        <option value="0">Sem Embalagem Plástica</option>
-                        <option value="0.128">8x8 (0,128)</option>
-                        <option value="0.168">10x14 (0,168)</option>
-                        <option value="0.11">15x20 (0,11)</option>
-                    </select>
-                </div>
                 <div class="chk-grid">
                     <label><input type="checkbox" id="chkChaveiro" class="calc-trigger"> Chaveiro</label>
                     <label><input type="checkbox" id="chkIma" class="calc-trigger"> Imã</label>
                     <label><input type="checkbox" id="chkAcabamento" class="calc-trigger" checked> Acabamento</label>
-                </div>
-                <div class="chk-grid">
+                    <label><input type="checkbox" id="chkLuminaria" class="calc-trigger"> Luminária</label>
+                    <label><input type="checkbox" id="chkPlastica" class="calc-trigger"> Emb. Plástica</label>
+                    <label><input type="checkbox" id="chkSacolaKraft" class="calc-trigger"> Sacola Kraft</label>
+                    <label><input type="checkbox" id="chkAdesivoFixo" class="calc-trigger"> Adesivo</label>
                     <label><input type="checkbox" id="chkDepreciacao" class="calc-trigger" checked> Depreciação</label>
                     <label><input type="checkbox" id="chkCustosFixos" class="calc-trigger" checked>
                         Infraestrutura</label>
-                </div>
-                <div class="input-row">
-                    <div class="input-group" style="flex: 2;">
-                        <select id="selPapelFixo" class="calc-trigger">
-                            <option value="0">Sem Sacola Kraft</option>
-                            <option value="0.999">Sacola Kraft PP (9,5x7,5x14,5)</option>
-                            <option value="1.349">Sacola Kraft M (14x09x21,5)</option>
-                            <option value="1.349">Sacola Kraft G (14x09x21,5)</option>
-                        </select>
-                    </div>
-                    <div class="input-group"
-                        style="flex: 1; display: flex; align-items: center; justify-content: center;">
-                        <label class="chk-single" style="margin-bottom: 0;"><input type="checkbox" id="chkAdesivoFixo"
-                                class="calc-trigger"> Adesivo</label>
-                    </div>
                 </div>
                 <div class="input-group full-width" style="margin-top: 10px;">
                     <label>Canal de Venda</label>
@@ -107,6 +86,7 @@
                         <div class="res-item-small"><span>Hardware (Deprec.):</span> <span id="resDepre">R$ 0,00</span>
                         </div>
                         <div class="res-item-small"><span>Acabamento:</span> <span id="resMaoObra">R$ 0,00</span></div>
+                        <div class="res-item-small"><span>Luminária:</span> <span id="resLuminaria">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Chaveiro:</span> <span id="resChaveiro">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Imã:</span> <span id="resIma">R$ 0,00</span></div>
                         <div class="res-item-small"><span>Adesivo:</span> <span id="resAdesivo">R$ 0,00</span></div>
@@ -152,6 +132,10 @@
                         <div class="res-item-small">
                             <span>Acabamento:</span>
                             <span id="cliAcabamento">Não</span>
+                        </div>
+                        <div class="res-item-small">
+                            <span>Luminária:</span>
+                            <span id="cliLuminaria">Não</span>
                         </div>
                         <div class="res-item-small">
                             <span>Chaveiro:</span>

@@ -8,6 +8,7 @@ const CONFIG = {
     margem_perda_material: 0.10,
     valor_chaveiro: 0.47,
     valor_ima: 0.20,
+    valor_luminaria: 21.15,
     valor_adesivo: 0.20,
     taxa_fixa_shopee: 3.00,
     valor_embalagem_plastica_fixa: 0.20,
@@ -81,18 +82,14 @@ function calcular() {
     const valChaveiro = document.getElementById('chkChaveiro').checked ? CONFIG.valor_chaveiro * qtd : 0;
     const valIma = document.getElementById('chkIma').checked ? CONFIG.valor_ima * qtd : 0;
     const valAcabamento = document.getElementById('chkAcabamento').checked ? CONFIG.valor_acabamento_unit * qtd : 0;
+    const valLuminaria = document.getElementById('chkLuminaria').checked ? CONFIG.valor_luminaria * qtd : 0;
     const valAdesivo = document.getElementById('chkAdesivoFixo').checked ? CONFIG.valor_adesivo * qtd : 0;
 
-    const embalagemSelecionada = parseFloat(document.getElementById('selPlastica').value) || 0;
-    const maiorValorEmbalagem = Math.max(CONFIG.valor_embalagem_plastica_fixa, embalagemSelecionada);
-    const valPlastica = embalagemSelecionada > 0 ? maiorValorEmbalagem * qtd : 0;
-
-    const embalagemPapelSelecionada = parseFloat(document.getElementById('selPapelFixo').value) || 0;
-    const maiorValorSacola = Math.max(CONFIG.valor_sacola_kraft, embalagemPapelSelecionada);
-    const valSacolaPapel = embalagemPapelSelecionada > 0 ? maiorValorSacola * qtd : 0;
-
+    const valPlastica = document.getElementById('chkPlastica').checked ? CONFIG.valor_embalagem_plastica_fixa * qtd : 0;
+    const valSacolaPapel = document.getElementById('chkSacolaKraft').checked ? CONFIG.valor_sacola_kraft * qtd : 0;
     const totalEmbalagens = valPlastica + valSacolaPapel;
-    const custoProducaoSubtotal = cMatTotal + cInfraTotal + cDepreTotal + valChaveiro + valIma + valAcabamento + valAdesivo + totalEmbalagens;
+
+    const custoProducaoSubtotal = cMatTotal + cInfraTotal + cDepreTotal + valChaveiro + valIma + valAcabamento + valLuminaria + valAdesivo + totalEmbalagens;
 
     const percTaxaCanal = parseFloat(document.getElementById('canalVenda').value) || 0;
     let valorTaxaFixaCanal = 0;
@@ -103,7 +100,6 @@ function calcular() {
     const precoComLucro = custoProducaoSubtotal * (1 + margemLucro / 100);
     const vendaTotalBruta = (precoComLucro / (1 - percTaxaCanal)) + valorTaxaFixaCanal;
 
-    // Arredondamento para cima do valor total e unitario final de venda
     const vendaTotal = Math.ceil(vendaTotalBruta);
     const vendaUnitaria = qtd > 0 ? Math.ceil(vendaTotalBruta / qtd) : 0;
     const valorTaxasTotais = vendaTotalBruta - precoComLucro;
@@ -112,6 +108,7 @@ function calcular() {
     document.getElementById('resEneDetalhe').innerText = format(cInfraTotal);
     document.getElementById('resDepre').innerText = format(cDepreTotal);
     document.getElementById('resMaoObra').innerText = format(valAcabamento);
+    document.getElementById('resLuminaria').innerText = format(valLuminaria);
     document.getElementById('resChaveiro').innerText = format(valChaveiro);
     document.getElementById('resIma').innerText = format(valIma);
     document.getElementById('resAdesivo').innerText = format(valAdesivo);
@@ -129,12 +126,11 @@ function calcular() {
     document.getElementById('dataAtualCliente').innerText = "Data: " + new Date().toLocaleDateString('pt-BR');
 
     document.getElementById('cliAcabamento').innerText = document.getElementById('chkAcabamento').checked ? "Sim" : "Não";
+    document.getElementById('cliLuminaria').innerText = document.getElementById('chkLuminaria').checked ? "Sim" : "Não";
     document.getElementById('cliChaveiro').innerText = document.getElementById('chkChaveiro').checked ? "Sim" : "Não";
     document.getElementById('cliIma').innerText = document.getElementById('chkIma').checked ? "Sim" : "Não";
     document.getElementById('cliAdesivo').innerText = document.getElementById('chkAdesivoFixo').checked ? "Sim" : "Não";
-
-    const temEmbalagem = (parseFloat(document.getElementById('selPlastica').value) || 0) > 0 || (parseFloat(document.getElementById('selPapelFixo').value) || 0) > 0;
-    document.getElementById('cliEmbalagem').innerText = temEmbalagem ? "Sim" : "Não";
+    document.getElementById('cliEmbalagem').innerText = (document.getElementById('chkPlastica').checked || document.getElementById('chkSacolaKraft').checked) ? "Sim" : "Não";
 }
 
 function format(v) {
