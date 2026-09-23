@@ -11,7 +11,7 @@ const CONFIG = {
     valor_luminaria: 21.15,
     valor_adesivo: 0.20,
     taxa_fixa_shopee: 3.00,
-    valor_embalagem_plastica_fixa: 0.20,
+    valor_embalagem_plastica_fixa: 0.50,
     valor_sacola_kraft: 1.50
 };
 
