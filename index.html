@@ -39,11 +39,9 @@
         <main class="grid">
             <section class="card no-print">
                 <h3>1. Filamento e Margem</h3>
+
                 <div class="input-group full-width">
-                    <div class="filament-select-wrapper">
-                        <div id="colorPreview" class="color-dot"></div>
-                        <select id="filamentoSelect" class="calc-trigger"></select>
-                    </div>
+                    <div id="filamentosGrid" class="filamentos-grid"></div>
                 </div>
 
                 <div class="input-row">
@@ -74,40 +72,52 @@
                 </div>
 
                 <h3>3. Adicionais e Canais</h3>
-                <div class="input-group full-width">
-                    <select id="selPlastica" class="calc-trigger">
-                        <option value="0">Sem Embalagem Plástica</option>
-                        <option value="0.128">8x8 (0,128)</option>
-                        <option value="0.168">10x14 (0,168)</option>
-                        <option value="0.11">15x20 (0,11)</option>
-                    </select>
-                </div>
 
                 <div class="chk-grid">
-                    <label><input type="checkbox" id="chkChaveiro" class="calc-trigger"> Chaveiro</label>
-                    <label><input type="checkbox" id="chkIma" class="calc-trigger"> Imã</label>
-                    <label><input type="checkbox" id="chkAcabamento" class="calc-trigger" checked> Acabamento</label>
-                </div>
+                    <label>
+                        <input type="checkbox" id="chkChaveiro" class="calc-trigger">
+                        Chaveiro
+                    </label>
 
-                <div class="chk-grid">
-                    <label><input type="checkbox" id="chkDepreciacao" class="calc-trigger" checked> Depreciação</label>
-                    <label><input type="checkbox" id="chkCustosFixos" class="calc-trigger" checked>
-                        Infraestrutura</label>
-                </div>
+                    <label>
+                        <input type="checkbox" id="chkIma" class="calc-trigger">
+                        Imã
+                    </label>
 
-                <div class="input-row">
-                    <div class="input-group" style="flex: 2;">
-                        <select id="selPapelFixo" class="calc-trigger">
-                            <option value="0">Sem Sacola de Papel</option>
-                            <option value="0.80">Sacola P (0,80)</option>
-                            <option value="1.20">Sacola M (1,20)</option>
-                        </select>
-                    </div>
-                    <div class="input-group"
-                        style="flex: 1; display: flex; align-items: center; justify-content: center;">
-                        <label class="chk-single" style="margin-bottom: 0;"><input type="checkbox" id="chkAdesivoFixo"
-                                class="calc-trigger"> Adesivo</label>
-                    </div>
+                    <label>
+                        <input type="checkbox" id="chkAcabamento" class="calc-trigger" checked>
+                        Acabamento
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkLuminaria" class="calc-trigger">
+                        Luminária
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkPlastica" class="calc-trigger">
+                        Embalagem Plástica
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkSacolaKraft" class="calc-trigger">
+                        Sacola Kraft
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkAdesivoFixo" class="calc-trigger">
+                        Adesivo
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkDepreciacao" class="calc-trigger" checked>
+                        Depreciação
+                    </label>
+
+                    <label>
+                        <input type="checkbox" id="chkCustosFixos" class="calc-trigger" checked>
+                        Infraestrutura
+                    </label>
                 </div>
 
                 <div class="input-group full-width" style="margin-top: 10px;">
