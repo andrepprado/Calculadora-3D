@@ -74,7 +74,10 @@ function atualizarFilamento() {
 }
 function calcular() {
     const peso = parseFloat(document.getElementById('peso').value) || 0;
-    const tempoRaw = document.getElementById('tempo').value || "00:00";
+
+    const tempoRaw =
+        document.getElementById('tempo').value || "00:00";
+
     const tVal = tempoRaw.split(':');
 
     const horasDec =
@@ -92,128 +95,86 @@ function calcular() {
 
     /*
      * MATERIAL
-     * So existe custo quando existe peso.
      */
     const cMatTotal =
-        peso > 0
-            ? (peso / 1000) *
-              custoKg *
-              (1 + CONFIG.margem_perda_material) *
-              qtd
-            : 0;
+        (peso / 1000) *
+        custoKg *
+        (1 + CONFIG.margem_perda_material) *
+        qtd;
 
     /*
-     * ENERGIA / INFRAESTRUTURA
-     * Dependem obrigatoriamente do tempo de impressao.
+     * ENERGIA + INFRAESTRUTURA
+     *
+     * Energia depende do tempo.
+     * Infraestrutura marcada possui custo fixo mesmo
+     * antes de informar peso ou tempo.
      */
-    let cInfraTotal = 0;
+    const custoEnergia =
+        horasDec *
+        CONFIG.consumo_medio_impressora *
+        CONFIG.custo_energia_kwh *
+        qtd;
 
-    if (horasDec > 0) {
+    const custoInfraestrutura =
+        document.getElementById('chkCustosFixos').checked
+            ? CONFIG.custo_infra_hora * qtd
+            : 0;
 
-        let cInfraHora =
-            CONFIG.consumo_medio_impressora *
-            CONFIG.custo_energia_kwh;
-
-        if (
-            document.getElementById('chkCustosFixos') &&
-            document.getElementById('chkCustosFixos').checked
-        ) {
-            cInfraHora += CONFIG.custo_infra_hora;
-        }
-
-        cInfraTotal =
-            horasDec *
-            cInfraHora *
-            qtd;
-    }
+    const cInfraTotal =
+        custoEnergia +
+        custoInfraestrutura;
 
     /*
      * DEPRECIACAO
-     * Tambem depende obrigatoriamente do tempo.
+     *
+     * Se marcada, existe custo mesmo com tempo zerado.
      */
-    let cDepreTotal = 0;
-
-    if (
-        horasDec > 0 &&
-        document.getElementById('chkDepreciacao') &&
+    const cDepreTotal =
         document.getElementById('chkDepreciacao').checked
-    ) {
-
-        const cDepreHora =
-            CONFIG.depreciacao_impressora_hora +
-            CONFIG.depreciacao_pc_hora;
-
-        cDepreTotal =
-            horasDec *
-            cDepreHora *
-            qtd;
-    }
+            ? (
+                CONFIG.depreciacao_impressora_hora +
+                CONFIG.depreciacao_pc_hora
+              ) * qtd
+            : 0;
 
     /*
      * ADICIONAIS
      *
-     * Acabamento acompanha a existencia da peca.
-     * Portanto, sem peso e sem tempo, nao existe custo
-     * automatico de acabamento.
+     * Todo adicional marcado entra no custo,
+     * independentemente de peso ou tempo.
      */
-    const existePeca =
-        peso > 0 || horasDec > 0;
-
-    const chkChaveiro =
-        document.getElementById('chkChaveiro');
-
-    const chkIma =
-        document.getElementById('chkIma');
-
-    const chkAcabamento =
-        document.getElementById('chkAcabamento');
-
-    const chkLuminaria =
-        document.getElementById('chkLuminaria');
-
-    const chkAdesivo =
-        document.getElementById('chkAdesivoFixo');
-
-    const chkPlastica =
-        document.getElementById('chkPlastica');
-
-    const chkSacola =
-        document.getElementById('chkSacolaKraft');
-
     const valChaveiro =
-        chkChaveiro && chkChaveiro.checked
+        document.getElementById('chkChaveiro').checked
             ? CONFIG.valor_chaveiro * qtd
             : 0;
 
     const valIma =
-        chkIma && chkIma.checked
+        document.getElementById('chkIma').checked
             ? CONFIG.valor_ima * qtd
             : 0;
 
     const valAcabamento =
-        existePeca &&
-        chkAcabamento &&
-        chkAcabamento.checked
+        document.getElementById('chkAcabamento').checked
             ? CONFIG.valor_acabamento_unit * qtd
             : 0;
 
     const valLuminaria =
-        chkLuminaria && chkLuminaria.checked
+        document.getElementById('chkLuminaria').checked
             ? CONFIG.valor_luminaria * qtd
             : 0;
 
     const valAdesivo =
-        chkAdesivo && chkAdesivo.checked
+        document.getElementById('chkAdesivoFixo').checked
             ? CONFIG.valor_adesivo * qtd
             : 0;
 
     const valPlastica =
-        chkPlastica && chkPlastica.checked
+        document.getElementById('chkPlastica').checked
             ? CONFIG.valor_embalagem_plastica_fixa * qtd
             : 0;
 
     const valSacolaPapel =
-        chkSacola && chkSacola.checked
+        document.getElementById('chkSacolaKraft').checked
             ? CONFIG.valor_sacola_kraft * qtd
             : 0;
 
@@ -222,7 +183,7 @@ function calcular() {
         valSacolaPapel;
 
     /*
-     * CUSTO TOTAL
+     * CUSTO DE PRODUCAO
      */
     const custoProducaoSubtotal =
         cMatTotal +
@@ -246,12 +207,7 @@ function calcular() {
 
     let valorTaxaFixaCanal = 0;
 
-    /*
-     * Nao existe taxa de canal se nao existe valor
-     * de producao/venda.
-     */
     if (
-        custoProducaoSubtotal > 0 &&
         percTaxaCanal > 0 &&
         canalVenda.selectedOptions[0] &&
         canalVenda.selectedOptions[0].text.includes("Shopee")
@@ -260,33 +216,28 @@ function calcular() {
             CONFIG.taxa_fixa_shopee * qtd;
     }
 
+    /*
+     * PRECO
+     */
     const precoComLucro =
         custoProducaoSubtotal *
         (1 + margemLucro / 100);
 
-    let vendaTotalBruta = 0;
-
-    if (custoProducaoSubtotal > 0) {
-
-        vendaTotalBruta =
-            (precoComLucro / (1 - percTaxaCanal)) +
-            valorTaxaFixaCanal;
-    }
+    const vendaTotalBruta =
+        (precoComLucro / (1 - percTaxaCanal)) +
+        valorTaxaFixaCanal;
 
     const vendaTotal =
-        vendaTotalBruta > 0
-            ? Math.ceil(vendaTotalBruta)
-            : 0;
+        Math.ceil(vendaTotalBruta);
 
     const vendaUnitaria =
-        vendaTotalBruta > 0 && qtd > 0
+        qtd > 0
             ? Math.ceil(vendaTotalBruta / qtd)
             : 0;
 
     const valorTaxasTotais =
-        vendaTotalBruta > 0
-            ? vendaTotalBruta - precoComLucro
-            : 0;
+        vendaTotalBruta -
+        precoComLucro;
 
     /*
      * RESULTADOS
@@ -336,13 +287,11 @@ function calcular() {
 
     /*
      * ORCAMENTO CLIENTE
-     * Atualiza somente se os elementos existirem.
      */
     const cliFilamento =
         document.getElementById('cliFilamento');
 
     if (cliFilamento) {
-
         cliFilamento.innerText =
             document.getElementById('resNomeFilamento').innerText;
 
@@ -360,34 +309,34 @@ function calcular() {
             new Date().toLocaleDateString('pt-BR');
 
         document.getElementById('cliAcabamento').innerText =
-            chkAcabamento && chkAcabamento.checked
+            document.getElementById('chkAcabamento').checked
                 ? "Sim"
                 : "Não";
 
         document.getElementById('cliLuminaria').innerText =
-            chkLuminaria && chkLuminaria.checked
+            document.getElementById('chkLuminaria').checked
                 ? "Sim"
                 : "Não";
 
         document.getElementById('cliChaveiro').innerText =
-            chkChaveiro && chkChaveiro.checked
+            document.getElementById('chkChaveiro').checked
                 ? "Sim"
                 : "Não";
 
         document.getElementById('cliIma').innerText =
-            chkIma && chkIma.checked
+            document.getElementById('chkIma').checked
                 ? "Sim"
                 : "Não";
 
         document.getElementById('cliAdesivo').innerText =
-            chkAdesivo && chkAdesivo.checked
+            document.getElementById('chkAdesivoFixo').checked
                 ? "Sim"
                 : "Não";
 
         document.getElementById('cliEmbalagem').innerText =
             (
-                (chkPlastica && chkPlastica.checked) ||
-                (chkSacola && chkSacola.checked)
+                document.getElementById('chkPlastica').checked ||
+                document.getElementById('chkSacolaKraft').checked
             )
                 ? "Sim"
                 : "Não";
