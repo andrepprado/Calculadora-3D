@@ -873,6 +873,475 @@ function formatarData(data) {
     }
 
 
+
+    /* PLANNER_WHATSAPP_EXPORT_START */
+
+    const WHATSAPP_STATUS_CONFIG = {
+
+        produzir: {
+            titulo: "A produzir"
+        },
+
+        modelar: {
+            titulo: "Modelar"
+        },
+
+        fatiar: {
+            titulo: "Fatiar"
+        },
+
+        imprimir: {
+            titulo: "Em produção"
+        },
+
+        acabamento: {
+            titulo: "Concluídos / Receber Pagamento"
+        },
+
+        pronto: {
+            titulo: "Pagos / Entregues"
+        }
+    };
+
+    function limparTextoWhatsApp(valor) {
+
+        return String(
+            valor ?? ""
+        )
+            .replace(
+                /\r?\n+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+    }
+
+    function obterNomeClienteWhatsApp(pedido) {
+
+        return limparTextoWhatsApp(
+            pedido.contato ||
+            pedido.cliente ||
+            ""
+        );
+    }
+
+    function formatarQuantidadeWhatsApp(pedido) {
+
+        const quantidade =
+            Math.max(
+                1,
+                Number(
+                    pedido.quantidade
+                ) || 1
+            );
+
+        if (quantidade <= 1) {
+            return "";
+        }
+
+        return (
+            ` (${quantidade} unidades)`
+        );
+    }
+
+    function formatarPedidoWhatsApp(pedido) {
+
+        const projeto =
+            limparTextoWhatsApp(
+                pedido.projeto
+            ) || "Pedido sem descrição";
+
+        const quantidade =
+            formatarQuantidadeWhatsApp(
+                pedido
+            );
+
+        const cliente =
+            obterNomeClienteWhatsApp(
+                pedido
+            );
+
+        const observacao =
+            limparTextoWhatsApp(
+                pedido.observacoes
+            );
+
+        let linha =
+            `• ${projeto}${quantidade}`;
+
+        if (cliente) {
+
+            linha +=
+                ` - ${cliente}`;
+        }
+
+        if (observacao) {
+
+            linha +=
+                ` (${observacao})`;
+        }
+
+        return linha;
+    }
+
+    function obterOrdemExportacaoWhatsApp() {
+
+        /*
+         * Usa a mesma ordem configurada visualmente
+         * pelo usuário no Planner.
+         */
+
+        if (
+            typeof boardLayout !==
+                "undefined" &&
+            Array.isArray(
+                boardLayout?.ordem
+            ) &&
+            boardLayout.ordem.length
+        ) {
+
+            const ordem =
+                boardLayout.ordem.filter(
+                    (status) =>
+                        STATUS.includes(
+                            status
+                        )
+                );
+
+            STATUS.forEach(
+                (status) => {
+
+                    if (
+                        !ordem.includes(
+                            status
+                        )
+                    ) {
+
+                        ordem.push(
+                            status
+                        );
+                    }
+                }
+            );
+
+            return ordem;
+        }
+
+        return [...STATUS];
+    }
+
+    function gerarTextoPlannerWhatsApp() {
+
+        const blocos = [];
+
+        const ordem =
+            obterOrdemExportacaoWhatsApp();
+
+        ordem.forEach(
+            (status) => {
+
+                const config =
+                    WHATSAPP_STATUS_CONFIG[
+                        status
+                    ];
+
+                if (!config) {
+                    return;
+                }
+
+                const itens =
+                    pedidos
+                        .filter(
+                            (pedido) =>
+                                pedido.status ===
+                                status
+                        )
+                        .map(
+                            formatarPedidoWhatsApp
+                        );
+
+                const linhas = [
+                    `*${config.titulo}:*`
+                ];
+
+                if (itens.length) {
+
+                    linhas.push(
+                        "",
+                        ...itens
+                    );
+                }
+
+                blocos.push(
+                    linhas.join("\n")
+                );
+            }
+        );
+
+        return blocos.join(
+            "\n\n"
+        );
+    }
+
+    function abrirExportacaoWhatsApp() {
+
+        const modal =
+            document.getElementById(
+                "modalExportarWhatsApp"
+            );
+
+        const textarea =
+            document.getElementById(
+                "textoExportacaoWhatsApp"
+            );
+
+        if (
+            !modal ||
+            !textarea
+        ) {
+            return;
+        }
+
+        textarea.value =
+            gerarTextoPlannerWhatsApp();
+
+        modal.hidden =
+            false;
+
+        document.body.classList.add(
+            "planner-modal-open"
+        );
+
+        window.setTimeout(
+            () => {
+
+                textarea.focus();
+
+                textarea.setSelectionRange(
+                    0,
+                    0
+                );
+            },
+            0
+        );
+    }
+
+    function fecharExportacaoWhatsApp() {
+
+        const modal =
+            document.getElementById(
+                "modalExportarWhatsApp"
+            );
+
+        if (!modal) {
+            return;
+        }
+
+        modal.hidden =
+            true;
+
+        document.body.classList.remove(
+            "planner-modal-open"
+        );
+    }
+
+    async function copiarExportacaoWhatsApp() {
+
+        const textarea =
+            document.getElementById(
+                "textoExportacaoWhatsApp"
+            );
+
+        const botao =
+            document.getElementById(
+                "btnCopiarExportacaoWhatsApp"
+            );
+
+        if (!textarea) {
+            return;
+        }
+
+        const texto =
+            textarea.value;
+
+        let copiado =
+            false;
+
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    texto
+                );
+
+                copiado =
+                    true;
+            }
+            catch (erro) {
+
+                console.warn(
+                    "Clipboard API indisponível.",
+                    erro
+                );
+            }
+        }
+
+        if (!copiado) {
+
+            textarea.focus();
+            textarea.select();
+
+            try {
+
+                copiado =
+                    document.execCommand(
+                        "copy"
+                    );
+            }
+            catch (erro) {
+
+                console.warn(
+                    "Fallback de cópia indisponível.",
+                    erro
+                );
+            }
+
+            textarea.setSelectionRange(
+                0,
+                0
+            );
+        }
+
+        if (!copiado) {
+
+            window.alert(
+                "Não foi possível copiar automaticamente. Selecione o texto e copie manualmente."
+            );
+
+            return;
+        }
+
+        if (botao) {
+
+            const textoOriginal =
+                botao.textContent;
+
+            botao.textContent =
+                "Copiado!";
+
+            window.setTimeout(
+                () => {
+
+                    botao.textContent =
+                        textoOriginal;
+                },
+                1600
+            );
+        }
+    }
+
+    function configurarExportacaoWhatsApp() {
+
+        const abrir =
+            document.getElementById(
+                "btnExportarWhatsApp"
+            );
+
+        const fecharTopo =
+            document.getElementById(
+                "btnFecharExportacaoWhatsApp"
+            );
+
+        const fecharRodape =
+            document.getElementById(
+                "btnFecharExportacaoWhatsAppRodape"
+            );
+
+        const copiar =
+            document.getElementById(
+                "btnCopiarExportacaoWhatsApp"
+            );
+
+        const backdrop =
+            document.querySelector(
+                "[data-whatsapp-close]"
+            );
+
+        if (abrir) {
+
+            abrir.addEventListener(
+                "click",
+                abrirExportacaoWhatsApp
+            );
+        }
+
+        if (fecharTopo) {
+
+            fecharTopo.addEventListener(
+                "click",
+                fecharExportacaoWhatsApp
+            );
+        }
+
+        if (fecharRodape) {
+
+            fecharRodape.addEventListener(
+                "click",
+                fecharExportacaoWhatsApp
+            );
+        }
+
+        if (copiar) {
+
+            copiar.addEventListener(
+                "click",
+                copiarExportacaoWhatsApp
+            );
+        }
+
+        if (backdrop) {
+
+            backdrop.addEventListener(
+                "click",
+                fecharExportacaoWhatsApp
+            );
+        }
+
+        document.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key !==
+                    "Escape"
+                ) {
+                    return;
+                }
+
+                const modal =
+                    document.getElementById(
+                        "modalExportarWhatsApp"
+                    );
+
+                if (
+                    modal &&
+                    !modal.hidden
+                ) {
+
+                    fecharExportacaoWhatsApp();
+                }
+            }
+        );
+    }
+
+    /* PLANNER_WHATSAPP_EXPORT_END */
     /* PLANNER_BOARD_LAYOUT_START */
 
     const BOARD_LAYOUT_KEY =
@@ -2612,6 +3081,8 @@ function formatarData(data) {
             }
         }
     );
+
+    configurarExportacaoWhatsApp();
 
     configurarLayoutQuadros();
 

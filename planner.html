@@ -106,7 +106,17 @@
                 Limpar filtros
             </button>
             <!-- PLANNER_BOARD_SETTINGS_START -->
-            <div class="planner-board-settings">
+                        <!-- PLANNER_WHATSAPP_EXPORT_START -->
+            <button
+                type="button"
+                class="planner-secondary-btn planner-whatsapp-btn"
+                id="btnExportarWhatsApp"
+                title="Exportar Planner para WhatsApp"
+            >
+                WhatsApp
+            </button>
+            <!-- PLANNER_WHATSAPP_EXPORT_END -->
+<div class="planner-board-settings">
                 <button
                     type="button"
                     class="planner-secondary-btn"
@@ -456,6 +466,83 @@
 <script src="planner.js"></script>
 
     <script src="mobile-menu.js"></script>
+
+    <!-- PLANNER_WHATSAPP_MODAL_START -->
+
+    <div
+        class="planner-whatsapp-modal"
+        id="modalExportarWhatsApp"
+        hidden
+    >
+        <div
+            class="planner-whatsapp-modal-backdrop"
+            data-whatsapp-close
+        ></div>
+
+        <div
+            class="planner-whatsapp-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tituloExportarWhatsApp"
+        >
+            <div class="planner-whatsapp-dialog-header">
+
+                <div>
+                    <span class="planner-whatsapp-eyebrow">
+                        EXPORTAR
+                    </span>
+
+                    <h2 id="tituloExportarWhatsApp">
+                        Texto para WhatsApp
+                    </h2>
+
+                    <p>
+                        Conteúdo gerado automaticamente com os pedidos atuais do Planner.
+                    </p>
+                </div>
+
+                <button
+                    type="button"
+                    class="planner-whatsapp-close"
+                    id="btnFecharExportacaoWhatsApp"
+                    aria-label="Fechar"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <textarea
+                id="textoExportacaoWhatsApp"
+                class="planner-whatsapp-textarea"
+                spellcheck="false"
+                readonly
+            ></textarea>
+
+            <div class="planner-whatsapp-actions">
+
+                <button
+                    type="button"
+                    class="planner-secondary-btn"
+                    id="btnFecharExportacaoWhatsAppRodape"
+                >
+                    Fechar
+                </button>
+
+                <button
+                    type="button"
+                    class="planner-primary-btn"
+                    id="btnCopiarExportacaoWhatsApp"
+                >
+                    Copiar texto
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- PLANNER_WHATSAPP_MODAL_END -->
+
 </body>
 
 </html>
