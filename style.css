@@ -3707,3 +3707,39 @@ input[type="checkbox"] {
 }
 
 /* ===== DUOLAB FILAMENTOS GRID END ===== */
+
+/* ===== BOTAO LIMPAR CALCULADORA START ===== */
+
+.calculator-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 14px;
+}
+
+.btn-limpar-calculadora {
+    appearance: none;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #475569;
+    padding: 10px 18px;
+    min-height: 42px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition:
+        border-color 0.15s ease,
+        background-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.btn-limpar-calculadora:hover {
+    border-color: #94a3b8;
+    background: #f8fafc;
+}
+
+.btn-limpar-calculadora:active {
+    transform: translateY(1px);
+}
+
+/* ===== BOTAO LIMPAR CALCULADORA END ===== */
