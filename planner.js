@@ -328,7 +328,207 @@
         );
     }
 
-    function formatarData(data) {
+    function moedaParaNumero(valor) {
+    if (
+        valor === null ||
+        valor === undefined ||
+        valor === ""
+    ) {
+        return 0;
+    }
+
+    if (typeof valor === "number") {
+        return Number.isFinite(valor)
+            ? valor
+            : 0;
+    }
+
+    let texto = String(valor)
+        .trim()
+        .replace(/\s/g, "")
+        .replace(/R\$/gi, "");
+
+    if (!texto) {
+        return 0;
+    }
+
+    if (
+        texto.includes(",") &&
+        texto.includes(".")
+    ) {
+        texto = texto
+            .replace(/\./g, "")
+            .replace(",", ".");
+    }
+    else if (texto.includes(",")) {
+        texto = texto.replace(",", ".");
+    }
+
+    texto = texto.replace(
+        /[^0-9.-]/g,
+        ""
+    );
+
+    const numero = Number(texto);
+
+    return Number.isFinite(numero)
+        ? numero
+        : 0;
+}
+
+function aplicarMascaraMoeda(campo) {
+    if (!campo) {
+        return;
+    }
+
+    const somenteDigitos = String(
+        campo.value || ""
+    )
+        .replace(/\D/g, "");
+
+    if (!somenteDigitos) {
+        campo.value = "";
+        return;
+    }
+
+    const numero =
+        Number(somenteDigitos) / 100;
+
+    campo.value =
+        numero.toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
+}
+
+function aplicarMascaraData(campo) {
+    if (!campo) {
+        return;
+    }
+
+    const digitos = String(
+        campo.value || ""
+    )
+        .replace(/\D/g, "")
+        .slice(0, 8);
+
+    if (!digitos) {
+        campo.value = "";
+        return;
+    }
+
+    let formatado =
+        digitos.slice(0, 2);
+
+    if (digitos.length > 2) {
+        formatado +=
+            "/" +
+            digitos.slice(2, 4);
+    }
+
+    if (digitos.length > 4) {
+        formatado +=
+            "/" +
+            digitos.slice(4, 8);
+    }
+
+    campo.value = formatado;
+}
+
+function dataBRParaISO(valor) {
+    if (!valor) {
+        return "";
+    }
+
+    const texto =
+        String(valor).trim();
+
+    if (
+        /^\d{4}-\d{2}-\d{2}$/.test(
+            texto
+        )
+    ) {
+        return texto;
+    }
+
+    const match = texto.match(
+        /^(\d{2})\/(\d{2})\/(\d{4})$/
+    );
+
+    if (!match) {
+        return "";
+    }
+
+    const dia =
+        Number(match[1]);
+
+    const mes =
+        Number(match[2]);
+
+    const ano =
+        Number(match[3]);
+
+    const data =
+        new Date(
+            ano,
+            mes - 1,
+            dia
+        );
+
+    if (
+        data.getFullYear() !== ano ||
+        data.getMonth() !== mes - 1 ||
+        data.getDate() !== dia
+    ) {
+        return "";
+    }
+
+    return (
+        String(ano).padStart(4, "0") +
+        "-" +
+        String(mes).padStart(2, "0") +
+        "-" +
+        String(dia).padStart(2, "0")
+    );
+}
+
+function dataISOParaBR(valor) {
+    if (!valor) {
+        return "";
+    }
+
+    const texto =
+        String(valor).trim();
+
+    if (
+        /^\d{2}\/\d{2}\/\d{4}$/.test(
+            texto
+        )
+    ) {
+        return texto;
+    }
+
+    const match = texto.match(
+        /^(\d{4})-(\d{2})-(\d{2})$/
+    );
+
+    if (!match) {
+        return texto;
+    }
+
+    return (
+        match[3] +
+        "/" +
+        match[2] +
+        "/" +
+        match[1]
+    );
+}
+
+function formatarData(data) {
         if (!data) {
             return "";
         }
@@ -832,8 +1032,7 @@
         elements.status.value =
             "produzir";
 
-        elements.data.value =
-            hojeISO();
+        elements.data.value = dataISOParaBR(hojeISO());
 
         elements.btnExcluir.hidden =
             true;
@@ -899,14 +1098,11 @@
         elements.cor.value =
             pedido.cor || "";
 
-        elements.valor.value =
-            pedido.valor || "";
+        elements.valor.value = pedido.valor ? formatarMoeda(pedido.valor) : "";
 
-        elements.data.value =
-            pedido.data || "";
+        elements.data.value = dataISOParaBR(pedido.data);
 
-        elements.prazo.value =
-            pedido.prazo || "";
+        elements.prazo.value = dataISOParaBR(pedido.prazo);
 
         elements.prioridade.value =
             pedido.prioridade || "media";
@@ -956,6 +1152,42 @@
             return;
         }
 
+        const dataPedidoFormatada =
+            dataBRParaISO(
+                elements.data.value
+            );
+
+        const prazoPedidoFormatado =
+            dataBRParaISO(
+                elements.prazo.value
+            );
+
+        if (
+            elements.data.value &&
+            !dataPedidoFormatada
+        ) {
+            window.alert(
+                "Informe uma Data do pedido válida no formato DD/MM/AAAA."
+            );
+
+            elements.data.focus();
+
+            return;
+        }
+
+        if (
+            elements.prazo.value &&
+            !prazoPedidoFormatado
+        ) {
+            window.alert(
+                "Informe um Prazo / Entrega válido no formato DD/MM/AAAA."
+            );
+
+            elements.prazo.focus();
+
+            return;
+        }
+
         const id =
             elements.id.value;
 
@@ -989,21 +1221,11 @@
             cor:
                 elements.cor.value.trim(),
 
-            valor:
-                Math.max(
-                    0,
-                    Number(
-                        elements.valor.value
-                    ) || 0
-                ),
+            valor: Math.max(0, moedaParaNumero(elements.valor.value)),
 
-            data:
-                elements.data.value ||
-                hojeISO(),
+            data: dataPedidoFormatada || hojeISO(),
 
-            prazo:
-                elements.prazo.value ||
-                "",
+            prazo: prazoPedidoFormatado,
 
             prioridade:
                 elements.prioridade.value ||
@@ -1263,6 +1485,91 @@
         "submit",
         salvarFormulario
     );
+
+    /* PLANNER_MASK_EVENTS_START */
+
+    if (elements.valor) {
+
+        elements.valor.addEventListener(
+            "input",
+            function () {
+                aplicarMascaraMoeda(
+                    elements.valor
+                );
+            }
+        );
+
+        elements.valor.addEventListener(
+            "blur",
+            function () {
+
+                if (
+                    elements.valor.value
+                ) {
+                    elements.valor.value =
+                        formatarMoeda(
+                            moedaParaNumero(
+                                elements.valor.value
+                            )
+                        );
+                }
+            }
+        );
+    }
+
+    [
+        elements.data,
+        elements.prazo
+    ].forEach(
+        function (campo) {
+
+            if (!campo) {
+                return;
+            }
+
+            campo.addEventListener(
+                "input",
+                function () {
+                    aplicarMascaraData(
+                        campo
+                    );
+                }
+            );
+
+            campo.addEventListener(
+                "blur",
+                function () {
+
+                    if (
+                        campo.value &&
+                        !dataBRParaISO(
+                            campo.value
+                        )
+                    ) {
+                        campo.classList.add(
+                            "planner-field-invalid"
+                        );
+                    }
+                    else {
+                        campo.classList.remove(
+                            "planner-field-invalid"
+                        );
+                    }
+                }
+            );
+
+            campo.addEventListener(
+                "focus",
+                function () {
+                    campo.classList.remove(
+                        "planner-field-invalid"
+                    );
+                }
+            );
+        }
+    );
+
+    /* PLANNER_MASK_EVENTS_END */
 
     elements.busca.addEventListener(
         "input",

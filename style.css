@@ -1857,3 +1857,499 @@ input[type="checkbox"] {
 }
 
 /* ===== DUOLAB KANBAN UX END ===== */
+
+/* ===== PLANNER RESPONSIVO V2 START ===== */
+
+/* ----------------------------------------------------------
+   FORMATAÇÃO DOS CAMPOS
+---------------------------------------------------------- */
+
+#pedidoValor,
+#pedidoData,
+#pedidoPrazo {
+    font-variant-numeric: tabular-nums;
+}
+
+#pedidoValor {
+    text-align: left;
+}
+
+.planner-field-invalid {
+    border-color: #d21919 !important;
+    box-shadow:
+        0 0 0 3px
+        rgba(210, 25, 25, 0.12) !important;
+}
+
+/* ----------------------------------------------------------
+   PROTEÇÃO CONTRA OVERFLOW
+---------------------------------------------------------- */
+
+.planner-page,
+.planner-shell,
+.planner-toolbar,
+.kanban-wrapper,
+.kanban-board,
+.kanban-column,
+.kanban-card {
+    box-sizing: border-box;
+}
+
+.planner-shell {
+    max-width: 100%;
+}
+
+.kanban-card {
+    overflow-wrap: anywhere;
+    word-break: normal;
+}
+
+/* ----------------------------------------------------------
+   TABLET
+---------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+
+    .planner-shell {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .planner-toolbar {
+        flex-wrap: wrap;
+    }
+
+    .planner-toolbar > * {
+        min-width: 0;
+    }
+}
+
+/* ----------------------------------------------------------
+   MOBILE
+---------------------------------------------------------- */
+
+@media (max-width: 720px) {
+
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .planner-page {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .planner-shell {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+
+        padding:
+            14px
+            12px
+            calc(
+                28px +
+                env(safe-area-inset-bottom)
+            ) !important;
+    }
+
+    /* HERO */
+
+    .planner-hero {
+        display: flex;
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 12px;
+
+        margin-bottom: 14px;
+    }
+
+    .planner-hero h1 {
+        margin: 0;
+
+        font-size: 1.65rem;
+        line-height: 1.15;
+    }
+
+    .planner-hero p {
+        margin-top: 6px;
+
+        font-size: 0.88rem;
+        line-height: 1.45;
+    }
+
+    .planner-hero button,
+    .planner-hero .planner-primary-btn {
+        width: 100%;
+        min-height: 46px;
+    }
+
+    /* INDICADORES */
+
+    .planner-stats {
+        display: grid;
+
+        grid-template-columns:
+            repeat(
+                2,
+                minmax(0, 1fr)
+            );
+
+        gap: 8px;
+
+        width: 100%;
+    }
+
+    .planner-stat-card {
+        min-width: 0;
+
+        padding: 11px;
+
+        border-radius: 12px;
+    }
+
+    .planner-stat-card strong {
+        display: block;
+
+        font-size: 1.1rem;
+        line-height: 1.2;
+
+        overflow-wrap: anywhere;
+    }
+
+    .planner-stat-label {
+        font-size: 0.68rem;
+        line-height: 1.25;
+    }
+
+    .planner-stat-money {
+        grid-column: 1 / -1;
+    }
+
+    /* TOOLBAR */
+
+    .planner-toolbar {
+        display: grid;
+
+        grid-template-columns: 1fr;
+
+        gap: 8px;
+
+        width: 100%;
+
+        padding: 10px;
+
+        margin-bottom: 14px;
+    }
+
+    .planner-toolbar input,
+    .planner-toolbar select,
+    .planner-toolbar button,
+    .planner-toolbar .planner-secondary-btn {
+        width: 100%;
+        max-width: none;
+
+        min-height: 44px;
+
+        box-sizing: border-box;
+
+        font-size: 16px;
+    }
+
+    /* KANBAN */
+
+    .kanban-wrapper {
+        width: calc(100% + 24px);
+
+        margin-left: -12px;
+        margin-right: -12px;
+
+        padding:
+            0
+            12px
+            16px;
+
+        overflow-x: auto;
+        overflow-y: visible;
+
+        scroll-snap-type:
+            x mandatory;
+
+        scroll-padding-left:
+            12px;
+
+        overscroll-behavior-x:
+            contain;
+
+        -webkit-overflow-scrolling:
+            touch;
+
+        scrollbar-width: thin;
+    }
+
+    .kanban-board {
+        display: flex;
+
+        width: max-content;
+        min-width: 100%;
+
+        align-items: stretch;
+
+        gap: 10px;
+    }
+
+    .kanban-column {
+        flex:
+            0 0
+            min(86vw, 340px);
+
+        width:
+            min(86vw, 340px);
+
+        min-width:
+            min(86vw, 340px);
+
+        max-width:
+            min(86vw, 340px);
+
+        min-height: 420px;
+
+        scroll-snap-align:
+            start;
+
+        scroll-snap-stop:
+            always;
+    }
+
+    .kanban-column-header {
+        position: sticky;
+
+        top: 0;
+
+        z-index: 1;
+    }
+
+    .kanban-list {
+        min-height: 340px !important;
+    }
+
+    .kanban-card {
+        width: 100%;
+
+        box-sizing: border-box;
+    }
+
+    /* MODAL */
+
+    .planner-modal-backdrop {
+        align-items: flex-end;
+
+        padding: 0;
+    }
+
+    .planner-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        max-height: 94dvh;
+
+        margin: 0;
+
+        border-radius:
+            18px
+            18px
+            0
+            0;
+
+        overflow-y: auto;
+
+        overscroll-behavior:
+            contain;
+
+        -webkit-overflow-scrolling:
+            touch;
+    }
+
+    .planner-modal-header {
+        position: sticky;
+
+        top: 0;
+
+        z-index: 10;
+
+        padding: 15px 16px;
+
+        background: #ffffff;
+
+        border-radius:
+            18px
+            18px
+            0
+            0;
+    }
+
+    .planner-modal-header h2 {
+        font-size: 1.15rem;
+    }
+
+    #pedidoForm {
+        padding: 14px 16px 16px;
+    }
+
+    .planner-form-grid {
+        display: grid;
+
+        grid-template-columns:
+            1fr !important;
+
+        gap: 12px;
+    }
+
+    .planner-field {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+    .planner-field input,
+    .planner-field select,
+    .planner-field textarea {
+        width: 100%;
+
+        min-width: 0;
+        min-height: 48px;
+
+        box-sizing: border-box;
+
+        font-size: 16px;
+    }
+
+    .planner-field textarea {
+        min-height: 100px;
+    }
+
+    /* Evita zoom automático do iOS */
+
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    /* AÇÕES DO MODAL */
+
+    .planner-modal-actions {
+        position: sticky;
+
+        bottom: 0;
+
+        z-index: 10;
+
+        display: grid;
+
+        grid-template-columns:
+            1fr;
+
+        gap: 8px;
+
+        margin:
+            16px
+            -16px
+            -16px;
+
+        padding:
+            12px
+            16px
+            calc(
+                12px +
+                env(safe-area-inset-bottom)
+            );
+
+        background:
+            rgba(
+                255,
+                255,
+                255,
+                0.97
+            );
+
+        border-top:
+            1px solid
+            rgba(
+                0,
+                54,
+                64,
+                0.08
+            );
+
+        backdrop-filter:
+            blur(12px);
+
+        -webkit-backdrop-filter:
+            blur(12px);
+    }
+
+    .planner-modal-actions button {
+        width: 100%;
+
+        min-height: 46px;
+    }
+}
+
+/* ----------------------------------------------------------
+   CELULARES PEQUENOS
+---------------------------------------------------------- */
+
+@media (max-width: 420px) {
+
+    .planner-shell {
+        padding-left: 10px !important;
+        padding-right: 10px !important;
+    }
+
+    .planner-hero h1 {
+        font-size: 1.5rem;
+    }
+
+    .planner-stats {
+        gap: 6px;
+    }
+
+    .planner-stat-card {
+        padding: 10px 8px;
+    }
+
+    .planner-stat-label {
+        font-size: 0.63rem;
+    }
+
+    .planner-stat-card strong {
+        font-size: 1rem;
+    }
+
+    .kanban-wrapper {
+        width: calc(100% + 20px);
+
+        margin-left: -10px;
+        margin-right: -10px;
+
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+
+    .kanban-column {
+        flex-basis: 88vw;
+
+        width: 88vw;
+        min-width: 88vw;
+        max-width: 88vw;
+    }
+}
+
+/* ===== PLANNER RESPONSIVO V2 END ===== */
