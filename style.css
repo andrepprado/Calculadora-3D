@@ -3285,3 +3285,40 @@ input[type="checkbox"] {
 }
 
 /* ===== PLANNER BOARD LAYOUT END ===== */
+
+
+/* ===== REMOVE BOARD TITLE ICONS START ===== */
+
+/*
+ * Cabeçalhos do Planner sem ícones decorativos.
+ */
+
+/* Marcadores em elementos próprios */
+
+.kanban-column-dot,
+.kanban-status-dot,
+.kanban-title-dot,
+.status-dot,
+.column-dot,
+.kanban-column-icon,
+.kanban-status-icon,
+.kanban-title-icon,
+.status-icon,
+.column-icon {
+    display: none !important;
+}
+
+/* Marcadores criados por pseudo-elementos */
+
+.kanban-column-title::before,
+.kanban-status-title::before,
+.kanban-column-header h2::before,
+.kanban-column-header h3::before,
+.kanban-column-header h4::before,
+.kanban-column-header strong::before,
+.kanban-column-header .title::before {
+    content: none !important;
+    display: none !important;
+}
+
+/* ===== REMOVE BOARD TITLE ICONS END ===== */
