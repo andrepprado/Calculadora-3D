@@ -3322,3 +3322,98 @@ input[type="checkbox"] {
 }
 
 /* ===== REMOVE BOARD TITLE ICONS END ===== */
+
+
+/* ===== KANBAN BUCKET SCROLL START ===== */
+
+/*
+ * Limita visualmente cada bucket do Planner.
+ *
+ * A área interna comporta aproximadamente 5 tickets.
+ * Quando houver mais conteúdo, a rolagem acontece
+ * somente dentro do bucket.
+ *
+ * Nenhum ticket é ocultado ou removido.
+ */
+
+.kanban-column {
+    height: 620px !important;
+    max-height: 620px !important;
+
+    display: flex !important;
+    flex-direction: column !important;
+
+    overflow: hidden !important;
+}
+
+/*
+ * Cabeçalho do bucket permanece sempre visível.
+ */
+
+.kanban-column-header {
+    flex: 0 0 auto !important;
+}
+
+/*
+ * Área que contém os tickets.
+ *
+ * Esta é a única área que deve crescer internamente
+ * e receber a barra de rolagem.
+ */
+
+.kanban-list {
+    flex: 1 1 auto !important;
+
+    min-height: 0 !important;
+
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+
+    scrollbar-width: thin;
+
+    overscroll-behavior: contain;
+}
+
+/*
+ * Chrome / Edge / Brave.
+ */
+
+.kanban-list::-webkit-scrollbar {
+    width: 7px;
+}
+
+.kanban-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.kanban-list::-webkit-scrollbar-thumb {
+    background: rgba(100, 116, 139, 0.28);
+    border-radius: 999px;
+}
+
+.kanban-list::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.45);
+}
+
+/*
+ * Evita que cards sejam comprimidos pelo flex.
+ */
+
+.kanban-card {
+    flex: 0 0 auto !important;
+}
+
+/*
+ * Em telas menores reduzimos um pouco a altura
+ * para aproveitar melhor a viewport.
+ */
+
+@media (max-height: 800px) {
+
+    .kanban-column {
+        height: 540px !important;
+        max-height: 540px !important;
+    }
+}
+
+/* ===== KANBAN BUCKET SCROLL END ===== */
