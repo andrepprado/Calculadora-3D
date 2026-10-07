@@ -354,4 +354,134 @@ function handleChange(e) {
     }
 }
 
-window.onload = popularFilamentos;
+/* ===== CALCULADORA INIT START ===== */
+
+function definirCheckbox(id, marcado) {
+    const elemento = document.getElementById(id);
+
+    if (elemento) {
+        elemento.checked = marcado;
+    }
+}
+
+function resetarCalculadora() {
+    const filamentoSelect =
+        document.getElementById('filamentoSelect');
+
+    const custoKg =
+        document.getElementById('custoKg');
+
+    const margem =
+        document.getElementById('margem');
+
+    const peso =
+        document.getElementById('peso');
+
+    const tempo =
+        document.getElementById('tempo');
+
+    const quantidade =
+        document.getElementById('quantidade');
+
+    const canalVenda =
+        document.getElementById('canalVenda');
+
+    if (filamentoSelect) {
+        filamentoSelect.selectedIndex = 0;
+    }
+
+    if (margem) {
+        margem.value = 100;
+    }
+
+    if (peso) {
+        peso.value = 0;
+    }
+
+    if (tempo) {
+        tempo.value = "00:00";
+    }
+
+    if (quantidade) {
+        quantidade.value = 1;
+    }
+
+    if (canalVenda) {
+        canalVenda.selectedIndex = 0;
+    }
+
+    definirCheckbox('chkChaveiro', false);
+    definirCheckbox('chkIma', false);
+    definirCheckbox('chkLuminaria', false);
+    definirCheckbox('chkPlastica', false);
+    definirCheckbox('chkSacolaKraft', false);
+    definirCheckbox('chkAdesivoFixo', false);
+
+    definirCheckbox('chkAcabamento', true);
+    definirCheckbox('chkDepreciacao', true);
+    definirCheckbox('chkCustosFixos', true);
+
+    localStorage.removeItem('cal3d_duolab_final');
+    localStorage.removeItem('cal3d_duolab_filamento');
+
+    if (filamentoSelect) {
+        atualizarFilamento();
+    } else {
+        calcular();
+    }
+
+    if (custoKg && filamentoSelect) {
+        const indice =
+            parseInt(filamentoSelect.value) || 0;
+
+        if (filamentos[indice]) {
+            custoKg.value =
+                filamentos[indice].custo.toFixed(2);
+        }
+    }
+}
+
+function configurarBotaoLimpar() {
+    const botao =
+        document.getElementById('btnLimparCalculadora');
+
+    if (!botao || botao.dataset.configurado === 'true') {
+        return;
+    }
+
+    botao.dataset.configurado = 'true';
+
+    botao.addEventListener(
+        'click',
+        resetarCalculadora
+    );
+}
+
+function iniciarCalculadora() {
+    popularFilamentos();
+    configurarBotaoLimpar();
+}
+
+/*
+ * Nao espera window.load.
+ *
+ * Se o JS estiver no final do BODY, executa imediatamente.
+ * Caso esteja no HEAD, espera somente o DOM.
+ *
+ * Imagens, fontes e demais recursos nao bloqueiam
+ * a inicializacao da calculadora.
+ */
+if (document.readyState === 'loading') {
+
+    document.addEventListener(
+        'DOMContentLoaded',
+        iniciarCalculadora,
+        { once: true }
+    );
+
+} else {
+
+    iniciarCalculadora();
+}
+
+/* ===== CALCULADORA INIT END ===== */
