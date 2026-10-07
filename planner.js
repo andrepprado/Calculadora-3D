@@ -1136,7 +1136,417 @@ function formatarData(data) {
         );
     }
 
-    function salvarFormulario(event) {
+
+    /* FIREBASE_SYNC_START */
+
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyBLTGktNsJUm-_IXtfh9cd65TYvUDk5gZ0",
+        authDomain: "duolabcalc.firebaseapp.com",
+        projectId: "duolabcalc",
+        storageBucket: "duolabcalc.firebasestorage.app",
+        messagingSenderId: "864677210505",
+        appId: "1:864677210505:web:58b31d092e25f8e5791958"
+    };
+
+    const FIREBASE_COLLECTION = "pedidos";
+    const FIREBASE_LOCAL_STORAGE_KEY = "duolab_planner_pedidos_v1";
+
+    let firebaseDb = null;
+    let firebaseAuth = null;
+    let firebaseReady = false;
+    let firebaseUnsubscribe = null;
+
+    function normalizarPedidoFirestore(pedido) {
+        return {
+            id: String(pedido.id || gerarId()),
+
+            cliente:
+                String(pedido.cliente || ""),
+
+            contato:
+                String(pedido.contato || ""),
+
+            projeto:
+                String(pedido.projeto || ""),
+
+            quantidade:
+                Math.max(
+                    1,
+                    Number(pedido.quantidade) || 1
+                ),
+
+            cor:
+                String(pedido.cor || ""),
+
+            valor:
+                Math.max(
+                    0,
+                    Number(pedido.valor) || 0
+                ),
+
+            data:
+                String(
+                    pedido.data ||
+                    hojeISO()
+                ),
+
+            prazo:
+                String(pedido.prazo || ""),
+
+            prioridade:
+                String(
+                    pedido.prioridade ||
+                    "media"
+                ),
+
+            status:
+                STATUS.includes(
+                    pedido.status
+                )
+                    ? pedido.status
+                    : "produzir",
+
+            observacoes:
+                String(
+                    pedido.observacoes ||
+                    ""
+                ),
+
+            criadoEm:
+                String(
+                    pedido.criadoEm ||
+                    new Date().toISOString()
+                ),
+
+            atualizadoEm:
+                String(
+                    pedido.atualizadoEm ||
+                    new Date().toISOString()
+                )
+        };
+    }
+
+    function obterPedidosLocaisParaMigracao() {
+        try {
+            const bruto =
+                localStorage.getItem(
+                    FIREBASE_LOCAL_STORAGE_KEY
+                );
+
+            if (!bruto) {
+                return [];
+            }
+
+            const dados =
+                JSON.parse(bruto);
+
+            if (!Array.isArray(dados)) {
+                return [];
+            }
+
+            return dados
+                .filter(
+                    (pedido) =>
+                        pedido &&
+                        typeof pedido === "object"
+                )
+                .map(
+                    normalizarPedidoFirestore
+                );
+        }
+        catch (erro) {
+            console.warn(
+                "Não foi possível ler os pedidos locais:",
+                erro
+            );
+
+            return [];
+        }
+    }
+
+    async function migrarPedidosLocaisSeNecessario() {
+        const referencia =
+            firebaseDb.collection(
+                FIREBASE_COLLECTION
+            );
+
+        const snapshot =
+            await referencia
+                .limit(1)
+                .get();
+
+        if (!snapshot.empty) {
+            return;
+        }
+
+        const locais =
+            obterPedidosLocaisParaMigracao();
+
+        if (!locais.length) {
+            return;
+        }
+
+        console.log(
+            `Migrando ${locais.length} pedido(s) local(is) para o Firestore...`
+        );
+
+        const lotes = [];
+
+        for (
+            let inicio = 0;
+            inicio < locais.length;
+            inicio += 400
+        ) {
+            lotes.push(
+                locais.slice(
+                    inicio,
+                    inicio + 400
+                )
+            );
+        }
+
+        for (const grupo of lotes) {
+            const batch =
+                firebaseDb.batch();
+
+            grupo.forEach(
+                (pedido) => {
+                    const ref =
+                        referencia.doc(
+                            pedido.id
+                        );
+
+                    batch.set(
+                        ref,
+                        pedido,
+                        {
+                            merge: true
+                        }
+                    );
+                }
+            );
+
+            await batch.commit();
+        }
+
+        console.log(
+            "Migração local concluída."
+        );
+    }
+
+    function iniciarSincronizacaoFirestore() {
+        if (
+            !firebaseDb ||
+            firebaseUnsubscribe
+        ) {
+            return;
+        }
+
+        firebaseUnsubscribe =
+            firebaseDb
+                .collection(
+                    FIREBASE_COLLECTION
+                )
+                .onSnapshot(
+                    (snapshot) => {
+                        pedidos =
+                            snapshot.docs.map(
+                                (documento) => {
+                                    const dados =
+                                        documento.data();
+
+                                    return normalizarPedidoFirestore({
+                                        ...dados,
+                                        id: documento.id
+                                    });
+                                }
+                            );
+
+                        try {
+                            localStorage.setItem(
+                                FIREBASE_LOCAL_STORAGE_KEY,
+                                JSON.stringify(
+                                    pedidos
+                                )
+                            );
+                        }
+                        catch (erro) {
+                            console.warn(
+                                "Cache local indisponível:",
+                                erro
+                            );
+                        }
+
+                        renderizar();
+                    },
+
+                    (erro) => {
+                        console.error(
+                            "Erro na sincronização Firestore:",
+                            erro
+                        );
+
+                        window.alert(
+                            "Não foi possível sincronizar os pedidos com o banco de dados."
+                        );
+                    }
+                );
+    }
+
+    async function salvarPedidoFirestore(pedido) {
+        if (
+            !firebaseReady ||
+            !firebaseDb
+        ) {
+            throw new Error(
+                "Firebase ainda não está conectado."
+            );
+        }
+
+        const dados =
+            normalizarPedidoFirestore(
+                pedido
+            );
+
+        await firebaseDb
+            .collection(
+                FIREBASE_COLLECTION
+            )
+            .doc(
+                dados.id
+            )
+            .set(
+                dados,
+                {
+                    merge: true
+                }
+            );
+    }
+
+    async function excluirPedidoFirestore(id) {
+        if (
+            !firebaseReady ||
+            !firebaseDb
+        ) {
+            throw new Error(
+                "Firebase ainda não está conectado."
+            );
+        }
+
+        await firebaseDb
+            .collection(
+                FIREBASE_COLLECTION
+            )
+            .doc(
+                String(id)
+            )
+            .delete();
+    }
+
+    async function atualizarStatusFirestore(
+        id,
+        novoStatus
+    ) {
+        if (
+            !firebaseReady ||
+            !firebaseDb
+        ) {
+            throw new Error(
+                "Firebase ainda não está conectado."
+            );
+        }
+
+        await firebaseDb
+            .collection(
+                FIREBASE_COLLECTION
+            )
+            .doc(
+                String(id)
+            )
+            .update({
+                status: novoStatus,
+                atualizadoEm:
+                    new Date().toISOString()
+            });
+    }
+
+    async function inicializarFirebasePlanner() {
+        try {
+            if (
+                typeof firebase ===
+                "undefined"
+            ) {
+                throw new Error(
+                    "Firebase SDK não foi carregado."
+                );
+            }
+
+            if (!firebase.apps.length) {
+                firebase.initializeApp(
+                    FIREBASE_CONFIG
+                );
+            }
+
+            firebaseAuth =
+                firebase.auth();
+
+            firebaseDb =
+                firebase.firestore();
+
+            try {
+                firebaseDb.settings({
+                    ignoreUndefinedProperties: true
+                });
+            }
+            catch (erro) {
+                console.debug(
+                    "Firestore settings já inicializado.",
+                    erro
+                );
+            }
+
+            await firebaseAuth
+                .signInAnonymously();
+
+            firebaseReady = true;
+
+            console.log(
+                "Firebase conectado."
+            );
+
+            console.log(
+                "UID anônimo:",
+                firebaseAuth.currentUser?.uid
+            );
+
+            await migrarPedidosLocaisSeNecessario();
+
+            iniciarSincronizacaoFirestore();
+        }
+        catch (erro) {
+            firebaseReady = false;
+
+            console.error(
+                "Erro ao inicializar Firebase:",
+                erro
+            );
+
+            const locais =
+                obterPedidosLocaisParaMigracao();
+
+            if (locais.length) {
+                pedidos = locais;
+                renderizar();
+            }
+
+            window.alert(
+                "Não foi possível conectar ao banco online. Verifique sua internet e a configuração do Firebase."
+            );
+        }
+    }
+
+    /* FIREBASE_SYNC_END */
+    async function salvarFormulario(event) {
         event.preventDefault();
 
         const cliente =
@@ -1188,6 +1598,14 @@ function formatarData(data) {
             return;
         }
 
+        if (!firebaseReady) {
+            window.alert(
+                "Aguarde a conexão com o banco de dados."
+            );
+
+            return;
+        }
+
         const id =
             elements.id.value;
 
@@ -1221,11 +1639,20 @@ function formatarData(data) {
             cor:
                 elements.cor.value.trim(),
 
-            valor: Math.max(0, moedaParaNumero(elements.valor.value)),
+            valor:
+                Math.max(
+                    0,
+                    moedaParaNumero(
+                        elements.valor.value
+                    )
+                ),
 
-            data: dataPedidoFormatada || hojeISO(),
+            data:
+                dataPedidoFormatada ||
+                hojeISO(),
 
-            prazo: prazoPedidoFormatado,
+            prazo:
+                prazoPedidoFormatado,
 
             prioridade:
                 elements.prioridade.value ||
@@ -1249,32 +1676,25 @@ function formatarData(data) {
                 new Date().toISOString()
         };
 
-        if (id) {
-            const indice =
-                pedidos.findIndex(
-                    (item) =>
-                        item.id === id
-                );
-
-            if (indice >= 0) {
-                pedidos[indice] =
-                    pedido;
-            }
-        }
-        else {
-            pedidos.unshift(
+        try {
+            await salvarPedidoFirestore(
                 pedido
             );
+
+            fecharModal();
         }
+        catch (erro) {
+            console.error(
+                "Erro ao salvar pedido:",
+                erro
+            );
 
-        salvarPedidos();
-
-        fecharModal();
-
-        renderizar();
+            window.alert(
+                "Erro ao salvar o pedido no banco de dados."
+            );
+        }
     }
-
-    function excluirPedido() {
+    async function excluirPedido() {
         const id =
             elements.id.value;
 
@@ -1300,20 +1720,33 @@ function formatarData(data) {
             return;
         }
 
-        pedidos =
-            pedidos.filter(
-                (item) =>
-                    item.id !== id
+        if (!firebaseReady) {
+            window.alert(
+                "Aguarde a conexão com o banco de dados."
             );
 
-        salvarPedidos();
+            return;
+        }
 
-        fecharModal();
+        try {
+            await excluirPedidoFirestore(
+                id
+            );
 
-        renderizar();
+            fecharModal();
+        }
+        catch (erro) {
+            console.error(
+                "Erro ao excluir pedido:",
+                erro
+            );
+
+            window.alert(
+                "Erro ao excluir o pedido do banco de dados."
+            );
+        }
     }
-
-    function moverPedido(
+    async function moverPedido(
         id,
         novoStatus
     ) {
@@ -1335,17 +1768,54 @@ function formatarData(data) {
             return;
         }
 
+        if (
+            pedido.status ===
+            novoStatus
+        ) {
+            return;
+        }
+
+        if (!firebaseReady) {
+            window.alert(
+                "Aguarde a conexão com o banco de dados."
+            );
+
+            return;
+        }
+
+        const statusAnterior =
+            pedido.status;
+
         pedido.status =
             novoStatus;
 
         pedido.atualizadoEm =
             new Date().toISOString();
 
-        salvarPedidos();
-
         renderizar();
-    }
 
+        try {
+            await atualizarStatusFirestore(
+                id,
+                novoStatus
+            );
+        }
+        catch (erro) {
+            pedido.status =
+                statusAnterior;
+
+            renderizar();
+
+            console.error(
+                "Erro ao mover pedido:",
+                erro
+            );
+
+            window.alert(
+                "Erro ao atualizar o status do pedido."
+            );
+        }
+    }
     function configurarDragDrop() {
         document
             .querySelectorAll(
@@ -1625,5 +2095,5 @@ function formatarData(data) {
 
     configurarBotoesAdicionar();
 
-    carregarBaseCompartilhada();
+    inicializarFirebasePlanner();
 })();
