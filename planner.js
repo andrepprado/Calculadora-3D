@@ -14,7 +14,7 @@
 
     const STATUS_LABELS = {
         modelar: "Modelar",
-        produzir: "A Produzir",
+        produzir: "Backlog",
         producao: "Em Produção",
         backlog: "Backlog",
         receber: "Concluído / Receber",
