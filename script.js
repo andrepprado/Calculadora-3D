@@ -32,27 +32,85 @@ const filamentos = [
     { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" }
 ];
 
+let filamentoSelecionado = 0;
+
 function popularFilamentos() {
-    const select = document.getElementById('filamentoSelect');
-    select.innerHTML = "";
-    filamentos.forEach((f, index) => {
-        const opt = document.createElement('option');
-        opt.value = index;
-        opt.text = f.nome;
-        select.add(opt);
-    });
+    const grid = document.getElementById('filamentosGrid');
+
+    if (!grid) {
+        console.error('filamentosGrid nao encontrado.');
+        return;
+    }
+
     carregarConfiguracoes();
+
+    grid.innerHTML = '';
+
+    filamentos.forEach((filamento, index) => {
+        const label = document.createElement('label');
+        label.className = 'filamento-opcao';
+
+        const checkbox = document.createElement('input');
+
+        checkbox.type = 'checkbox';
+        checkbox.className = 'filamento-checkbox';
+        checkbox.dataset.index = String(index);
+        checkbox.checked = index === filamentoSelecionado;
+
+        const cor = document.createElement('span');
+        cor.className = 'filamento-cor';
+        cor.style.backgroundColor = filamento.cor;
+
+        const nome = document.createElement('span');
+        nome.className = 'filamento-nome';
+        nome.textContent = filamento.nome;
+
+        checkbox.addEventListener('change', () => {
+
+            if (!checkbox.checked) {
+                checkbox.checked = true;
+                return;
+            }
+
+            document
+                .querySelectorAll('.filamento-checkbox')
+                .forEach(item => {
+                    item.checked = item === checkbox;
+                });
+
+            filamentoSelecionado = index;
+
+            localStorage.setItem(
+                'cal3d_duolab_filamento',
+                String(index)
+            );
+
+            atualizarFilamento();
+        });
+
+        label.appendChild(checkbox);
+        label.appendChild(cor);
+        label.appendChild(nome);
+
+        grid.appendChild(label);
+    });
+
     atualizarFilamento();
 }
 
 function atualizarFilamento() {
-    const select = document.getElementById('filamentoSelect');
-    const index = parseInt(select.value);
-    if (isNaN(index) || !filamentos[index]) return;
-    const fil = filamentos[index];
-    document.getElementById('custoKg').value = fil.custo.toFixed(2);
-    document.getElementById('colorPreview').style.backgroundColor = fil.cor;
-    document.getElementById('resNomeFilamento').innerText = fil.nome;
+    const filamento = filamentos[filamentoSelecionado];
+
+    if (!filamento) {
+        return;
+    }
+
+    document.getElementById('custoKg').value =
+        filamento.custo.toFixed(2);
+
+    document.getElementById('resNomeFilamento').innerText =
+        filamento.nome;
+
     calcular();
 }
 
@@ -138,24 +196,59 @@ function format(v) {
 }
 
 function carregarConfiguracoes() {
-    const salvo = JSON.parse(localStorage.getItem('cal3d_duolab_final'));
-    if (salvo) {
-        document.getElementById('margem').value = salvo.margem;
-        document.getElementById('filamentoSelect').value = salvo.filIndex || 0;
+    let salvo = null;
+
+    try {
+        salvo = JSON.parse(
+            localStorage.getItem('cal3d_duolab_final')
+        );
+    } catch (erro) {
+        salvo = null;
+    }
+
+    if (
+        salvo &&
+        salvo.margem !== undefined &&
+        document.getElementById('margem')
+    ) {
+        document.getElementById('margem').value =
+            salvo.margem;
+    }
+
+    const filamentoSalvo = parseInt(
+        localStorage.getItem('cal3d_duolab_filamento'),
+        10
+    );
+
+    if (
+        !Number.isNaN(filamentoSalvo) &&
+        filamentos[filamentoSalvo]
+    ) {
+        filamentoSelecionado = filamentoSalvo;
+        return;
+    }
+
+    if (
+        salvo &&
+        salvo.filIndex !== undefined
+    ) {
+        const indiceAntigo = parseInt(
+            salvo.filIndex,
+            10
+        );
+
+        if (
+            !Number.isNaN(indiceAntigo) &&
+            filamentos[indiceAntigo]
+        ) {
+            filamentoSelecionado = indiceAntigo;
+        }
     }
 }
 
 document.querySelectorAll('.calc-trigger').forEach(el => {
-    el.addEventListener('input', handleChange);
-    el.addEventListener('change', handleChange);
+    el.addEventListener('input', calcular);
+    el.addEventListener('change', calcular);
 });
-
-function handleChange(e) {
-    if (e.target.id === "filamentoSelect") {
-        atualizarFilamento();
-    } else {
-        calcular();
-    }
-}
 
 window.onload = popularFilamentos;

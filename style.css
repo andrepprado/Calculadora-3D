@@ -3635,3 +3635,75 @@ input[type="checkbox"] {
 }
 
 /* ===== PLANNER WHATSAPP EXPORT END ===== */
+
+/* ===== DUOLAB FILAMENTOS GRID START ===== */
+
+.filamentos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    width: 100%;
+    margin-bottom: 12px;
+}
+
+.filamento-opcao {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    min-height: 42px;
+    padding: 8px 10px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    cursor: pointer;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background 0.2s ease;
+}
+
+.filamento-opcao:hover {
+    border-color: #94a3b8;
+}
+
+.filamento-opcao:has(.filamento-checkbox:checked) {
+    border-color: var(--primary);
+    background: #f8fafc;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.10);
+}
+
+.filamento-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    flex: 0 0 18px;
+    margin: 0;
+}
+
+.filamento-cor {
+    width: 18px;
+    height: 18px;
+    min-width: 18px;
+    flex: 0 0 18px;
+    border-radius: 50%;
+    border: 1px solid #cbd5e1;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.filamento-nome {
+    min-width: 0;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 600;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+}
+
+@media (max-width: 700px) {
+    .filamentos-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== DUOLAB FILAMENTOS GRID END ===== */
