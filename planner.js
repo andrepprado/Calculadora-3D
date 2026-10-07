@@ -872,6 +872,528 @@ function formatarData(data) {
         return ghost;
     }
 
+
+    /* PLANNER_BOARD_LAYOUT_START */
+
+    const BOARD_LAYOUT_KEY =
+        "duolab_planner_board_layout_v1";
+
+    let boardLayout =
+        carregarLayoutQuadros();
+
+    function carregarLayoutQuadros() {
+
+        const padrao = {
+            ordem: [...STATUS],
+            ocultos: []
+        };
+
+        try {
+
+            const salvo =
+                JSON.parse(
+                    localStorage.getItem(
+                        BOARD_LAYOUT_KEY
+                    ) || "null"
+                );
+
+            if (
+                !salvo ||
+                !Array.isArray(
+                    salvo.ordem
+                )
+            ) {
+                return padrao;
+            }
+
+            const ordemValida =
+                salvo.ordem.filter(
+                    (status) =>
+                        STATUS.includes(
+                            status
+                        )
+                );
+
+            STATUS.forEach(
+                (status) => {
+
+                    if (
+                        !ordemValida.includes(
+                            status
+                        )
+                    ) {
+                        ordemValida.push(
+                            status
+                        );
+                    }
+                }
+            );
+
+            return {
+                ordem:
+                    ordemValida,
+
+                ocultos:
+                    Array.isArray(
+                        salvo.ocultos
+                    )
+                        ? salvo.ocultos.filter(
+                            (status) =>
+                                STATUS.includes(
+                                    status
+                                )
+                        )
+                        : []
+            };
+        }
+        catch (erro) {
+
+            console.warn(
+                "Não foi possível carregar a organização dos quadros.",
+                erro
+            );
+
+            return padrao;
+        }
+    }
+
+    function salvarLayoutQuadros() {
+
+        try {
+
+            localStorage.setItem(
+                BOARD_LAYOUT_KEY,
+                JSON.stringify(
+                    boardLayout
+                )
+            );
+        }
+        catch (erro) {
+
+            console.warn(
+                "Não foi possível salvar a organização dos quadros.",
+                erro
+            );
+        }
+    }
+
+    function moverQuadro(
+        status,
+        direcao
+    ) {
+
+        const ordem =
+            [...boardLayout.ordem];
+
+        const indice =
+            ordem.indexOf(
+                status
+            );
+
+        const destino =
+            indice + direcao;
+
+        if (
+            indice < 0 ||
+            destino < 0 ||
+            destino >= ordem.length
+        ) {
+            return;
+        }
+
+        [
+            ordem[indice],
+            ordem[destino]
+        ] = [
+            ordem[destino],
+            ordem[indice]
+        ];
+
+        boardLayout.ordem =
+            ordem;
+
+        salvarLayoutQuadros();
+
+        aplicarLayoutQuadros();
+    }
+
+    function definirQuadroOculto(
+        status,
+        ocultar
+    ) {
+
+        const ocultos =
+            new Set(
+                boardLayout.ocultos
+            );
+
+        if (ocultar) {
+
+            ocultos.add(
+                status
+            );
+        }
+        else {
+
+            ocultos.delete(
+                status
+            );
+        }
+
+        boardLayout.ocultos =
+            [...ocultos];
+
+        salvarLayoutQuadros();
+
+        aplicarLayoutQuadros();
+    }
+
+    function criarBotaoControleQuadro(
+        simbolo,
+        titulo,
+        acao
+    ) {
+
+        const botao =
+            document.createElement(
+                "button"
+            );
+
+        botao.type =
+            "button";
+
+        botao.className =
+            "kanban-column-control-btn";
+
+        botao.textContent =
+            simbolo;
+
+        botao.title =
+            titulo;
+
+        botao.setAttribute(
+            "aria-label",
+            titulo
+        );
+
+        botao.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+
+                acao();
+            }
+        );
+
+        return botao;
+    }
+
+    function garantirControlesQuadro(
+        coluna,
+        status
+    ) {
+
+        const header =
+            coluna.querySelector(
+                ".kanban-column-header"
+            );
+
+        if (
+            !header ||
+            header.querySelector(
+                ".kanban-column-controls"
+            )
+        ) {
+            return;
+        }
+
+        const controles =
+            document.createElement(
+                "div"
+            );
+
+        controles.className =
+            "kanban-column-controls";
+
+        controles.appendChild(
+            criarBotaoControleQuadro(
+                "←",
+                "Mover quadro para a esquerda",
+                () =>
+                    moverQuadro(
+                        status,
+                        -1
+                    )
+            )
+        );
+
+        controles.appendChild(
+            criarBotaoControleQuadro(
+                "→",
+                "Mover quadro para a direita",
+                () =>
+                    moverQuadro(
+                        status,
+                        1
+                    )
+            )
+        );
+
+        controles.appendChild(
+            criarBotaoControleQuadro(
+                "×",
+                "Ocultar quadro",
+                () =>
+                    definirQuadroOculto(
+                        status,
+                        true
+                    )
+            )
+        );
+
+        header.appendChild(
+            controles
+        );
+    }
+
+    function renderizarMenuQuadros() {
+
+        const menu =
+            document.getElementById(
+                "menuConfigurarQuadros"
+            );
+
+        if (!menu) {
+            return;
+        }
+
+        menu.innerHTML =
+            "";
+
+        const titulo =
+            document.createElement(
+                "strong"
+            );
+
+        titulo.textContent =
+            "Quadros visíveis";
+
+        menu.appendChild(
+            titulo
+        );
+
+        boardLayout.ordem.forEach(
+            (status) => {
+
+                const label =
+                    document.createElement(
+                        "label"
+                    );
+
+                label.className =
+                    "planner-board-setting-item";
+
+                const checkbox =
+                    document.createElement(
+                        "input"
+                    );
+
+                checkbox.type =
+                    "checkbox";
+
+                checkbox.checked =
+                    !boardLayout.ocultos.includes(
+                        status
+                    );
+
+                checkbox.addEventListener(
+                    "change",
+                    () => {
+
+                        definirQuadroOculto(
+                            status,
+                            !checkbox.checked
+                        );
+                    }
+                );
+
+                const texto =
+                    document.createElement(
+                        "span"
+                    );
+
+                texto.textContent =
+                    STATUS_LABELS[
+                        status
+                    ] || status;
+
+                label.append(
+                    checkbox,
+                    texto
+                );
+
+                menu.appendChild(
+                    label
+                );
+            }
+        );
+
+        const dica =
+            document.createElement(
+                "small"
+            );
+
+        dica.textContent =
+            "Use as setas no cabeçalho de cada quadro para alterar a posição.";
+
+        menu.appendChild(
+            dica
+        );
+    }
+
+    function aplicarLayoutQuadros() {
+
+        const board =
+            document.getElementById(
+                "kanbanBoard"
+            );
+
+        if (!board) {
+            return;
+        }
+
+        boardLayout.ordem.forEach(
+            (status) => {
+
+                const coluna =
+                    board.querySelector(
+                        `[data-status="${status}"]`
+                    );
+
+                if (!coluna) {
+                    return;
+                }
+
+                garantirControlesQuadro(
+                    coluna,
+                    status
+                );
+
+                coluna.hidden =
+                    boardLayout.ocultos.includes(
+                        status
+                    );
+
+                /*
+                 * appendChild em elemento existente
+                 * move a coluna inteira.
+                 *
+                 * Portanto:
+                 * - cabeçalho
+                 * - contador
+                 * - botão +
+                 * - lista
+                 * - todos os cards
+                 *
+                 * acompanham o quadro.
+                 */
+
+                board.appendChild(
+                    coluna
+                );
+            }
+        );
+
+        const visiveis =
+            boardLayout.ordem.filter(
+                (status) =>
+                    !boardLayout.ocultos.includes(
+                        status
+                    )
+            ).length;
+
+        const quantidade =
+            Math.max(
+                visiveis,
+                1
+            );
+
+        board.style.gridTemplateColumns =
+            `repeat(${quantidade}, minmax(220px, 1fr))`;
+
+        board.style.minWidth =
+            `${quantidade * 232}px`;
+
+        renderizarMenuQuadros();
+    }
+
+    function configurarLayoutQuadros() {
+
+        const botao =
+            document.getElementById(
+                "btnConfigurarQuadros"
+            );
+
+        const menu =
+            document.getElementById(
+                "menuConfigurarQuadros"
+            );
+
+        aplicarLayoutQuadros();
+
+        if (
+            !botao ||
+            !menu
+        ) {
+            return;
+        }
+
+        botao.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+
+                const abrir =
+                    menu.hidden;
+
+                menu.hidden =
+                    !abrir;
+
+                botao.setAttribute(
+                    "aria-expanded",
+                    String(
+                        abrir
+                    )
+                );
+            }
+        );
+
+        menu.addEventListener(
+            "click",
+            (event) => {
+
+                event.stopPropagation();
+            }
+        );
+
+        document.addEventListener(
+            "click",
+            () => {
+
+                menu.hidden =
+                    true;
+
+                botao.setAttribute(
+                    "aria-expanded",
+                    "false"
+                );
+            }
+        );
+    }
+
+    /* PLANNER_BOARD_LAYOUT_END */
     function renderizar() {
         const filtrados =
             obterFiltrados();
@@ -2090,6 +2612,8 @@ function formatarData(data) {
             }
         }
     );
+
+    configurarLayoutQuadros();
 
     configurarDragDrop();
 
