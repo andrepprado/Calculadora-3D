@@ -2353,3 +2353,208 @@ input[type="checkbox"] {
 }
 
 /* ===== PLANNER RESPONSIVO V2 END ===== */
+
+/* ===== APP MOBILE MENU START ===== */
+
+.app-header-inner {
+    position: relative;
+}
+
+/* Botão escondido no desktop */
+
+.app-menu-toggle {
+    display: none;
+
+    width: 44px;
+    height: 44px;
+
+    padding: 10px;
+
+    margin-left: auto;
+
+    flex: 0 0 44px;
+
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    gap: 5px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    -webkit-tap-highlight-color: transparent;
+}
+
+.app-menu-toggle-line {
+    display: block;
+
+    width: 23px;
+    height: 2px;
+
+    border-radius: 999px;
+
+    background: currentColor;
+
+    transition:
+        transform 0.22s ease,
+        opacity 0.22s ease;
+}
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 720px) {
+
+    .app-header {
+        position: relative;
+
+        z-index: 1000;
+    }
+
+    .app-header-inner {
+        position: relative;
+
+        display: flex;
+
+        width: 100%;
+
+        align-items: center;
+
+        flex-wrap: wrap;
+    }
+
+    .app-menu-toggle {
+        display: flex;
+
+        order: 2;
+    }
+
+    /*
+     * Todos os filhos do cabeçalho são ocultados no mobile,
+     * exceto:
+     * - primeiro elemento (normalmente logo/marca)
+     * - botão hambúrguer
+     */
+
+    .app-header-inner > * {
+        order: 3;
+    }
+
+    .app-header-inner > :first-child {
+        order: 1;
+    }
+
+    .app-header-inner > .app-menu-toggle {
+        order: 2;
+    }
+
+    /*
+     * Elementos que formam a navegação.
+     * Abrimos/fechamos via classe app-menu-open.
+     */
+
+    .app-header-inner > *:not(:first-child):not(.app-menu-toggle) {
+        display: none;
+    }
+
+    .app-header-inner.app-menu-open > *:not(:first-child):not(.app-menu-toggle) {
+        display: flex;
+    }
+
+    /*
+     * O botão permanece no topo.
+     */
+
+    .app-header-inner.app-menu-open > .app-menu-toggle {
+        display: flex;
+    }
+
+    /*
+     * Menu aberto
+     */
+
+    .app-header-inner.app-menu-open {
+        padding-bottom: 10px;
+    }
+
+    .app-header-inner.app-menu-open > *:not(:first-child):not(.app-menu-toggle) {
+        width: 100%;
+        max-width: 100%;
+
+        margin-left: 0;
+        margin-right: 0;
+
+        box-sizing: border-box;
+    }
+
+    /*
+     * Navegações internas
+     */
+
+    .app-header-inner.app-menu-open nav,
+    .app-header-inner.app-menu-open .app-nav,
+    .app-header-inner.app-menu-open .app-header-nav,
+    .app-header-inner.app-menu-open .header-nav,
+    .app-header-inner.app-menu-open .nav-links {
+        display: flex;
+
+        width: 100%;
+
+        flex-direction: column;
+
+        align-items: stretch;
+
+        gap: 4px;
+    }
+
+    .app-header-inner.app-menu-open nav a,
+    .app-header-inner.app-menu-open .app-nav a,
+    .app-header-inner.app-menu-open .app-header-nav a,
+    .app-header-inner.app-menu-open .header-nav a,
+    .app-header-inner.app-menu-open .nav-links a {
+        display: flex;
+
+        width: 100%;
+
+        min-height: 44px;
+
+        align-items: center;
+
+        padding: 10px 12px;
+
+        box-sizing: border-box;
+
+        border-radius: 8px;
+    }
+
+    /*
+     * Animação X
+     */
+
+    .app-menu-toggle[aria-expanded="true"]
+    .app-menu-toggle-line:nth-child(1) {
+        transform:
+            translateY(7px)
+            rotate(45deg);
+    }
+
+    .app-menu-toggle[aria-expanded="true"]
+    .app-menu-toggle-line:nth-child(2) {
+        opacity: 0;
+    }
+
+    .app-menu-toggle[aria-expanded="true"]
+    .app-menu-toggle-line:nth-child(3) {
+        transform:
+            translateY(-7px)
+            rotate(-45deg);
+    }
+}
+
+/* ===== APP MOBILE MENU END ===== */
