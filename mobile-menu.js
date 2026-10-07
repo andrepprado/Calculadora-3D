@@ -1,77 +1,101 @@
-/**
- * Menu hambúrguer responsivo
- */
-
 (function () {
     "use strict";
 
-    function fecharMenu(header, botao) {
-        if (!header || !botao) {
+    const HEADER_SELECTOR =
+        ".app-header.no-print";
+
+    const INNER_SELECTOR =
+        ".app-header-inner";
+
+    const BUTTON_SELECTOR =
+        ".app-menu-toggle";
+
+    const OPEN_CLASS =
+        "app-menu-open";
+
+    function fecharMenu(header) {
+        if (!header) {
             return;
         }
 
-        header.classList.remove(
-            "app-menu-open"
-        );
-
-        botao.setAttribute(
-            "aria-expanded",
-            "false"
-        );
-
-        botao.setAttribute(
-            "aria-label",
-            "Abrir menu"
-        );
-    }
-
-    function abrirMenu(header, botao) {
-        if (!header || !botao) {
-            return;
-        }
-
-        header.classList.add(
-            "app-menu-open"
-        );
-
-        botao.setAttribute(
-            "aria-expanded",
-            "true"
-        );
-
-        botao.setAttribute(
-            "aria-label",
-            "Fechar menu"
-        );
-    }
-
-    function alternarMenu(header, botao) {
-        const aberto =
-            header.classList.contains(
-                "app-menu-open"
-            );
-
-        if (aberto) {
-            fecharMenu(
-                header,
-                botao
-            );
-        }
-        else {
-            abrirMenu(
-                header,
-                botao
-            );
-        }
-    }
-
-    function inicializarMenu(header) {
         const botao =
             header.querySelector(
-                ".app-menu-toggle"
+                BUTTON_SELECTOR
             );
 
-        if (!botao) {
+        header.classList.remove(
+            OPEN_CLASS
+        );
+
+        if (botao) {
+            botao.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+            botao.setAttribute(
+                "aria-label",
+                "Abrir menu"
+            );
+        }
+    }
+
+    function abrirMenu(header) {
+        if (!header) {
+            return;
+        }
+
+        const botao =
+            header.querySelector(
+                BUTTON_SELECTOR
+            );
+
+        header.classList.add(
+            OPEN_CLASS
+        );
+
+        if (botao) {
+            botao.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+            botao.setAttribute(
+                "aria-label",
+                "Fechar menu"
+            );
+        }
+    }
+
+    function alternarMenu(header) {
+        if (!header) {
+            return;
+        }
+
+        if (
+            header.classList.contains(
+                OPEN_CLASS
+            )
+        ) {
+            fecharMenu(header);
+        }
+        else {
+            abrirMenu(header);
+        }
+    }
+
+    function inicializarHeader(header) {
+        const inner =
+            header.querySelector(
+                INNER_SELECTOR
+            );
+
+        const botao =
+            header.querySelector(
+                BUTTON_SELECTOR
+            );
+
+        if (!inner || !botao) {
             return;
         }
 
@@ -82,8 +106,7 @@
                 event.stopPropagation();
 
                 alternarMenu(
-                    header,
-                    botao
+                    header
                 );
             }
         );
@@ -100,74 +123,72 @@
                     return;
                 }
 
-                if (
-                    window.matchMedia(
-                        "(max-width: 720px)"
-                    ).matches
-                ) {
-                    fecharMenu(
-                        header,
-                        botao
-                    );
-                }
+                fecharMenu(
+                    header
+                );
             }
+        );
+    }
+
+    function iniciar() {
+        const headers =
+            document.querySelectorAll(
+                HEADER_SELECTOR
+            );
+
+        headers.forEach(
+            inicializarHeader
         );
 
         document.addEventListener(
             "click",
             function (event) {
-                if (
-                    !header.contains(
-                        event.target
+
+                document
+                    .querySelectorAll(
+                        HEADER_SELECTOR +
+                        "." +
+                        OPEN_CLASS
                     )
-                ) {
-                    fecharMenu(
-                        header,
-                        botao
+                    .forEach(
+                        function (header) {
+
+                            if (
+                                !header.contains(
+                                    event.target
+                                )
+                            ) {
+                                fecharMenu(
+                                    header
+                                );
+                            }
+                        }
                     );
-                }
             }
         );
 
         document.addEventListener(
             "keydown",
             function (event) {
+
                 if (
-                    event.key ===
+                    event.key !==
                     "Escape"
                 ) {
-                    fecharMenu(
-                        header,
-                        botao
-                    );
+                    return;
                 }
+
+                document
+                    .querySelectorAll(
+                        HEADER_SELECTOR +
+                        "." +
+                        OPEN_CLASS
+                    )
+                    .forEach(
+                        fecharMenu
+                    );
             }
         );
-
-        window.addEventListener(
-            "resize",
-            function () {
-                if (
-                    window.innerWidth >
-                    720
-                ) {
-                    fecharMenu(
-                        header,
-                        botao
-                    );
-                }
-            }
-        );
-    }
-
-    function iniciar() {
-        document
-            .querySelectorAll(
-                ".app-header-inner"
-            )
-            .forEach(
-                inicializarMenu
-            );
     }
 
     if (

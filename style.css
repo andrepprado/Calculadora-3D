@@ -2354,25 +2354,52 @@ input[type="checkbox"] {
 
 /* ===== PLANNER RESPONSIVO V2 END ===== */
 
-/* ===== APP MOBILE MENU START ===== */
+/* ===== APP HAMBURGER GLOBAL START ===== */
 
-.app-header-inner {
+/*
+ * O app-header.no-print funciona SEMPRE como
+ * menu hambúrguer, independentemente da resolução.
+ */
+
+.app-header.no-print {
     position: relative;
+
+    z-index: 1000;
+
+    width: 100%;
 }
 
-/* Botão escondido no desktop */
+.app-header.no-print .app-header-inner {
+    position: relative;
 
-.app-menu-toggle {
-    display: none;
+    display: flex;
 
-    width: 44px;
-    height: 44px;
+    width: 100%;
 
-    padding: 10px;
+    align-items: center;
+
+    flex-wrap: wrap;
+
+    box-sizing: border-box;
+}
+
+/* ============================================================
+   BOTAO HAMBURGUER
+============================================================ */
+
+.app-header.no-print .app-menu-toggle {
+    display: flex !important;
+
+    width: 46px;
+    height: 46px;
+
+    min-width: 46px;
 
     margin-left: auto;
 
-    flex: 0 0 44px;
+    padding: 10px;
+
+    flex: 0 0 46px;
 
     align-items: center;
     justify-content: center;
@@ -2381,24 +2408,53 @@ input[type="checkbox"] {
     gap: 5px;
 
     border: 0;
+
     border-radius: 10px;
 
     background: transparent;
 
+    color: inherit;
+
     cursor: pointer;
 
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color:
+        transparent;
 }
 
+.app-header.no-print
+.app-menu-toggle:hover {
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.10
+        );
+}
+
+.app-header.no-print
+.app-menu-toggle:focus-visible {
+    outline:
+        2px solid
+        currentColor;
+
+    outline-offset:
+        2px;
+}
+
+.app-header.no-print
 .app-menu-toggle-line {
     display: block;
 
-    width: 23px;
+    width: 24px;
     height: 2px;
+
+    flex: 0 0 2px;
 
     border-radius: 999px;
 
-    background: currentColor;
+    background:
+        currentColor;
 
     transition:
         transform 0.22s ease,
@@ -2406,155 +2462,214 @@ input[type="checkbox"] {
 }
 
 /* ============================================================
-   MOBILE
+   ORDEM
+============================================================ */
+
+/*
+ * Primeiro filho = marca/logo.
+ * Segundo elemento visível = hambúrguer.
+ * Restante = conteúdo do menu.
+ */
+
+.app-header.no-print
+.app-header-inner > * {
+    order: 3;
+}
+
+.app-header.no-print
+.app-header-inner > :first-child {
+    order: 1;
+}
+
+.app-header.no-print
+.app-header-inner >
+.app-menu-toggle {
+    order: 2;
+}
+
+/* ============================================================
+   HEADER FECHADO
+============================================================ */
+
+.app-header.no-print
+.app-header-inner >
+*:not(:first-child):not(.app-menu-toggle) {
+    display: none !important;
+}
+
+/* ============================================================
+   HEADER ABERTO
+============================================================ */
+
+.app-header.no-print.app-menu-open
+.app-header-inner {
+    padding-bottom: 10px;
+}
+
+.app-header.no-print.app-menu-open
+.app-header-inner >
+*:not(:first-child):not(.app-menu-toggle) {
+    display: flex !important;
+
+    width: 100%;
+
+    max-width: 100%;
+
+    margin-left: 0;
+    margin-right: 0;
+
+    box-sizing: border-box;
+}
+
+/* ============================================================
+   NAVEGACAO
+============================================================ */
+
+.app-header.no-print.app-menu-open nav,
+.app-header.no-print.app-menu-open .app-nav,
+.app-header.no-print.app-menu-open .app-header-nav,
+.app-header.no-print.app-menu-open .header-nav,
+.app-header.no-print.app-menu-open .nav-links {
+    display: flex !important;
+
+    width: 100%;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 4px;
+}
+
+.app-header.no-print.app-menu-open nav ul,
+.app-header.no-print.app-menu-open .app-nav ul,
+.app-header.no-print.app-menu-open .app-header-nav ul,
+.app-header.no-print.app-menu-open .header-nav ul,
+.app-header.no-print.app-menu-open .nav-links ul {
+    display: flex !important;
+
+    width: 100%;
+
+    margin: 0;
+    padding: 0;
+
+    flex-direction: column;
+
+    align-items: stretch;
+
+    gap: 4px;
+
+    list-style: none;
+}
+
+.app-header.no-print.app-menu-open nav li,
+.app-header.no-print.app-menu-open .app-nav li,
+.app-header.no-print.app-menu-open .app-header-nav li,
+.app-header.no-print.app-menu-open .header-nav li,
+.app-header.no-print.app-menu-open .nav-links li {
+    display: block;
+
+    width: 100%;
+}
+
+.app-header.no-print.app-menu-open nav a,
+.app-header.no-print.app-menu-open .app-nav a,
+.app-header.no-print.app-menu-open .app-header-nav a,
+.app-header.no-print.app-menu-open .header-nav a,
+.app-header.no-print.app-menu-open .nav-links a {
+    display: flex;
+
+    width: 100%;
+
+    min-height: 44px;
+
+    align-items: center;
+
+    padding:
+        10px
+        12px;
+
+    box-sizing:
+        border-box;
+
+    border-radius:
+        8px;
+}
+
+/* ============================================================
+   ANIMACAO HAMBURGUER -> X
+============================================================ */
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(1) {
+    transform:
+        translateY(7px)
+        rotate(45deg);
+}
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(2) {
+    opacity: 0;
+}
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(3) {
+    transform:
+        translateY(-7px)
+        rotate(-45deg);
+}
+
+/* ============================================================
+   CONTEUDO ABERTO
+============================================================ */
+
+.app-header.no-print.app-menu-open
+.app-header-inner {
+    gap:
+        8px
+        12px;
+}
+
+.app-header.no-print.app-menu-open
+.app-header-inner::after {
+    content: "";
+
+    order: 2;
+
+    flex-basis: 100%;
+
+    width: 0;
+    height: 0;
+}
+
+/* ============================================================
+   TELAS PEQUENAS
 ============================================================ */
 
 @media (max-width: 720px) {
 
-    .app-header {
-        position: relative;
-
-        z-index: 1000;
-    }
-
+    .app-header.no-print
     .app-header-inner {
-        position: relative;
-
-        display: flex;
-
         width: 100%;
 
-        align-items: center;
-
-        flex-wrap: wrap;
-    }
-
-    .app-menu-toggle {
-        display: flex;
-
-        order: 2;
-    }
-
-    /*
-     * Todos os filhos do cabeçalho são ocultados no mobile,
-     * exceto:
-     * - primeiro elemento (normalmente logo/marca)
-     * - botão hambúrguer
-     */
-
-    .app-header-inner > * {
-        order: 3;
-    }
-
-    .app-header-inner > :first-child {
-        order: 1;
-    }
-
-    .app-header-inner > .app-menu-toggle {
-        order: 2;
-    }
-
-    /*
-     * Elementos que formam a navegação.
-     * Abrimos/fechamos via classe app-menu-open.
-     */
-
-    .app-header-inner > *:not(:first-child):not(.app-menu-toggle) {
-        display: none;
-    }
-
-    .app-header-inner.app-menu-open > *:not(:first-child):not(.app-menu-toggle) {
-        display: flex;
-    }
-
-    /*
-     * O botão permanece no topo.
-     */
-
-    .app-header-inner.app-menu-open > .app-menu-toggle {
-        display: flex;
-    }
-
-    /*
-     * Menu aberto
-     */
-
-    .app-header-inner.app-menu-open {
-        padding-bottom: 10px;
-    }
-
-    .app-header-inner.app-menu-open > *:not(:first-child):not(.app-menu-toggle) {
-        width: 100%;
         max-width: 100%;
 
-        margin-left: 0;
-        margin-right: 0;
-
-        box-sizing: border-box;
+        box-sizing:
+            border-box;
     }
 
-    /*
-     * Navegações internas
-     */
+    .app-header.no-print
+    .app-menu-toggle {
+        width: 44px;
+        height: 44px;
 
-    .app-header-inner.app-menu-open nav,
-    .app-header-inner.app-menu-open .app-nav,
-    .app-header-inner.app-menu-open .app-header-nav,
-    .app-header-inner.app-menu-open .header-nav,
-    .app-header-inner.app-menu-open .nav-links {
-        display: flex;
+        min-width: 44px;
 
-        width: 100%;
-
-        flex-direction: column;
-
-        align-items: stretch;
-
-        gap: 4px;
-    }
-
-    .app-header-inner.app-menu-open nav a,
-    .app-header-inner.app-menu-open .app-nav a,
-    .app-header-inner.app-menu-open .app-header-nav a,
-    .app-header-inner.app-menu-open .header-nav a,
-    .app-header-inner.app-menu-open .nav-links a {
-        display: flex;
-
-        width: 100%;
-
-        min-height: 44px;
-
-        align-items: center;
-
-        padding: 10px 12px;
-
-        box-sizing: border-box;
-
-        border-radius: 8px;
-    }
-
-    /*
-     * Animação X
-     */
-
-    .app-menu-toggle[aria-expanded="true"]
-    .app-menu-toggle-line:nth-child(1) {
-        transform:
-            translateY(7px)
-            rotate(45deg);
-    }
-
-    .app-menu-toggle[aria-expanded="true"]
-    .app-menu-toggle-line:nth-child(2) {
-        opacity: 0;
-    }
-
-    .app-menu-toggle[aria-expanded="true"]
-    .app-menu-toggle-line:nth-child(3) {
-        transform:
-            translateY(-7px)
-            rotate(-45deg);
+        flex-basis: 44px;
     }
 }
 
-/* ===== APP MOBILE MENU END ===== */
+/* ===== APP HAMBURGER GLOBAL END ===== */
