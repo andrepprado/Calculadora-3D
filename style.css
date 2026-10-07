@@ -314,3 +314,784 @@ input[type="checkbox"] {
         text-shadow: none;
     }
 }
+
+/* ===== DUOLAB PLANNER START ===== */
+
+.app-header {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    border-bottom: 1px solid #e2e8f0;
+    position: sticky;
+    top: 0;
+    z-index: 900;
+    backdrop-filter: blur(12px);
+}
+
+.app-header-inner {
+    max-width: 1500px;
+    min-height: 72px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+}
+
+.app-brand {
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.app-brand img {
+    display: block;
+    width: auto;
+    height: 48px;
+    max-width: 170px;
+    object-fit: contain;
+}
+
+.app-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px;
+    background: #f1f5f9;
+    border-radius: 12px;
+}
+
+.app-nav a {
+    padding: 10px 16px;
+    border-radius: 9px;
+    color: #475569;
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-decoration: none;
+    transition: 0.2s ease;
+}
+
+.app-nav a:hover {
+    color: #2563eb;
+    background: #ffffff;
+}
+
+.app-nav a.active {
+    color: #ffffff;
+    background: #2563eb;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.22);
+}
+
+.planner-page {
+    min-height: 100vh;
+    padding: 0;
+    background: #f1f5f9;
+}
+
+.planner-page::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.planner-shell {
+    width: min(100% - 32px, 1500px);
+    margin: 0 auto;
+    padding: 30px 0 50px;
+    position: relative;
+    z-index: 1;
+}
+
+.planner-hero {
+    margin-bottom: 22px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.planner-eyebrow {
+    display: block;
+    margin-bottom: 5px;
+    color: #2563eb;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.16em;
+}
+
+.planner-hero h1 {
+    margin: 0;
+    color: #0f172a;
+    font-size: clamp(1.8rem, 3vw, 2.7rem);
+    line-height: 1.05;
+}
+
+.planner-hero p {
+    margin: 8px 0 0;
+    color: #64748b;
+    font-size: 0.96rem;
+}
+
+.planner-primary-btn,
+.planner-secondary-btn,
+.planner-danger-btn {
+    min-height: 44px;
+    border: 0;
+    border-radius: 10px;
+    padding: 0 17px;
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.planner-primary-btn {
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(37, 99, 235, 0.2);
+}
+
+.planner-primary-btn:hover {
+    background: #1d4ed8;
+    transform: translateY(-1px);
+}
+
+.planner-primary-btn span {
+    margin-right: 5px;
+    font-size: 1.15rem;
+}
+
+.planner-secondary-btn {
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+}
+
+.planner-secondary-btn:hover {
+    color: #0f172a;
+    border-color: #94a3b8;
+}
+
+.planner-danger-btn {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.planner-danger-btn:hover {
+    background: #fecaca;
+}
+
+.planner-stats {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.planner-stat-card {
+    min-width: 0;
+    padding: 16px 18px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.planner-stat-label {
+    display: block;
+    margin-bottom: 5px;
+    color: #64748b;
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.planner-stat-card strong {
+    display: block;
+    overflow: hidden;
+    color: #0f172a;
+    font-size: 1.45rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.planner-stat-money strong {
+    color: #10b981;
+    font-size: 1.18rem;
+}
+
+.planner-toolbar {
+    margin-bottom: 18px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+}
+
+.planner-search {
+    min-width: 240px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 0 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+}
+
+.planner-search span {
+    color: #94a3b8;
+    font-size: 1.3rem;
+}
+
+.planner-search input {
+    width: 100%;
+    min-height: 42px;
+    padding: 0;
+    border: 0;
+    outline: 0;
+    box-shadow: none;
+    background: transparent;
+}
+
+.planner-toolbar select {
+    width: auto;
+    min-width: 190px;
+    min-height: 44px;
+    margin: 0;
+}
+
+.kanban-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 14px;
+}
+
+.kanban-board {
+    min-width: 1450px;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(220px, 1fr));
+    gap: 12px;
+    align-items: start;
+}
+
+.kanban-column {
+    min-height: 520px;
+    overflow: hidden;
+    background: rgba(248, 250, 252, 0.96);
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+}
+
+.kanban-column-header {
+    min-height: 58px;
+    padding: 13px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: #ffffff;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.kanban-column-header > div {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.kanban-column-header h2 {
+    margin: 0;
+    overflow: hidden;
+    color: #334155;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.kanban-dot {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+}
+
+.status-novo {
+    background: #64748b;
+}
+
+.status-orcamento {
+    background: #2563eb;
+}
+
+.status-aguardando {
+    background: #f59e0b;
+}
+
+.status-producao {
+    background: #8b5cf6;
+}
+
+.status-finalizacao {
+    background: #06b6d4;
+}
+
+.status-concluido {
+    background: #10b981;
+}
+
+.kanban-count {
+    min-width: 25px;
+    height: 25px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: #f1f5f9;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 900;
+}
+
+.kanban-list {
+    min-height: 460px;
+    padding: 10px;
+    transition: 0.15s ease;
+}
+
+.kanban-list.drag-over {
+    background: rgba(37, 99, 235, 0.08);
+    box-shadow: inset 0 0 0 2px rgba(37, 99, 235, 0.25);
+}
+
+.kanban-empty {
+    padding: 28px 8px;
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-align: center;
+}
+
+.pedido-card {
+    margin-bottom: 9px;
+    padding: 13px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 11px;
+    box-shadow: 0 3px 10px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    transition: 0.18s ease;
+}
+
+.pedido-card:hover {
+    border-color: #bfdbfe;
+    box-shadow: 0 7px 18px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+}
+
+.pedido-card:focus {
+    outline: 3px solid rgba(37, 99, 235, 0.18);
+}
+
+.pedido-card.dragging {
+    opacity: 0.42;
+}
+
+.pedido-card.pedido-atrasado {
+    border-color: #fecaca;
+    box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.pedido-card-top {
+    margin-bottom: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.pedido-prioridade {
+    padding: 4px 7px;
+    border-radius: 999px;
+    font-size: 0.61rem;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.prioridade-alta {
+    color: #b91c1c;
+    background: #fee2e2;
+}
+
+.prioridade-media {
+    color: #92400e;
+    background: #fef3c7;
+}
+
+.prioridade-baixa {
+    color: #047857;
+    background: #d1fae5;
+}
+
+.pedido-edit-btn {
+    width: 27px;
+    height: 27px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: transparent;
+    border: 0;
+    border-radius: 7px;
+    font-size: 1rem;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.pedido-edit-btn:hover {
+    background: #f1f5f9;
+}
+
+.pedido-card h3 {
+    margin: 0 0 4px;
+    color: #0f172a;
+    font-size: 0.9rem;
+    line-height: 1.25;
+}
+
+.pedido-cliente {
+    margin: 0 0 12px;
+    color: #64748b;
+    font-size: 0.76rem;
+    font-weight: 700;
+}
+
+.pedido-card-details {
+    display: grid;
+    gap: 6px;
+}
+
+.pedido-card-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    color: #64748b;
+    font-size: 0.68rem;
+}
+
+.pedido-card-line strong {
+    overflow: hidden;
+    color: #475569;
+    font-size: 0.68rem;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.pedido-prazo-atrasado,
+.pedido-prazo-atrasado strong {
+    color: #dc2626;
+}
+
+.pedido-card-footer {
+    margin-top: 11px;
+    padding-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.pedido-card-footer strong {
+    color: #0f172a;
+    font-size: 0.78rem;
+}
+
+.pedido-card-footer span {
+    overflow: hidden;
+    color: #94a3b8;
+    font-size: 0.58rem;
+    font-weight: 800;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.planner-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.58);
+    backdrop-filter: blur(4px);
+}
+
+.planner-modal-backdrop[hidden] {
+    display: none;
+}
+
+.planner-modal {
+    width: min(720px, 100%);
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 24px 70px rgba(15, 23, 42, 0.3);
+}
+
+.planner-modal-header {
+    padding: 20px 22px 14px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.planner-modal-header h2 {
+    margin: 0;
+    color: #0f172a;
+    font-size: 1.3rem;
+}
+
+.planner-modal-close {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    background: #f1f5f9;
+    border: 0;
+    border-radius: 9px;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+.planner-modal-close:hover {
+    color: #0f172a;
+    background: #e2e8f0;
+}
+
+#pedidoForm {
+    padding: 20px 22px 22px;
+}
+
+.planner-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+}
+
+.planner-field {
+    min-width: 0;
+}
+
+.planner-field-full {
+    grid-column: 1 / -1;
+}
+
+.planner-field label {
+    display: block;
+    margin-bottom: 6px;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.planner-field input,
+.planner-field select,
+.planner-field textarea {
+    width: 100%;
+    min-height: 44px;
+    margin: 0;
+    padding: 10px 11px;
+    color: #0f172a;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    font-family: inherit;
+    font-size: 0.86rem;
+    box-sizing: border-box;
+}
+
+.planner-field textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+.planner-field input:focus,
+.planner-field select:focus,
+.planner-field textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.planner-modal-actions {
+    margin-top: 22px;
+    padding-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.planner-modal-actions-right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+}
+
+.modal-open {
+    overflow: hidden;
+}
+
+@media (max-width: 1050px) {
+    .planner-stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .app-header-inner {
+        padding: 10px 14px;
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .app-brand img {
+        height: 40px;
+    }
+
+    .app-nav {
+        width: 100%;
+    }
+
+    .app-nav a {
+        flex: 1;
+        text-align: center;
+    }
+
+    .planner-shell {
+        width: min(100% - 20px, 1500px);
+        padding-top: 20px;
+    }
+
+    .planner-hero {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .planner-primary-btn {
+        width: 100%;
+    }
+
+    .planner-stats {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .planner-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .planner-search {
+        min-width: 0;
+    }
+
+    .planner-toolbar select {
+        width: 100%;
+    }
+
+    .planner-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-field-full {
+        grid-column: auto;
+    }
+
+    .planner-modal-actions {
+        align-items: stretch;
+        flex-direction: column-reverse;
+    }
+
+    .planner-modal-actions-right {
+        width: 100%;
+        margin: 0;
+        flex-direction: column-reverse;
+    }
+
+    .planner-modal-actions button,
+    .planner-modal-actions-right button {
+        width: 100%;
+    }
+}
+
+/* ===== DUOLAB PLANNER END ===== */
+
+/* ===== DUOLAB PLANNER FLOW START ===== */
+
+.status-modelar {
+    background: #64748b;
+}
+
+.status-produzir {
+    background: #2563eb;
+}
+
+.status-producao {
+    background: #8b5cf6;
+}
+
+.status-backlog {
+    background: #f59e0b;
+}
+
+.status-receber {
+    background: #06b6d4;
+}
+
+.status-entregue {
+    background: #10b981;
+}
+
+.pedido-observacao {
+    margin-top: 10px;
+    padding: 8px 9px;
+    color: #475569;
+    background: #f8fafc;
+    border-left: 3px solid #cbd5e1;
+    border-radius: 5px;
+    font-size: 0.67rem;
+    line-height: 1.4;
+}
+
+/* ===== DUOLAB PLANNER FLOW END ===== */
