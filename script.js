@@ -67,10 +67,16 @@ function atualizarFilamento() {
     document.getElementById('colorPreview').style.backgroundColor =
         fil.cor;
 
-    document.getElementById('resNomeFilamento').innerText =
-        fil.nome;
+    setText('resNomeFilamento', fil.nome);
 
     calcular();
+}
+function setText(id, valor) {
+    const elemento = document.getElementById(id);
+
+    if (elemento) {
+        elemento.innerText = valor;
+    }
 }
 function calcular() {
     const peso = parseFloat(document.getElementById('peso').value) || 0;
@@ -242,48 +248,34 @@ function calcular() {
     /*
      * RESULTADOS
      */
-    document.getElementById('resMatDetalhe').innerText =
-        format(cMatTotal);
+    setText('resMatDetalhe', format(cMatTotal));
 
-    document.getElementById('resEneDetalhe').innerText =
-        format(cInfraTotal);
+    setText('resEneDetalhe', format(cInfraTotal));
 
-    document.getElementById('resDepre').innerText =
-        format(cDepreTotal);
+    setText('resDepre', format(cDepreTotal));
 
-    document.getElementById('resMaoObra').innerText =
-        format(valAcabamento);
+    setText('resMaoObra', format(valAcabamento));
 
-    document.getElementById('resLuminaria').innerText =
-        format(valLuminaria);
+    setText('resLuminaria', format(valLuminaria));
 
-    document.getElementById('resChaveiro').innerText =
-        format(valChaveiro);
+    setText('resChaveiro', format(valChaveiro));
 
-    document.getElementById('resIma').innerText =
-        format(valIma);
+    setText('resIma', format(valIma));
 
-    document.getElementById('resAdesivo').innerText =
-        format(valAdesivo);
+    setText('resAdesivo', format(valAdesivo));
 
-    document.getElementById('resPlaDetalhe').innerText =
-        format(totalEmbalagens);
+    setText('resPlaDetalhe', format(totalEmbalagens));
 
-    document.getElementById('resTaxas').innerText =
-        format(valorTaxasTotais);
+    setText('resTaxas', format(valorTaxasTotais));
 
-    document.getElementById('resCustoTotal').innerText =
-        format(custoProducaoSubtotal);
+    setText('resCustoTotal', format(custoProducaoSubtotal));
 
-    document.getElementById('resVendaUnid').innerText =
-        format(vendaUnitaria);
+    setText('resVendaUnid', format(vendaUnitaria));
 
-    document.getElementById('resVendaTotal').innerText =
-        format(vendaTotal);
+    setText('resVendaTotal', format(vendaTotal));
 
-    document.getElementById('dataAtual').innerText =
-        "Data: " +
-        new Date().toLocaleDateString('pt-BR');
+    setText('dataAtual', "Data: " +
+        new Date().toLocaleDateString('pt-BR'));
 
     /*
      * ORCAMENTO CLIENTE
@@ -295,51 +287,41 @@ function calcular() {
         cliFilamento.innerText =
             document.getElementById('resNomeFilamento').innerText;
 
-        document.getElementById('cliQtd').innerText =
-            qtd;
+        setText('cliQtd', qtd);
 
-        document.getElementById('cliValorUnid').innerText =
-            format(vendaUnitaria);
+        setText('cliValorUnid', format(vendaUnitaria));
 
-        document.getElementById('cliValorTotal').innerText =
-            format(vendaTotal);
+        setText('cliValorTotal', format(vendaTotal));
 
-        document.getElementById('dataAtualCliente').innerText =
-            "Data: " +
-            new Date().toLocaleDateString('pt-BR');
+        setText('dataAtualCliente', "Data: " +
+            new Date().toLocaleDateString('pt-BR'));
 
-        document.getElementById('cliAcabamento').innerText =
-            document.getElementById('chkAcabamento').checked
+        setText('cliAcabamento', document.getElementById('chkAcabamento').checked
                 ? "Sim"
-                : "Não";
+                : "Não");
 
-        document.getElementById('cliLuminaria').innerText =
-            document.getElementById('chkLuminaria').checked
+        setText('cliLuminaria', document.getElementById('chkLuminaria').checked
                 ? "Sim"
-                : "Não";
+                : "Não");
 
-        document.getElementById('cliChaveiro').innerText =
-            document.getElementById('chkChaveiro').checked
+        setText('cliChaveiro', document.getElementById('chkChaveiro').checked
                 ? "Sim"
-                : "Não";
+                : "Não");
 
-        document.getElementById('cliIma').innerText =
-            document.getElementById('chkIma').checked
+        setText('cliIma', document.getElementById('chkIma').checked
                 ? "Sim"
-                : "Não";
+                : "Não");
 
-        document.getElementById('cliAdesivo').innerText =
-            document.getElementById('chkAdesivoFixo').checked
+        setText('cliAdesivo', document.getElementById('chkAdesivoFixo').checked
                 ? "Sim"
-                : "Não";
+                : "Não");
 
-        document.getElementById('cliEmbalagem').innerText =
-            (
+        setText('cliEmbalagem', (
                 document.getElementById('chkPlastica').checked ||
                 document.getElementById('chkSacolaKraft').checked
             )
                 ? "Sim"
-                : "Não";
+                : "Não");
     }
 }
 function format(v) {
