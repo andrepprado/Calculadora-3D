@@ -42,59 +42,59 @@ It follows a lightweight technical structure:
 The Duo.Lab Calc project includes:
 
 ### 🧮 **Pricing Calculator**
-- Input fields for material, weight, time and quantity  
-- Real-time recalculation  
-- Automatic total and unit price update  
-- Clear separation between production cost and sale price  
+- Input fields for material, weight, time and quantity
+- Real-time recalculation
+- Automatic total and unit price update
+- Clear separation between production cost and sale price
 
 ### 🧵 **Filament Selection**
-- Predefined filament options  
-- Material cost per kilogram  
-- Color and material reference  
-- Automatic update of material cost based on selected filament  
+- Predefined filament options
+- Material cost per kilogram
+- Color and material reference
+- Automatic update of material cost based on selected filament
 
 ### ⚙️ **Production Cost Logic**
-- Material usage calculation  
-- Material loss percentage  
-- Print time calculation  
-- Energy cost  
-- Infrastructure cost  
-- Printer depreciation  
-- Computer depreciation  
-- Finishing cost  
+- Material usage calculation
+- Material loss percentage
+- Print time calculation
+- Energy cost
+- Infrastructure cost
+- Printer depreciation
+- Computer depreciation
+- Finishing cost
 
 ### 📦 **Accessories & Packaging**
-- Keychain option  
-- Magnet option  
-- Adhesive cost  
-- Plastic packaging  
-- Kraft bag option  
-- Additional finishing items  
+- Keychain option
+- Magnet option
+- Adhesive cost
+- Plastic packaging
+- Kraft bag option
+- Additional finishing items
 
 ### 🛒 **Sales Channel Fees**
-- Marketplace percentage fees  
-- Shopee fixed fee support  
-- Final price adjusted by commercial channel  
-- Unit and total sale price calculation  
+- Marketplace percentage fees
+- Shopee fixed fee support
+- Final price adjusted by commercial channel
+- Unit and total sale price calculation
 
 ### 📊 **Internal Breakdown**
-- Material cost  
-- Energy cost  
-- Fixed costs  
-- Accessories  
-- Packaging  
-- Fees  
-- Profit margin  
-- Final sale value  
+- Material cost
+- Energy cost
+- Fixed costs
+- Accessories
+- Packaging
+- Fees
+- Profit margin
+- Final sale value
 
 ### 📄 **Customer Quote**
-- Simplified quote view  
-- Selected filament information  
-- Quantity  
-- Optional services  
-- Unit price  
-- Total price  
-- Date reference  
+- Simplified quote view
+- Selected filament information
+- Quantity
+- Optional services
+- Unit price
+- Total price
+- Date reference
 
 ---
 
@@ -134,42 +134,42 @@ The layout uses organized cards, clean spacing, readable inputs and a practical 
 
 ## 📸 Demonstrations
 
-### 🔹 Calculator Interface  
+### 🔹 Calculator Interface
 Structured form with all main inputs required to calculate a 3D printing quote.
 
-### 🔹 Filament Selection  
+### 🔹 Filament Selection
 Material selector with predefined costs and automatic value update.
 
-### 🔹 Production Variables  
+### 🔹 Production Variables
 Fields for weight, time, quantity, loss percentage and production-related costs.
 
-### 🔹 Accessories & Packaging  
+### 🔹 Accessories & Packaging
 Optional cost items that can be included in the final quote.
 
-### 🔹 Internal Results  
+### 🔹 Internal Results
 Detailed cost breakdown showing how the final value is composed.
 
-### 🔹 Customer Quote  
+### 🔹 Customer Quote
 Simplified summary designed for client communication.
 
-### 🔹 Responsive Design  
+### 🔹 Responsive Design
 Card-based structure that adapts across different screen sizes.
 
 ---
 
 ## 🛠 Technologies Used
 
-- **HTML5** – semantic structure and form organization  
-- **CSS3** – responsive layout, visual hierarchy, cards and interface styling  
-- **JavaScript (ES6+)** – calculation engine, dynamic updates and quote rendering  
-- **LocalStorage** – local persistence for selected settings and values  
-- **Vercel** for deployment  
+- **HTML5** – semantic structure and form organization
+- **CSS3** – responsive layout, visual hierarchy, cards and interface styling
+- **JavaScript (ES6+)** – calculation engine, dynamic updates and quote rendering
+- **LocalStorage** – local persistence for selected settings and values
+- **Vercel** for deployment
 
 ---
 
 ## 👤 Author
 
-**André Luiz Ghiringhelli**  
+**André Luiz Ghiringhelli**
 Process Analyst | Full Stack Developer | RPA | Automation
 
 <p align="left">
