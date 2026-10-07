@@ -871,478 +871,7 @@ function formatarData(data) {
 
         return ghost;
     }
-
-
-
-    /* PLANNER_WHATSAPP_EXPORT_START */
-
-    const WHATSAPP_STATUS_CONFIG = {
-
-        produzir: {
-            titulo: "A produzir"
-        },
-
-        modelar: {
-            titulo: "Modelar"
-        },
-
-        fatiar: {
-            titulo: "Fatiar"
-        },
-
-        imprimir: {
-            titulo: "Em produção"
-        },
-
-        acabamento: {
-            titulo: "Concluídos / Receber Pagamento"
-        },
-
-        pronto: {
-            titulo: "Pagos / Entregues"
-        }
-    };
-
-    function limparTextoWhatsApp(valor) {
-
-        return String(
-            valor ?? ""
-        )
-            .replace(
-                /\r?\n+/g,
-                " "
-            )
-            .replace(
-                /\s+/g,
-                " "
-            )
-            .trim();
-    }
-
-    function obterNomeClienteWhatsApp(pedido) {
-
-        return limparTextoWhatsApp(
-            pedido.contato ||
-            pedido.cliente ||
-            ""
-        );
-    }
-
-    function formatarQuantidadeWhatsApp(pedido) {
-
-        const quantidade =
-            Math.max(
-                1,
-                Number(
-                    pedido.quantidade
-                ) || 1
-            );
-
-        if (quantidade <= 1) {
-            return "";
-        }
-
-        return (
-            ` (${quantidade} unidades)`
-        );
-    }
-
-    function formatarPedidoWhatsApp(pedido) {
-
-        const projeto =
-            limparTextoWhatsApp(
-                pedido.projeto
-            ) || "Pedido sem descrição";
-
-        const quantidade =
-            formatarQuantidadeWhatsApp(
-                pedido
-            );
-
-        const cliente =
-            obterNomeClienteWhatsApp(
-                pedido
-            );
-
-        const observacao =
-            limparTextoWhatsApp(
-                pedido.observacoes
-            );
-
-        let linha =
-            `• ${projeto}${quantidade}`;
-
-        if (cliente) {
-
-            linha +=
-                ` - ${cliente}`;
-        }
-
-        if (observacao) {
-
-            linha +=
-                ` (${observacao})`;
-        }
-
-        return linha;
-    }
-
-    function obterOrdemExportacaoWhatsApp() {
-
-        /*
-         * Usa a mesma ordem configurada visualmente
-         * pelo usuário no Planner.
-         */
-
-        if (
-            typeof boardLayout !==
-                "undefined" &&
-            Array.isArray(
-                boardLayout?.ordem
-            ) &&
-            boardLayout.ordem.length
-        ) {
-
-            const ordem =
-                boardLayout.ordem.filter(
-                    (status) =>
-                        STATUS.includes(
-                            status
-                        )
-                );
-
-            STATUS.forEach(
-                (status) => {
-
-                    if (
-                        !ordem.includes(
-                            status
-                        )
-                    ) {
-
-                        ordem.push(
-                            status
-                        );
-                    }
-                }
-            );
-
-            return ordem;
-        }
-
-        return [...STATUS];
-    }
-
-    function gerarTextoPlannerWhatsApp() {
-
-        const blocos = [];
-
-        const ordem =
-            obterOrdemExportacaoWhatsApp();
-
-        ordem.forEach(
-            (status) => {
-
-                const config =
-                    WHATSAPP_STATUS_CONFIG[
-                        status
-                    ];
-
-                if (!config) {
-                    return;
-                }
-
-                const itens =
-                    pedidos
-                        .filter(
-                            (pedido) =>
-                                pedido.status ===
-                                status
-                        )
-                        .map(
-                            formatarPedidoWhatsApp
-                        );
-
-                const linhas = [
-                    `*${config.titulo}:*`
-                ];
-
-                if (itens.length) {
-
-                    linhas.push(
-                        "",
-                        ...itens
-                    );
-                }
-
-                blocos.push(
-                    linhas.join("\n")
-                );
-            }
-        );
-
-        return blocos.join(
-            "\n\n"
-        );
-    }
-
-    function abrirExportacaoWhatsApp() {
-
-        const modal =
-            document.getElementById(
-                "modalExportarWhatsApp"
-            );
-
-        const textarea =
-            document.getElementById(
-                "textoExportacaoWhatsApp"
-            );
-
-        if (
-            !modal ||
-            !textarea
-        ) {
-            return;
-        }
-
-        textarea.value =
-            gerarTextoPlannerWhatsApp();
-
-        modal.hidden =
-            false;
-
-        document.body.classList.add(
-            "planner-modal-open"
-        );
-
-        window.setTimeout(
-            () => {
-
-                textarea.focus();
-
-                textarea.setSelectionRange(
-                    0,
-                    0
-                );
-            },
-            0
-        );
-    }
-
-    function fecharExportacaoWhatsApp() {
-
-        const modal =
-            document.getElementById(
-                "modalExportarWhatsApp"
-            );
-
-        if (!modal) {
-            return;
-        }
-
-        modal.hidden =
-            true;
-
-        document.body.classList.remove(
-            "planner-modal-open"
-        );
-    }
-
-    async function copiarExportacaoWhatsApp() {
-
-        const textarea =
-            document.getElementById(
-                "textoExportacaoWhatsApp"
-            );
-
-        const botao =
-            document.getElementById(
-                "btnCopiarExportacaoWhatsApp"
-            );
-
-        if (!textarea) {
-            return;
-        }
-
-        const texto =
-            textarea.value;
-
-        let copiado =
-            false;
-
-        if (
-            navigator.clipboard &&
-            window.isSecureContext
-        ) {
-
-            try {
-
-                await navigator.clipboard.writeText(
-                    texto
-                );
-
-                copiado =
-                    true;
-            }
-            catch (erro) {
-
-                console.warn(
-                    "Clipboard API indisponível.",
-                    erro
-                );
-            }
-        }
-
-        if (!copiado) {
-
-            textarea.focus();
-            textarea.select();
-
-            try {
-
-                copiado =
-                    document.execCommand(
-                        "copy"
-                    );
-            }
-            catch (erro) {
-
-                console.warn(
-                    "Fallback de cópia indisponível.",
-                    erro
-                );
-            }
-
-            textarea.setSelectionRange(
-                0,
-                0
-            );
-        }
-
-        if (!copiado) {
-
-            window.alert(
-                "Não foi possível copiar automaticamente. Selecione o texto e copie manualmente."
-            );
-
-            return;
-        }
-
-        if (botao) {
-
-            const textoOriginal =
-                botao.textContent;
-
-            botao.textContent =
-                "Copiado!";
-
-            window.setTimeout(
-                () => {
-
-                    botao.textContent =
-                        textoOriginal;
-                },
-                1600
-            );
-        }
-    }
-
-    function configurarExportacaoWhatsApp() {
-
-        const abrir =
-            document.getElementById(
-                "btnExportarWhatsApp"
-            );
-
-        const fecharTopo =
-            document.getElementById(
-                "btnFecharExportacaoWhatsApp"
-            );
-
-        const fecharRodape =
-            document.getElementById(
-                "btnFecharExportacaoWhatsAppRodape"
-            );
-
-        const copiar =
-            document.getElementById(
-                "btnCopiarExportacaoWhatsApp"
-            );
-
-        const backdrop =
-            document.querySelector(
-                "[data-whatsapp-close]"
-            );
-
-        if (abrir) {
-
-            abrir.addEventListener(
-                "click",
-                abrirExportacaoWhatsApp
-            );
-        }
-
-        if (fecharTopo) {
-
-            fecharTopo.addEventListener(
-                "click",
-                fecharExportacaoWhatsApp
-            );
-        }
-
-        if (fecharRodape) {
-
-            fecharRodape.addEventListener(
-                "click",
-                fecharExportacaoWhatsApp
-            );
-        }
-
-        if (copiar) {
-
-            copiar.addEventListener(
-                "click",
-                copiarExportacaoWhatsApp
-            );
-        }
-
-        if (backdrop) {
-
-            backdrop.addEventListener(
-                "click",
-                fecharExportacaoWhatsApp
-            );
-        }
-
-        document.addEventListener(
-            "keydown",
-            (event) => {
-
-                if (
-                    event.key !==
-                    "Escape"
-                ) {
-                    return;
-                }
-
-                const modal =
-                    document.getElementById(
-                        "modalExportarWhatsApp"
-                    );
-
-                if (
-                    modal &&
-                    !modal.hidden
-                ) {
-
-                    fecharExportacaoWhatsApp();
-                }
-            }
-        );
-    }
-
-    /* PLANNER_WHATSAPP_EXPORT_END */
-    /* PLANNER_BOARD_LAYOUT_START */
+/* PLANNER_BOARD_LAYOUT_START */
 
     const BOARD_LAYOUT_KEY =
         "duolab_planner_board_layout_v1";
@@ -1863,6 +1392,961 @@ function formatarData(data) {
     }
 
     /* PLANNER_BOARD_LAYOUT_END */
+
+    /* PLANNER_WHATSAPP_EXPORT_START */
+
+    /*
+     * Emojis utilizados SOMENTE no texto exportado.
+     * Não alteram os títulos dos quadros do Planner.
+     */
+
+    const WHATSAPP_EXPORT_CONFIG = {
+
+        modelar: {
+            titulo: "🛠️ Modelar"
+        },
+
+        produzir: {
+            titulo: "🗳️ A produzir"
+        },
+
+        fatiar: {
+            titulo: "⌛ Backlog"
+        },
+
+        imprimir: {
+            titulo: "🖨️ Em produção"
+        },
+
+        acabamento: {
+            titulo: "✅ Concluídos / Receber Pagamento"
+        },
+
+        pronto: {
+            titulo: "Pagos / Entregues"
+        }
+
+    };
+
+
+    function limparTextoWhatsApp(valor) {
+
+        return String(
+            valor ?? ""
+        )
+            .replace(
+                /\r?\n+/g,
+                " "
+            )
+            .replace(
+                /\s+/g,
+                " "
+            )
+            .trim();
+
+    }
+
+
+    function normalizarStatusWhatsApp(status) {
+
+        const valor =
+            String(
+                status ?? ""
+            )
+                .trim()
+                .toLowerCase()
+                .normalize("NFD")
+                .replace(
+                    /[\u0300-\u036f]/g,
+                    ""
+                )
+                .replace(
+                    /[^a-z0-9]+/g,
+                    " "
+                )
+                .trim();
+
+        if (
+            valor === "modelar" ||
+            valor.includes("modelar")
+        ) {
+
+            return "modelar";
+
+        }
+
+        if (
+            valor === "produzir" ||
+            valor === "a produzir" ||
+            valor.includes("a produzir")
+        ) {
+
+            return "produzir";
+
+        }
+
+        if (
+            valor === "fatiar" ||
+            valor === "backlog" ||
+            valor.includes("backlog")
+        ) {
+
+            return "fatiar";
+
+        }
+
+        if (
+            valor === "imprimir" ||
+            valor === "em producao" ||
+            valor.includes("em producao")
+        ) {
+
+            return "imprimir";
+
+        }
+
+        if (
+            valor === "acabamento" ||
+            valor.includes("concluido") ||
+            valor.includes("receber")
+        ) {
+
+            return "acabamento";
+
+        }
+
+        if (
+            valor === "pronto" ||
+            valor.includes("pago") ||
+            valor.includes("entregue")
+        ) {
+
+            return "pronto";
+
+        }
+
+        return valor;
+
+    }
+
+
+    function obterOrdemExportacaoWhatsApp() {
+
+        const ordemPadrao = [
+            "modelar",
+            "produzir",
+            "imprimir",
+            "fatiar",
+            "acabamento",
+            "pronto"
+        ];
+
+        const ordem = [];
+
+        /*
+         * Primeiro tenta respeitar exatamente
+         * a ordem atual configurada no Planner.
+         */
+
+        if (
+            typeof boardLayout !== "undefined" &&
+            boardLayout &&
+            Array.isArray(
+                boardLayout.ordem
+            )
+        ) {
+
+            boardLayout.ordem.forEach(
+                (status) => {
+
+                    const normalizado =
+                        normalizarStatusWhatsApp(
+                            status
+                        );
+
+                    if (
+                        WHATSAPP_EXPORT_CONFIG[
+                            normalizado
+                        ] &&
+                        !ordem.includes(
+                            normalizado
+                        )
+                    ) {
+
+                        ordem.push(
+                            normalizado
+                        );
+
+                    }
+
+                }
+            );
+
+        }
+
+        /*
+         * Garante que nenhum bucket fique fora.
+         */
+
+        ordemPadrao.forEach(
+            (status) => {
+
+                if (
+                    !ordem.includes(
+                        status
+                    )
+                ) {
+
+                    ordem.push(
+                        status
+                    );
+
+                }
+
+            }
+        );
+
+        return ordem;
+
+    }
+
+
+    function obterPedidosStatusWhatsApp(status) {
+
+        return pedidos.filter(
+            (pedido) => {
+
+                return (
+                    normalizarStatusWhatsApp(
+                        pedido.status
+                    ) ===
+                    status
+                );
+
+            }
+        );
+
+    }
+
+
+    function formatarPedidoWhatsApp(pedido) {
+
+        const projeto =
+            limparTextoWhatsApp(
+                pedido.projeto ||
+                pedido.produto ||
+                pedido.descricao ||
+                pedido.nomeProjeto ||
+                ""
+            ) ||
+            "Pedido sem descrição";
+
+        const quantidade =
+            Math.max(
+                1,
+                Number(
+                    pedido.quantidade
+                ) || 1
+            );
+
+        const cliente =
+            limparTextoWhatsApp(
+                pedido.contato ||
+                pedido.cliente ||
+                pedido.nomeCliente ||
+                pedido.nome ||
+                ""
+            );
+
+        const observacao =
+            limparTextoWhatsApp(
+                pedido.observacoes ||
+                pedido.observacao ||
+                pedido.obs ||
+                ""
+            );
+
+        let linha =
+            `• ${projeto}`;
+
+        if (
+            quantidade >
+            1
+        ) {
+
+            linha +=
+                ` (${quantidade} unidades)`;
+
+        }
+
+        if (cliente) {
+
+            linha +=
+                ` - ${cliente}`;
+
+        }
+
+        if (observacao) {
+
+            linha +=
+                ` (${observacao})`;
+
+        }
+
+        return linha;
+
+    }
+
+
+    function gerarTextoPlannerWhatsApp(
+        statusSelecionados = null
+    ) {
+
+        const ordem =
+            obterOrdemExportacaoWhatsApp();
+
+        const selecionados =
+            Array.isArray(
+                statusSelecionados
+            )
+                ? statusSelecionados
+                : ordem;
+
+        const blocos = [];
+
+        ordem.forEach(
+            (status) => {
+
+                if (
+                    !selecionados.includes(
+                        status
+                    )
+                ) {
+                    return;
+                }
+
+                const config =
+                    WHATSAPP_EXPORT_CONFIG[
+                        status
+                    ];
+
+                if (!config) {
+                    return;
+                }
+
+                const pedidosStatus =
+                    obterPedidosStatusWhatsApp(
+                        status
+                    );
+
+                const linhas = [
+                    `*${config.titulo}:*`
+                ];
+
+                if (
+                    pedidosStatus.length
+                ) {
+
+                    linhas.push("");
+
+                    pedidosStatus.forEach(
+                        (pedido) => {
+
+                            linhas.push(
+                                formatarPedidoWhatsApp(
+                                    pedido
+                                )
+                            );
+
+                        }
+                    );
+
+                }
+
+                blocos.push(
+                    linhas.join("\n")
+                );
+
+            }
+        );
+
+        return blocos.join(
+            "\n\n"
+        );
+
+    }
+
+
+    async function copiarTextoPlannerWhatsApp(
+        texto
+    ) {
+
+        if (!texto) {
+            return false;
+        }
+
+        if (
+            navigator.clipboard &&
+            window.isSecureContext
+        ) {
+
+            try {
+
+                await navigator.clipboard.writeText(
+                    texto
+                );
+
+                return true;
+
+            }
+            catch (erro) {
+
+                console.warn(
+                    "Clipboard API indisponível.",
+                    erro
+                );
+
+            }
+
+        }
+
+        /*
+         * Fallback para navegadores que não permitem
+         * navigator.clipboard.
+         */
+
+        const textarea =
+            document.createElement(
+                "textarea"
+            );
+
+        textarea.value =
+            texto;
+
+        textarea.setAttribute(
+            "readonly",
+            ""
+        );
+
+        textarea.style.position =
+            "fixed";
+
+        textarea.style.opacity =
+            "0";
+
+        textarea.style.pointerEvents =
+            "none";
+
+        document.body.appendChild(
+            textarea
+        );
+
+        textarea.focus();
+        textarea.select();
+
+        let copiado =
+            false;
+
+        try {
+
+            copiado =
+                document.execCommand(
+                    "copy"
+                );
+
+        }
+        catch (erro) {
+
+            console.warn(
+                "Fallback de cópia indisponível.",
+                erro
+            );
+
+        }
+
+        textarea.remove();
+
+        return copiado;
+
+    }
+
+
+    function feedbackBotaoWhatsApp(
+        botao,
+        texto = "Copiado!"
+    ) {
+
+        if (!botao) {
+            return;
+        }
+
+        const original =
+            botao.dataset.originalText ||
+            botao.textContent;
+
+        botao.dataset.originalText =
+            original;
+
+        botao.textContent =
+            texto;
+
+        botao.classList.add(
+            "is-copied"
+        );
+
+        window.clearTimeout(
+            botao._whatsappFeedbackTimer
+        );
+
+        botao._whatsappFeedbackTimer =
+            window.setTimeout(
+                () => {
+
+                    botao.textContent =
+                        original;
+
+                    botao.classList.remove(
+                        "is-copied"
+                    );
+
+                },
+                1500
+            );
+
+    }
+
+
+    async function copiarTodosWhatsApp() {
+
+        const botao =
+            document.getElementById(
+                "btnExportarWhatsApp"
+            );
+
+        /*
+         * Gera novamente no momento do clique.
+         * Portanto sempre usa o estado ATUAL do Planner.
+         */
+
+        const texto =
+            gerarTextoPlannerWhatsApp();
+
+        const copiado =
+            await copiarTextoPlannerWhatsApp(
+                texto
+            );
+
+        if (copiado) {
+
+            feedbackBotaoWhatsApp(
+                botao
+            );
+
+            return;
+
+        }
+
+        window.alert(
+            "Não foi possível copiar o texto para a área de transferência."
+        );
+
+    }
+
+
+    function criarListaBucketsWhatsApp() {
+
+        const container =
+            document.getElementById(
+                "listaBucketsWhatsApp"
+            );
+
+        if (!container) {
+            return;
+        }
+
+        container.innerHTML =
+            "";
+
+        const ordem =
+            obterOrdemExportacaoWhatsApp();
+
+        ordem.forEach(
+            (status) => {
+
+                const config =
+                    WHATSAPP_EXPORT_CONFIG[
+                        status
+                    ];
+
+                if (!config) {
+                    return;
+                }
+
+                const quantidade =
+                    obterPedidosStatusWhatsApp(
+                        status
+                    ).length;
+
+                const label =
+                    document.createElement(
+                        "label"
+                    );
+
+                label.className =
+                    "planner-whatsapp-bucket-option";
+
+                const checkbox =
+                    document.createElement(
+                        "input"
+                    );
+
+                checkbox.type =
+                    "checkbox";
+
+                checkbox.value =
+                    status;
+
+                checkbox.checked =
+                    true;
+
+                const texto =
+                    document.createElement(
+                        "span"
+                    );
+
+                /*
+                 * No seletor também usamos o nome amigável.
+                 * Isso não altera o nome real do quadro.
+                 */
+
+                texto.textContent =
+                    `${config.titulo} (${quantidade})`;
+
+                label.appendChild(
+                    checkbox
+                );
+
+                label.appendChild(
+                    texto
+                );
+
+                container.appendChild(
+                    label
+                );
+
+            }
+        );
+
+    }
+
+
+    function obterBucketsSelecionadosWhatsApp() {
+
+        return Array.from(
+            document.querySelectorAll(
+                '#listaBucketsWhatsApp input[type="checkbox"]:checked'
+            )
+        ).map(
+            (checkbox) =>
+                checkbox.value
+        );
+
+    }
+
+
+    function marcarBucketsWhatsApp(
+        marcado
+    ) {
+
+        document
+            .querySelectorAll(
+                '#listaBucketsWhatsApp input[type="checkbox"]'
+            )
+            .forEach(
+                (checkbox) => {
+
+                    checkbox.checked =
+                        marcado;
+
+                }
+            );
+
+    }
+
+
+    function abrirMenuWhatsApp() {
+
+        const menu =
+            document.getElementById(
+                "menuOpcoesWhatsApp"
+            );
+
+        const botao =
+            document.getElementById(
+                "btnOpcoesWhatsApp"
+            );
+
+        if (
+            !menu ||
+            !botao
+        ) {
+            return;
+        }
+
+        const vaiAbrir =
+            menu.hidden;
+
+        if (vaiAbrir) {
+
+            /*
+             * Atualiza quantidades e ordem toda vez
+             * que o menu for aberto.
+             */
+
+            criarListaBucketsWhatsApp();
+
+            menu.hidden =
+                false;
+
+            botao.setAttribute(
+                "aria-expanded",
+                "true"
+            );
+
+        }
+        else {
+
+            menu.hidden =
+                true;
+
+            botao.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+
+    }
+
+
+    function fecharMenuWhatsApp() {
+
+        const menu =
+            document.getElementById(
+                "menuOpcoesWhatsApp"
+            );
+
+        const botao =
+            document.getElementById(
+                "btnOpcoesWhatsApp"
+            );
+
+        if (menu) {
+
+            menu.hidden =
+                true;
+
+        }
+
+        if (botao) {
+
+            botao.setAttribute(
+                "aria-expanded",
+                "false"
+            );
+
+        }
+
+    }
+
+
+    async function copiarBucketsSelecionadosWhatsApp() {
+
+        const botao =
+            document.getElementById(
+                "btnCopiarSelecionadosWhatsApp"
+            );
+
+        const selecionados =
+            obterBucketsSelecionadosWhatsApp();
+
+        if (
+            !selecionados.length
+        ) {
+
+            feedbackBotaoWhatsApp(
+                botao,
+                "Selecione um quadro"
+            );
+
+            return;
+
+        }
+
+        const texto =
+            gerarTextoPlannerWhatsApp(
+                selecionados
+            );
+
+        const copiado =
+            await copiarTextoPlannerWhatsApp(
+                texto
+            );
+
+        if (!copiado) {
+
+            window.alert(
+                "Não foi possível copiar o texto para a área de transferência."
+            );
+
+            return;
+
+        }
+
+        feedbackBotaoWhatsApp(
+            botao
+        );
+
+        window.setTimeout(
+            fecharMenuWhatsApp,
+            650
+        );
+
+    }
+
+
+    function configurarExportacaoWhatsApp() {
+
+        const copiarTodos =
+            document.getElementById(
+                "btnExportarWhatsApp"
+            );
+
+        const opcoes =
+            document.getElementById(
+                "btnOpcoesWhatsApp"
+            );
+
+        const marcarTodos =
+            document.getElementById(
+                "btnMarcarTodosWhatsApp"
+            );
+
+        const desmarcarTodos =
+            document.getElementById(
+                "btnDesmarcarTodosWhatsApp"
+            );
+
+        const copiarSelecionados =
+            document.getElementById(
+                "btnCopiarSelecionadosWhatsApp"
+            );
+
+        if (copiarTodos) {
+
+            copiarTodos.addEventListener(
+                "click",
+                copiarTodosWhatsApp
+            );
+
+        }
+
+        if (opcoes) {
+
+            opcoes.addEventListener(
+                "click",
+                (event) => {
+
+                    event.stopPropagation();
+
+                    abrirMenuWhatsApp();
+
+                }
+            );
+
+        }
+
+        if (marcarTodos) {
+
+            marcarTodos.addEventListener(
+                "click",
+                () => {
+
+                    marcarBucketsWhatsApp(
+                        true
+                    );
+
+                }
+            );
+
+        }
+
+        if (desmarcarTodos) {
+
+            desmarcarTodos.addEventListener(
+                "click",
+                () => {
+
+                    marcarBucketsWhatsApp(
+                        false
+                    );
+
+                }
+            );
+
+        }
+
+        if (copiarSelecionados) {
+
+            copiarSelecionados.addEventListener(
+                "click",
+                copiarBucketsSelecionadosWhatsApp
+            );
+
+        }
+
+        document.addEventListener(
+            "click",
+            (event) => {
+
+                const wrapper =
+                    document.querySelector(
+                        ".planner-whatsapp-export"
+                    );
+
+                if (
+                    wrapper &&
+                    !wrapper.contains(
+                        event.target
+                    )
+                ) {
+
+                    fecharMenuWhatsApp();
+
+                }
+
+            }
+        );
+
+        document.addEventListener(
+            "keydown",
+            (event) => {
+
+                if (
+                    event.key ===
+                    "Escape"
+                ) {
+
+                    fecharMenuWhatsApp();
+
+                }
+
+            }
+        );
+
+    }
+
+    /* PLANNER_WHATSAPP_EXPORT_END */
     function renderizar() {
         const filtrados =
             obterFiltrados();
