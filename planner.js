@@ -29,92 +29,112 @@
 
     const elements = {
         btnNovo: document.getElementById("btnNovoPedido"),
+
         busca: document.getElementById("buscaPedidos"),
-        filtroPrioridade: document.getElementById("filtroPrioridade"),
-        btnLimparFiltros: document.getElementById("btnLimparFiltros"),
 
-        modal: document.getElementById("pedidoModal"),
-        modalTitulo: document.getElementById("modalTitulo"),
-        btnFecharModal: document.getElementById("btnFecharModal"),
-        btnCancelarModal: document.getElementById("btnCancelarModal"),
-        btnExcluir: document.getElementById("btnExcluirPedido"),
-        form: document.getElementById("pedidoForm"),
+        filtroPrioridade:
+            document.getElementById("filtroPrioridade"),
 
-        id: document.getElementById("pedidoId"),
-        cliente: document.getElementById("pedidoCliente"),
-        contato: document.getElementById("pedidoContato"),
-        projeto: document.getElementById("pedidoProjeto"),
-        quantidade: document.getElementById("pedidoQuantidade"),
-        cor: document.getElementById("pedidoCor"),
-        valor: document.getElementById("pedidoValor"),
-        data: document.getElementById("pedidoData"),
-        prazo: document.getElementById("pedidoPrazo"),
-        prioridade: document.getElementById("pedidoPrioridade"),
-        status: document.getElementById("pedidoStatus"),
-        observacoes: document.getElementById("pedidoObservacoes"),
+        btnLimparFiltros:
+            document.getElementById("btnLimparFiltros"),
 
-        statAtivos: document.getElementById("statAtivos"),
-        statProducao: document.getElementById("statProducao"),
-        statAtrasados: document.getElementById("statAtrasados"),
-        statReceber: document.getElementById("statReceber"),
-        statValorAberto: document.getElementById("statValorAberto")
+        modal:
+            document.getElementById("pedidoModal"),
+
+        modalTitulo:
+            document.getElementById("modalTitulo"),
+
+        btnFecharModal:
+            document.getElementById("btnFecharModal"),
+
+        btnCancelarModal:
+            document.getElementById("btnCancelarModal"),
+
+        btnExcluir:
+            document.getElementById("btnExcluirPedido"),
+
+        form:
+            document.getElementById("pedidoForm"),
+
+        id:
+            document.getElementById("pedidoId"),
+
+        cliente:
+            document.getElementById("pedidoCliente"),
+
+        contato:
+            document.getElementById("pedidoContato"),
+
+        projeto:
+            document.getElementById("pedidoProjeto"),
+
+        quantidade:
+            document.getElementById("pedidoQuantidade"),
+
+        cor:
+            document.getElementById("pedidoCor"),
+
+        valor:
+            document.getElementById("pedidoValor"),
+
+        data:
+            document.getElementById("pedidoData"),
+
+        prazo:
+            document.getElementById("pedidoPrazo"),
+
+        prioridade:
+            document.getElementById("pedidoPrioridade"),
+
+        status:
+            document.getElementById("pedidoStatus"),
+
+        observacoes:
+            document.getElementById("pedidoObservacoes"),
+
+        statAtivos:
+            document.getElementById("statAtivos"),
+
+        statProducao:
+            document.getElementById("statProducao"),
+
+        statAtrasados:
+            document.getElementById("statAtrasados"),
+
+        statReceber:
+            document.getElementById("statReceber"),
+
+        statValorAberto:
+            document.getElementById("statValorAberto")
     };
 
     let pedidos = carregarPedidos();
-    let dragId = null;
 
-    migrarPedidosAntigos();
+    let dragId = null;
 
     function carregarPedidos() {
         try {
-            const salvo = localStorage.getItem(STORAGE_KEY);
+            const salvo =
+                localStorage.getItem(STORAGE_KEY);
 
             if (!salvo) {
                 return [];
             }
 
-            const dados = JSON.parse(salvo);
+            const dados =
+                JSON.parse(salvo);
 
             return Array.isArray(dados)
                 ? dados
                 : [];
-        } catch (error) {
-            console.error("Erro ao carregar pedidos:", error);
-            return [];
         }
-    }
+        catch (error) {
+            console.error(
+                "Erro ao carregar pedidos:",
+                error
+            );
 
-    function migrarPedidosAntigos() {
-        let alterou = false;
-
-        pedidos.forEach((pedido) => {
-            const mapa = {
-                novo: "produzir",
-                orcamento: "backlog",
-                aguardando: "backlog",
-                producao: "producao",
-                finalizacao: "receber",
-                concluido: "entregue"
-            };
-
-            if (mapa[pedido.status]) {
-                pedido.status = mapa[pedido.status];
-                alterou = true;
-            }
-
-            if (!STATUS.includes(pedido.status)) {
-                pedido.status = "produzir";
-                alterou = true;
-            }
-
-            if (pedido.cor === undefined) {
-                pedido.cor = "";
-                alterou = true;
-            }
-        });
-
-        if (alterou) {
-            salvarPedidos();
+            return [];
         }
     }
 
@@ -133,20 +153,30 @@
             return crypto.randomUUID();
         }
 
-        return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+        return (
+            Date.now() +
+            "-" +
+            Math.random()
+                .toString(16)
+                .slice(2)
+        );
     }
 
     function hojeISO() {
         const hoje = new Date();
 
-        const ano = hoje.getFullYear();
-        const mes = String(
-            hoje.getMonth() + 1
-        ).padStart(2, "0");
+        const ano =
+            hoje.getFullYear();
 
-        const dia = String(
-            hoje.getDate()
-        ).padStart(2, "0");
+        const mes =
+            String(
+                hoje.getMonth() + 1
+            ).padStart(2, "0");
+
+        const dia =
+            String(
+                hoje.getDate()
+            ).padStart(2, "0");
 
         return `${ano}-${mes}-${dia}`;
     }
@@ -154,7 +184,10 @@
     function normalizarTexto(valor) {
         return String(valor || "")
             .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
+            .replace(
+                /[\u0300-\u036f]/g,
+                ""
+            )
             .toLowerCase()
             .trim();
     }
@@ -169,14 +202,15 @@
     }
 
     function formatarMoeda(valor) {
-        return (Number(valor) || 0)
-            .toLocaleString(
-                "pt-BR",
-                {
-                    style: "currency",
-                    currency: "BRL"
-                }
-            );
+        return (
+            Number(valor) || 0
+        ).toLocaleString(
+            "pt-BR",
+            {
+                style: "currency",
+                currency: "BRL"
+            }
+        );
     }
 
     function formatarData(data) {
@@ -184,13 +218,20 @@
             return "";
         }
 
-        const partes = data.split("-");
+        const partes =
+            data.split("-");
 
         if (partes.length !== 3) {
             return data;
         }
 
-        return `${partes[2]}/${partes[1]}/${partes[0]}`;
+        return (
+            partes[2] +
+            "/" +
+            partes[1] +
+            "/" +
+            partes[0]
+        );
     }
 
     function estaAtrasado(pedido) {
@@ -225,28 +266,34 @@
         const prioridade =
             elements.filtroPrioridade.value;
 
-        return pedidos.filter((pedido) => {
-            if (
-                prioridade &&
-                pedido.prioridade !== prioridade
-            ) {
-                return false;
+        return pedidos.filter(
+            (pedido) => {
+
+                if (
+                    prioridade &&
+                    pedido.prioridade !== prioridade
+                ) {
+                    return false;
+                }
+
+                if (!termo) {
+                    return true;
+                }
+
+                const texto =
+                    normalizarTexto(
+                        [
+                            pedido.cliente,
+                            pedido.contato,
+                            pedido.projeto,
+                            pedido.cor,
+                            pedido.observacoes
+                        ].join(" ")
+                    );
+
+                return texto.includes(termo);
             }
-
-            if (!termo) {
-                return true;
-            }
-
-            const texto = normalizarTexto([
-                pedido.cliente,
-                pedido.contato,
-                pedido.projeto,
-                pedido.cor,
-                pedido.observacoes
-            ].join(" "));
-
-            return texto.includes(termo);
-        });
+        );
     }
 
     function criarCard(pedido) {
@@ -262,41 +309,79 @@
                 : "pedido-card";
 
         card.draggable = true;
-        card.dataset.id = pedido.id;
+
+        card.dataset.id =
+            pedido.id;
+
         card.tabIndex = 0;
 
-        const cor = pedido.cor
-            ? `
-                <div class="pedido-card-line">
-                    <span>Cor / Material</span>
-                    <strong>${escaparHtml(pedido.cor)}</strong>
-                </div>
-            `
-            : "";
+        const cor =
+            pedido.cor
+                ? `
+                    <div class="pedido-card-line">
+                        <span>Cor / Material</span>
+                        <strong>
+                            ${escaparHtml(pedido.cor)}
+                        </strong>
+                    </div>
+                `
+                : "";
 
-        const prazo = pedido.prazo
-            ? `
-                <div class="pedido-card-line ${atrasado ? "pedido-prazo-atrasado" : ""}">
-                    <span>${atrasado ? "Atrasado" : "Entrega"}</span>
-                    <strong>${escaparHtml(formatarData(pedido.prazo))}</strong>
-                </div>
-            `
-            : "";
+        const prazo =
+            pedido.prazo
+                ? `
+                    <div class="pedido-card-line ${
+                        atrasado
+                            ? "pedido-prazo-atrasado"
+                            : ""
+                    }">
+                        <span>
+                            ${
+                                atrasado
+                                    ? "Atrasado"
+                                    : "Entrega"
+                            }
+                        </span>
 
-        const observacao = pedido.observacoes
-            ? `
-                <div class="pedido-observacao">
-                    ${escaparHtml(pedido.observacoes)}
-                </div>
-            `
-            : "";
+                        <strong>
+                            ${escaparHtml(
+                                formatarData(
+                                    pedido.prazo
+                                )
+                            )}
+                        </strong>
+                    </div>
+                `
+                : "";
+
+        const observacao =
+            pedido.observacoes
+                ? `
+                    <div class="pedido-observacao">
+                        ${escaparHtml(
+                            pedido.observacoes
+                        )}
+                    </div>
+                `
+                : "";
 
         card.innerHTML = `
             <div class="pedido-card-top">
-                <span class="pedido-prioridade ${prioridadeClasse(pedido.prioridade)}">
-                    ${escaparHtml(
-                        PRIORIDADE_LABELS[pedido.prioridade] || "Média"
-                    )}
+
+                <span
+                    class="pedido-prioridade ${
+                        prioridadeClasse(
+                            pedido.prioridade
+                        )
+                    }"
+                >
+                    ${
+                        escaparHtml(
+                            PRIORIDADE_LABELS[
+                                pedido.prioridade
+                            ] || "Média"
+                        )
+                    }
                 </span>
 
                 <button
@@ -306,19 +391,31 @@
                 >
                     ⋯
                 </button>
+
             </div>
 
-            <h3>${escaparHtml(pedido.projeto)}</h3>
+            <h3>
+                ${escaparHtml(
+                    pedido.projeto
+                )}
+            </h3>
 
             <p class="pedido-cliente">
-                ${escaparHtml(pedido.cliente)}
+                ${escaparHtml(
+                    pedido.cliente
+                )}
             </p>
 
             <div class="pedido-card-details">
 
                 <div class="pedido-card-line">
                     <span>Quantidade</span>
-                    <strong>${escaparHtml(pedido.quantidade || 1)}</strong>
+
+                    <strong>
+                        ${escaparHtml(
+                            pedido.quantidade || 1
+                        )}
+                    </strong>
                 </div>
 
                 ${cor}
@@ -330,30 +427,46 @@
             ${observacao}
 
             <div class="pedido-card-footer">
-                <strong>${formatarMoeda(pedido.valor)}</strong>
+
+                <strong>
+                    ${formatarMoeda(
+                        pedido.valor
+                    )}
+                </strong>
 
                 <span>
                     ${escaparHtml(
-                        STATUS_LABELS[pedido.status] || ""
+                        STATUS_LABELS[
+                            pedido.status
+                        ] || ""
                     )}
                 </span>
+
             </div>
         `;
 
         card.addEventListener(
             "click",
-            () => abrirEdicao(pedido.id)
+            () => {
+                abrirEdicao(
+                    pedido.id
+                );
+            }
         );
 
         card.addEventListener(
             "keydown",
             (event) => {
+
                 if (
                     event.key === "Enter" ||
                     event.key === " "
                 ) {
                     event.preventDefault();
-                    abrirEdicao(pedido.id);
+
+                    abrirEdicao(
+                        pedido.id
+                    );
                 }
             }
         );
@@ -361,12 +474,19 @@
         card.addEventListener(
             "dragstart",
             (event) => {
-                dragId = pedido.id;
 
-                card.classList.add("dragging");
+                dragId =
+                    pedido.id;
 
-                if (event.dataTransfer) {
-                    event.dataTransfer.effectAllowed = "move";
+                card.classList.add(
+                    "dragging"
+                );
+
+                if (
+                    event.dataTransfer
+                ) {
+                    event.dataTransfer.effectAllowed =
+                        "move";
 
                     event.dataTransfer.setData(
                         "text/plain",
@@ -379,111 +499,152 @@
         card.addEventListener(
             "dragend",
             () => {
+
                 dragId = null;
 
-                card.classList.remove("dragging");
+                card.classList.remove(
+                    "dragging"
+                );
 
                 document
-                    .querySelectorAll(".kanban-list")
-                    .forEach((lista) => {
-                        lista.classList.remove("drag-over");
-                    });
+                    .querySelectorAll(
+                        ".kanban-list"
+                    )
+                    .forEach(
+                        (lista) => {
+                            lista.classList.remove(
+                                "drag-over"
+                            );
+                        }
+                    );
             }
         );
 
         return card;
     }
 
+    function criarTicketFantasma(status) {
+        const ghost =
+            document.createElement("button");
+
+        ghost.type = "button";
+
+        ghost.className =
+            "kanban-ghost-ticket";
+
+        ghost.dataset.ghostStatus =
+            status;
+
+        ghost.innerHTML = `
+            <span class="kanban-ghost-plus">
+                +
+            </span>
+
+            <span>
+                Adicionar pedido
+            </span>
+        `;
+
+        ghost.addEventListener(
+            "click",
+            () => {
+                abrirNovoPedido(
+                    status
+                );
+            }
+        );
+
+        return ghost;
+    }
+
     function renderizar() {
         const filtrados =
             obterFiltrados();
 
-        STATUS.forEach((status) => {
-            const lista =
-                document.querySelector(
-                    `[data-list="${status}"]`
-                );
+        STATUS.forEach(
+            (status) => {
 
-            if (!lista) {
-                return;
-            }
+                const lista =
+                    document.querySelector(
+                        `[data-list="${status}"]`
+                    );
 
-            lista.innerHTML = "";
+                if (!lista) {
+                    return;
+                }
 
-            const pedidosStatus =
-                filtrados
-                    .filter(
-                        (pedido) =>
-                            pedido.status === status
-                    )
-                    .sort(
-                        (a, b) => {
-                            const prioridades = {
-                                alta: 0,
-                                media: 1,
-                                baixa: 2
-                            };
+                lista.innerHTML = "";
 
-                            const prioridadeA =
-                                prioridades[a.prioridade] ?? 1;
+                const pedidosStatus =
+                    filtrados
+                        .filter(
+                            (pedido) =>
+                                pedido.status === status
+                        )
+                        .sort(
+                            (a, b) => {
 
-                            const prioridadeB =
-                                prioridades[b.prioridade] ?? 1;
+                                const prioridades = {
+                                    alta: 0,
+                                    media: 1,
+                                    baixa: 2
+                                };
 
-                            if (
-                                prioridadeA !==
-                                prioridadeB
-                            ) {
-                                return (
-                                    prioridadeA -
-                                    prioridadeB
+                                const pa =
+                                    prioridades[
+                                        a.prioridade
+                                    ] ?? 1;
+
+                                const pb =
+                                    prioridades[
+                                        b.prioridade
+                                    ] ?? 1;
+
+                                if (pa !== pb) {
+                                    return pa - pb;
+                                }
+
+                                return String(
+                                    a.prazo ||
+                                    "9999-12-31"
+                                ).localeCompare(
+                                    String(
+                                        b.prazo ||
+                                        "9999-12-31"
+                                    )
                                 );
                             }
+                        );
 
-                            return String(
-                                a.prazo || "9999-12-31"
-                            ).localeCompare(
-                                String(
-                                    b.prazo || "9999-12-31"
-                                )
-                            );
-                        }
-                    );
+                pedidosStatus.forEach(
+                    (pedido) => {
 
-            pedidosStatus.forEach(
-                (pedido) => {
-                    lista.appendChild(
-                        criarCard(pedido)
-                    );
-                }
-            );
-
-            if (pedidosStatus.length === 0) {
-                const vazio =
-                    document.createElement("div");
-
-                vazio.className =
-                    "kanban-empty";
-
-                vazio.textContent =
-                    "Nenhum pedido";
-
-                lista.appendChild(vazio);
-            }
-
-            const contador =
-                document.querySelector(
-                    `[data-count="${status}"]`
+                        lista.appendChild(
+                            criarCard(pedido)
+                        );
+                    }
                 );
 
-            if (contador) {
-                contador.textContent =
-                    pedidos.filter(
-                        (pedido) =>
-                            pedido.status === status
-                    ).length;
+                lista.appendChild(
+                    criarTicketFantasma(
+                        status
+                    )
+                );
+
+                const contador =
+                    document.querySelector(
+                        `[data-count="${status}"]`
+                    );
+
+                if (contador) {
+                    contador.textContent =
+                        pedidos.filter(
+                            (pedido) =>
+                                pedido.status === status
+                        ).length;
+                }
             }
-        });
+        );
 
         atualizarEstatisticas();
     }
@@ -502,7 +663,9 @@
             );
 
         const atrasados =
-            pedidos.filter(estaAtrasado);
+            pedidos.filter(
+                estaAtrasado
+            );
 
         const receber =
             pedidos.filter(
@@ -514,7 +677,11 @@
             receber.reduce(
                 (total, pedido) =>
                     total +
-                    (Number(pedido.valor) || 0),
+                    (
+                        Number(
+                            pedido.valor
+                        ) || 0
+                    ),
                 0
             );
 
@@ -531,42 +698,68 @@
             receber.length;
 
         elements.statValorAberto.textContent =
-            formatarMoeda(valorReceber);
+            formatarMoeda(
+                valorReceber
+            );
     }
 
     function limparFormulario() {
         elements.form.reset();
 
         elements.id.value = "";
-        elements.quantidade.value = "1";
-        elements.prioridade.value = "media";
-        elements.status.value = "produzir";
-        elements.data.value = hojeISO();
 
-        elements.btnExcluir.hidden = true;
+        elements.quantidade.value =
+            "1";
+
+        elements.prioridade.value =
+            "media";
+
+        elements.status.value =
+            "produzir";
+
+        elements.data.value =
+            hojeISO();
+
+        elements.btnExcluir.hidden =
+            true;
     }
 
-    function abrirNovoPedido() {
+    function abrirNovoPedido(
+        statusInicial = "produzir"
+    ) {
         limparFormulario();
+
+        if (
+            STATUS.includes(
+                statusInicial
+            )
+        ) {
+            elements.status.value =
+                statusInicial;
+        }
 
         elements.modalTitulo.textContent =
             "Novo Pedido";
 
-        elements.modal.hidden = false;
+        elements.modal.hidden =
+            false;
 
         document.body.classList.add(
             "modal-open"
         );
 
         requestAnimationFrame(
-            () => elements.cliente.focus()
+            () => {
+                elements.cliente.focus();
+            }
         );
     }
 
     function abrirEdicao(id) {
         const pedido =
             pedidos.find(
-                (item) => item.id === id
+                (item) =>
+                    item.id === id
             );
 
         if (!pedido) {
@@ -612,20 +805,20 @@
         elements.modalTitulo.textContent =
             "Editar Pedido";
 
-        elements.btnExcluir.hidden = false;
-        elements.modal.hidden = false;
+        elements.btnExcluir.hidden =
+            false;
+
+        elements.modal.hidden =
+            false;
 
         document.body.classList.add(
             "modal-open"
         );
-
-        requestAnimationFrame(
-            () => elements.cliente.focus()
-        );
     }
 
     function fecharModal() {
-        elements.modal.hidden = true;
+        elements.modal.hidden =
+            true;
 
         document.body.classList.remove(
             "modal-open"
@@ -641,7 +834,10 @@
         const projeto =
             elements.projeto.value.trim();
 
-        if (!cliente || !projeto) {
+        if (
+            !cliente ||
+            !projeto
+        ) {
             return;
         }
 
@@ -650,11 +846,14 @@
 
         const anterior =
             pedidos.find(
-                (item) => item.id === id
+                (item) =>
+                    item.id === id
             );
 
         const pedido = {
-            id: id || gerarId(),
+            id:
+                id ||
+                gerarId(),
 
             cliente,
 
@@ -688,7 +887,8 @@
                 hojeISO(),
 
             prazo:
-                elements.prazo.value || "",
+                elements.prazo.value ||
+                "",
 
             prioridade:
                 elements.prioridade.value ||
@@ -715,18 +915,25 @@
         if (id) {
             const indice =
                 pedidos.findIndex(
-                    (item) => item.id === id
+                    (item) =>
+                        item.id === id
                 );
 
             if (indice >= 0) {
-                pedidos[indice] = pedido;
+                pedidos[indice] =
+                    pedido;
             }
-        } else {
-            pedidos.unshift(pedido);
+        }
+        else {
+            pedidos.unshift(
+                pedido
+            );
         }
 
         salvarPedidos();
+
         fecharModal();
+
         renderizar();
     }
 
@@ -740,29 +947,32 @@
 
         const pedido =
             pedidos.find(
-                (item) => item.id === id
+                (item) =>
+                    item.id === id
             );
 
         if (!pedido) {
             return;
         }
 
-        const confirmado =
-            window.confirm(
+        if (
+            !window.confirm(
                 `Excluir "${pedido.projeto}" de "${pedido.cliente}"?`
-            );
-
-        if (!confirmado) {
+            )
+        ) {
             return;
         }
 
         pedidos =
             pedidos.filter(
-                (item) => item.id !== id
+                (item) =>
+                    item.id !== id
             );
 
         salvarPedidos();
+
         fecharModal();
+
         renderizar();
     }
 
@@ -771,14 +981,17 @@
         novoStatus
     ) {
         if (
-            !STATUS.includes(novoStatus)
+            !STATUS.includes(
+                novoStatus
+            )
         ) {
             return;
         }
 
         const pedido =
             pedidos.find(
-                (item) => item.id === id
+                (item) =>
+                    item.id === id
             );
 
         if (!pedido) {
@@ -792,6 +1005,7 @@
             new Date().toISOString();
 
         salvarPedidos();
+
         renderizar();
     }
 
@@ -802,9 +1016,11 @@
             )
             .forEach(
                 (lista) => {
+
                     lista.addEventListener(
-                        "dragover",
+                        "dragenter",
                         (event) => {
+
                             event.preventDefault();
 
                             lista.classList.add(
@@ -814,17 +1030,44 @@
                     );
 
                     lista.addEventListener(
-                        "dragleave",
-                        () => {
-                            lista.classList.remove(
+                        "dragover",
+                        (event) => {
+
+                            event.preventDefault();
+
+                            if (
+                                event.dataTransfer
+                            ) {
+                                event.dataTransfer.dropEffect =
+                                    "move";
+                            }
+
+                            lista.classList.add(
                                 "drag-over"
                             );
                         }
                     );
 
                     lista.addEventListener(
+                        "dragleave",
+                        (event) => {
+
+                            if (
+                                !lista.contains(
+                                    event.relatedTarget
+                                )
+                            ) {
+                                lista.classList.remove(
+                                    "drag-over"
+                                );
+                            }
+                        }
+                    );
+
+                    lista.addEventListener(
                         "drop",
                         (event) => {
+
                             event.preventDefault();
 
                             lista.classList.remove(
@@ -838,16 +1081,16 @@
                                         "text/plain"
                                     );
 
-                            const status =
+                            const novoStatus =
                                 lista.dataset.list;
 
                             if (
                                 id &&
-                                status
+                                novoStatus
                             ) {
                                 moverPedido(
                                     id,
-                                    status
+                                    novoStatus
                                 );
                             }
                         }
@@ -856,9 +1099,34 @@
             );
     }
 
+    function configurarBotoesAdicionar() {
+        document
+            .querySelectorAll(
+                "[data-add-status]"
+            )
+            .forEach(
+                (botao) => {
+
+                    botao.addEventListener(
+                        "click",
+                        () => {
+
+                            abrirNovoPedido(
+                                botao.dataset.addStatus
+                            );
+                        }
+                    );
+                }
+            );
+    }
+
     elements.btnNovo.addEventListener(
         "click",
-        abrirNovoPedido
+        () => {
+            abrirNovoPedido(
+                "produzir"
+            );
+        }
     );
 
     elements.btnFecharModal.addEventListener(
@@ -894,8 +1162,13 @@
     elements.btnLimparFiltros.addEventListener(
         "click",
         () => {
-            elements.busca.value = "";
-            elements.filtroPrioridade.value = "";
+
+            elements.busca.value =
+                "";
+
+            elements.filtroPrioridade.value =
+                "";
+
             renderizar();
         }
     );
@@ -903,6 +1176,7 @@
     elements.modal.addEventListener(
         "mousedown",
         (event) => {
+
             if (
                 event.target ===
                 elements.modal
@@ -915,6 +1189,7 @@
     document.addEventListener(
         "keydown",
         (event) => {
+
             if (
                 event.key === "Escape" &&
                 !elements.modal.hidden
@@ -925,5 +1200,8 @@
     );
 
     configurarDragDrop();
+
+    configurarBotoesAdicionar();
+
     renderizar();
 })();
