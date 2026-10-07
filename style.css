@@ -2673,3 +2673,411 @@ input[type="checkbox"] {
 }
 
 /* ===== APP HAMBURGER GLOBAL END ===== */
+
+/* ===== HAMBURGER FLOATING FIX START ===== */
+
+/*
+ * REMOVE COMPLETAMENTE A APARÊNCIA DE HEADER.
+ *
+ * O header continua no DOM apenas como container
+ * do menu, mas não ocupa mais uma barra horizontal.
+ */
+
+.app-header.no-print {
+    position: fixed !important;
+
+    top: 18px !important;
+    right: 18px !important;
+
+    bottom: auto !important;
+    left: auto !important;
+
+    z-index: 99999 !important;
+
+    width: 48px !important;
+    height: 48px !important;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    background: transparent !important;
+
+    box-shadow: none !important;
+
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+
+    overflow: visible !important;
+}
+
+/*
+ * REMOVE O CONTAINER HORIZONTAL
+ */
+
+.app-header.no-print .app-header-inner {
+    position: static !important;
+
+    display: block !important;
+
+    width: 48px !important;
+    height: 48px !important;
+
+    min-width: 0 !important;
+    min-height: 0 !important;
+
+    max-width: none !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    border: 0 !important;
+
+    background: transparent !important;
+
+    box-shadow: none !important;
+
+    overflow: visible !important;
+}
+
+/*
+ * ESCONDE TODO O HEADER TRADICIONAL.
+ *
+ * Inclusive logo/marca.
+ */
+
+.app-header.no-print
+.app-header-inner > *:not(.app-menu-toggle) {
+    display: none !important;
+}
+
+/* ============================================================
+   BOTAO FLUTUANTE
+============================================================ */
+
+.app-header.no-print .app-menu-toggle {
+    position: absolute !important;
+
+    top: 0 !important;
+    right: 0 !important;
+
+    display: flex !important;
+
+    width: 48px !important;
+    height: 48px !important;
+
+    min-width: 48px !important;
+    min-height: 48px !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    align-items: center !important;
+    justify-content: center !important;
+    flex-direction: column !important;
+
+    gap: 5px !important;
+
+    border:
+        1px solid
+        rgba(0, 54, 64, 0.12) !important;
+
+    border-radius: 14px !important;
+
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.96
+        ) !important;
+
+    color: #003640 !important;
+
+    box-shadow:
+        0 6px 20px
+        rgba(
+            0,
+            54,
+            64,
+            0.14
+        ) !important;
+
+    cursor: pointer !important;
+
+    order: initial !important;
+
+    -webkit-tap-highlight-color:
+        transparent;
+}
+
+/*
+ * HAMBURGUER
+ */
+
+.app-header.no-print
+.app-menu-toggle-line {
+    display: block !important;
+
+    width: 23px !important;
+    height: 2px !important;
+
+    min-height: 2px !important;
+
+    margin: 0 !important;
+
+    border-radius: 999px !important;
+
+    background: currentColor !important;
+
+    transition:
+        transform 0.2s ease,
+        opacity 0.2s ease !important;
+}
+
+/* ============================================================
+   MENU ABERTO
+============================================================ */
+
+/*
+ * Quando aberto, o HEADER continua pequeno.
+ * Quem cresce é somente o painel do menu.
+ */
+
+.app-header.no-print.app-menu-open {
+    width: 48px !important;
+    height: 48px !important;
+
+    padding: 0 !important;
+
+    background: transparent !important;
+}
+
+/*
+ * O inner também continua pequeno.
+ */
+
+.app-header.no-print.app-menu-open
+.app-header-inner {
+    width: 48px !important;
+    height: 48px !important;
+
+    padding: 0 !important;
+
+    background: transparent !important;
+}
+
+/*
+ * REMOVE pseudo-elemento criado anteriormente
+ */
+
+.app-header.no-print.app-menu-open
+.app-header-inner::after {
+    display: none !important;
+    content: none !important;
+}
+
+/*
+ * O conteúdo do menu vira painel flutuante.
+ */
+
+.app-header.no-print.app-menu-open
+.app-header-inner > *:not(.app-menu-toggle) {
+    position: absolute !important;
+
+    top: 58px !important;
+    right: 0 !important;
+
+    left: auto !important;
+
+    display: flex !important;
+
+    width: 280px !important;
+
+    min-width: 280px !important;
+    max-width: calc(100vw - 32px) !important;
+
+    height: auto !important;
+
+    margin: 0 !important;
+
+    padding: 10px !important;
+
+    box-sizing: border-box !important;
+
+    flex-direction: column !important;
+
+    align-items: stretch !important;
+
+    gap: 4px !important;
+
+    border:
+        1px solid
+        rgba(
+            0,
+            54,
+            64,
+            0.10
+        ) !important;
+
+    border-radius: 14px !important;
+
+    background: #ffffff !important;
+
+    box-shadow:
+        0 16px 40px
+        rgba(
+            0,
+            54,
+            64,
+            0.18
+        ) !important;
+}
+
+/* ============================================================
+   NAVEGACAO
+============================================================ */
+
+.app-header.no-print.app-menu-open nav,
+.app-header.no-print.app-menu-open .app-nav,
+.app-header.no-print.app-menu-open .app-header-nav,
+.app-header.no-print.app-menu-open .header-nav,
+.app-header.no-print.app-menu-open .nav-links {
+    display: flex !important;
+
+    flex-direction: column !important;
+
+    width: 280px !important;
+
+    max-width: calc(100vw - 32px) !important;
+
+    align-items: stretch !important;
+
+    gap: 4px !important;
+}
+
+.app-header.no-print.app-menu-open nav ul,
+.app-header.no-print.app-menu-open .app-nav ul,
+.app-header.no-print.app-menu-open .app-header-nav ul,
+.app-header.no-print.app-menu-open .header-nav ul,
+.app-header.no-print.app-menu-open .nav-links ul {
+    display: flex !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+    padding: 0 !important;
+
+    flex-direction: column !important;
+
+    gap: 4px !important;
+
+    list-style: none !important;
+}
+
+.app-header.no-print.app-menu-open nav li,
+.app-header.no-print.app-menu-open .app-nav li,
+.app-header.no-print.app-menu-open .app-header-nav li,
+.app-header.no-print.app-menu-open .header-nav li,
+.app-header.no-print.app-menu-open .nav-links li {
+    display: block !important;
+
+    width: 100% !important;
+
+    margin: 0 !important;
+}
+
+.app-header.no-print.app-menu-open nav a,
+.app-header.no-print.app-menu-open .app-nav a,
+.app-header.no-print.app-menu-open .app-header-nav a,
+.app-header.no-print.app-menu-open .header-nav a,
+.app-header.no-print.app-menu-open .nav-links a {
+    display: flex !important;
+
+    width: 100% !important;
+
+    min-height: 44px !important;
+
+    align-items: center !important;
+
+    padding:
+        10px
+        12px !important;
+
+    box-sizing: border-box !important;
+
+    border-radius: 9px !important;
+
+    white-space: normal !important;
+}
+
+/* ============================================================
+   HAMBURGUER -> X
+============================================================ */
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(1) {
+    transform:
+        translateY(7px)
+        rotate(45deg) !important;
+}
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(2) {
+    opacity: 0 !important;
+}
+
+.app-header.no-print
+.app-menu-toggle[aria-expanded="true"]
+.app-menu-toggle-line:nth-child(3) {
+    transform:
+        translateY(-7px)
+        rotate(-45deg) !important;
+}
+
+/* ============================================================
+   MOBILE
+============================================================ */
+
+@media (max-width: 720px) {
+
+    .app-header.no-print {
+        top: 12px !important;
+        right: 12px !important;
+    }
+
+    .app-header.no-print.app-menu-open
+    .app-header-inner >
+    *:not(.app-menu-toggle) {
+        width:
+            min(
+                280px,
+                calc(100vw - 24px)
+            ) !important;
+
+        min-width: 0 !important;
+
+        max-width:
+            calc(100vw - 24px) !important;
+    }
+
+    .app-header.no-print.app-menu-open nav,
+    .app-header.no-print.app-menu-open .app-nav,
+    .app-header.no-print.app-menu-open .app-header-nav,
+    .app-header.no-print.app-menu-open .header-nav,
+    .app-header.no-print.app-menu-open .nav-links {
+        width: 100% !important;
+
+        max-width: 100% !important;
+    }
+}
+
+/* ===== HAMBURGER FLOATING FIX END ===== */
