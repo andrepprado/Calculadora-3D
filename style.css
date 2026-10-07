@@ -21,6 +21,7 @@ body {
     position: relative;
 }
 
+/* Background Pattern Duo.Lab */
 body::before {
     content: "";
     position: fixed;
@@ -28,7 +29,8 @@ body::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%), url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
+    background-image: radial-gradient(circle, transparent 0%, var(--bg-base) 85%),
+        url('img/Gemini_Generated_Image_biuvitbiuvitbiuv.png');
     background-repeat: no-repeat, repeat;
     background-size: cover, 450px;
     opacity: 0.15;
@@ -38,8 +40,16 @@ body::before {
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1000px;
     margin: 0 auto;
+    position: relative;
+}
+
+header h1 {
+    text-align: center;
+    color: var(--primary);
+    font-weight: 800;
+    margin-bottom: 20px;
 }
 
 .grid {
@@ -56,14 +66,17 @@ body::before {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 }
 
+/* --- INPUTS --- */
 .input-row {
     display: flex;
     gap: 12px;
     margin-bottom: 12px;
+    width: 100%;
 }
 
-.input-group {
-    flex: 1;
+.input-row .input-group {
+    flex: 1 1 0;
+    min-width: 0;
     display: flex;
     flex-direction: column;
 }
@@ -78,6 +91,7 @@ h3 {
 }
 
 label {
+    display: block;
     font-size: 0.75rem;
     font-weight: 700;
     color: #64748b;
@@ -86,16 +100,28 @@ label {
 
 input:not([type="checkbox"]),
 select {
+    width: 100%;
     padding: 10px;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
+    font-size: 1rem;
+    background: #fff;
     height: 42px;
+    transition: border-color 0.2s;
+}
+
+input:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .filament-select-wrapper {
     display: flex;
     align-items: center;
     gap: 12px;
+    margin-bottom: 10px;
 }
 
 .color-dot {
@@ -103,8 +129,11 @@ select {
     height: 28px;
     border-radius: 50%;
     border: 1px solid #cbd5e1;
+    flex-shrink: 0;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
+/* --- CHECKBOXES --- */
 .chk-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -112,34 +141,40 @@ select {
     margin: 15px 0;
 }
 
-.chk-grid label {
+.chk-grid label,
+.chk-single {
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: #475569;
 }
 
+input[type="checkbox"] {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    cursor: pointer;
+}
+
+/* --- RESULTADOS --- */
 .results {
     background: var(--dark-card);
     color: white;
-}
-
-.print-header h2 {
-    font-size: 1.4rem;
-    margin-bottom: 5px;
-}
-
-.print-header p {
-    font-size: 0.9rem;
-    color: #cbd5e1;
+    border: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 600px;
 }
 
 .info-row-destaque {
+    margin-bottom: 15px;
     font-size: 1.1rem;
     font-weight: 700;
-    margin-bottom: 10px;
     border-bottom: 1px solid #334155;
-    padding-bottom: 6px;
+    padding-bottom: 8px;
 }
 
 .internal-box {
@@ -147,23 +182,50 @@ select {
     padding: 15px;
     border-radius: 10px;
     margin: 15px 0;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.internal-tag {
+    font-size: 0.65rem;
+    color: #fbbf24;
+    font-weight: bold;
+    display: block;
+    margin-bottom: 10px;
+    letter-spacing: 1px;
 }
 
 .res-item-small {
     display: flex;
     justify-content: space-between;
+    font-size: 0.85rem;
+    color: #94a3b8;
     margin-bottom: 6px;
-    color: #cbd5e1;
 }
 
-#printCliente .res-item-small span:last-child {
-    font-weight: 700;
-    color: #ffffff;
+.res-total-interno {
+    display: flex;
+    justify-content: space-between;
+    font-weight: bold;
+    border-top: 1px solid #334155;
+    margin-top: 10px;
+    padding-top: 10px;
+    color: #fff;
 }
 
 .venda-container {
     text-align: center;
-    margin-top: 20px;
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #334155;
+}
+
+.venda-block small {
+    display: block;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 0.7rem;
+    margin-bottom: 5px;
 }
 
 .txt-venda-unid {
@@ -172,52 +234,83 @@ select {
 }
 
 .txt-venda-total {
-    font-size: 3rem;
+    font-size: 3.5rem;
     font-weight: 900;
     color: #2ecc71;
+    line-height: 1;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
-#printCliente {
-    grid-column: 1 / -1;
+.btn-print {
+    width: 100%;
+    margin-top: 25px;
+    padding: 18px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.3s;
 }
 
+.btn-print:hover {
+    background: #1d4ed8;
+}
+
+/* --- RESPONSIVIDADE --- */
+@media (max-width: 768px) {
+    .grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chk-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+/* --- IMPRESSÃO --- */
 @media print {
+    @page {
+        margin: 1cm;
+        size: A4;
+    }
+
     .no-print {
         display: none !important;
     }
 
+    body {
+        background: white !important;
+        padding: 0 !important;
+    }
+
     body::before {
-        display: none;
+        display: none !important;
     }
 
     .card.results {
         background: white !important;
         color: black !important;
+        box-shadow: none;
+        width: 100%;
+    }
+
+    .print-header {
+        display: block !important;
+        text-align: center;
+        border-bottom: 3px solid #000;
+    }
+
+    .res-item-small,
+    .res-total-interno,
+    .info-row-destaque {
+        color: black !important;
+        border-bottom: 1px solid #eee;
     }
 
     .txt-venda-total {
         color: black !important;
+        text-shadow: none;
     }
-}
-
-#printCliente .print-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#printCliente .header-left {
-    display: flex;
-    flex-direction: column;
-}
-
-#printCliente .header-right {
-    display: flex;
-    align-items: center;
-}
-
-.logo-cliente {
-    max-height: 120px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
 }
