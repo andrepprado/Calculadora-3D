@@ -108,10 +108,125 @@
             document.getElementById("statValorAberto")
     };
 
-    let pedidos = carregarPedidos();
+    let pedidos = [];
 
     let dragId = null;
 
+    async function carregarBaseCompartilhada() {
+        try {
+            const resposta = await fetch(
+                `data/pedidos.json?v=${Date.now()}`,
+                {
+                    cache: "no-store"
+                }
+            );
+
+            if (!resposta.ok) {
+                throw new Error(
+                    `HTTP ${resposta.status}`
+                );
+            }
+
+            const base = await resposta.json();
+
+            const remotos =
+                Array.isArray(base)
+                    ? base
+                    : (
+                        Array.isArray(base.pedidos)
+                            ? base.pedidos
+                            : []
+                    );
+
+            const locais =
+                carregarPedidos();
+
+            /*
+             * A base publicada no site e a base principal.
+             *
+             * Alteracoes realizadas neste navegador continuam
+             * sendo preservadas no localStorage.
+             *
+             * Se existir uma versao local do mesmo ID,
+             * prevalece a mais recentemente atualizada.
+             */
+
+            const mapa = new Map();
+
+            remotos.forEach(
+                (pedido) => {
+                    mapa.set(
+                        pedido.id,
+                        pedido
+                    );
+                }
+            );
+
+            locais.forEach(
+                (local) => {
+                    const remoto =
+                        mapa.get(local.id);
+
+                    if (!remoto) {
+                        mapa.set(
+                            local.id,
+                            local
+                        );
+
+                        return;
+                    }
+
+                    const dataLocal =
+                        new Date(
+                            local.atualizadoEm ||
+                            local.criadoEm ||
+                            0
+                        ).getTime();
+
+                    const dataRemota =
+                        new Date(
+                            remoto.atualizadoEm ||
+                            remoto.criadoEm ||
+                            0
+                        ).getTime();
+
+                    if (
+                        dataLocal >
+                        dataRemota
+                    ) {
+                        mapa.set(
+                            local.id,
+                            local
+                        );
+                    }
+                }
+            );
+
+            pedidos =
+                Array.from(
+                    mapa.values()
+                );
+
+            salvarPedidos();
+
+            renderizar();
+
+            console.log(
+                `Planner carregado: ${pedidos.length} pedidos.`
+            );
+        }
+        catch (error) {
+            console.warn(
+                "Nao foi possivel carregar a base compartilhada. Usando cache local.",
+                error
+            );
+
+            pedidos =
+                carregarPedidos();
+
+            renderizar();
+        }
+    }
     function carregarPedidos() {
         try {
             const salvo =
@@ -1203,5 +1318,5 @@
 
     configurarBotoesAdicionar();
 
-    renderizar();
+    carregarBaseCompartilhada();
 })();
