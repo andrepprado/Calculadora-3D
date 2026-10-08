@@ -2971,7 +2971,7 @@ function formatarData(data) {
             try {
                 firebaseDb.settings({
                     ignoreUndefinedProperties: true
-                });
+                }, { merge: true });
             }
             catch (erro) {
                 console.debug(
