@@ -505,6 +505,56 @@ function lerBandejas(){
         return {nome:f.nome,peso,horas:(h||0)+(m||0)/60,custo:f.custo,tempo};
     });
 }
+
+/* DUOLAB ORDENACAO FILAMENTOS V1 */
+function duoOrdenarFilamentosPorMarca() {
+    if (typeof filamentos === 'undefined' ||
+        !Array.isArray(filamentos)) return;
+
+    const obterMarca = (nome) => {
+        const texto = String(nome || '')
+            .replace(/^\s+/, '')
+            .replace(/^(?:[A-Z0-9_-]+\s*-\s*)/i, '')
+            .trim();
+
+        const marcas = [
+            'MASTERPRINT',
+            'VOOLT',
+            'CREALITY',
+            'ESUN',
+            'SUNLU',
+            'BAMBULAB',
+            'BAMBU LAB',
+            '3D FILA',
+            '3DFILA',
+            'GTMAX3D',
+            'VONDER',
+            'POLYMAKER'
+        ];
+
+        const marca = marcas.find(m =>
+            texto.toUpperCase().includes(m) ||
+            String(nome).toUpperCase().includes(m)
+        );
+
+        return marca || texto.split(/\s+/)[0] || 'OUTROS';
+    };
+
+    const comparador = new Intl.Collator('pt-BR', {
+        sensitivity: 'base',
+        numeric: true
+    });
+
+    filamentos.sort((a, b) => {
+        const marcaA = obterMarca(a.nome);
+        const marcaB = obterMarca(b.nome);
+
+        return comparador.compare(marcaA, marcaB) ||
+               comparador.compare(a.nome, b.nome);
+    });
+}
+
+duoOrdenarFilamentosPorMarca();
 function configurarMultipartes() {
     const toggle = document.getElementById('modoMultipartes');
     const area = document.getElementById('bandejasArea');
