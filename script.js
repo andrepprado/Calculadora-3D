@@ -372,82 +372,137 @@ function definirCheckbox(id, marcado) {
 }
 
 function resetarCalculadora() {
-    const filamentoSelect =
-        document.getElementById('filamentoSelect');
+    const get = id => document.getElementById(id);
 
-    const custoKg =
-        document.getElementById('custoKg');
+    const definir = (id, valor) => {
+        const el = get(id);
+        if (el) el.value = valor;
+    };
 
-    const margem =
-        document.getElementById('margem');
+    const marcar = (id, valor) => {
+        const el = get(id);
+        if (el) el.checked = valor;
+    };
 
-    const peso =
-        document.getElementById('peso');
-
-    const tempo =
-        document.getElementById('tempo');
-
-    const quantidade =
-        document.getElementById('quantidade');
-
-    const canalVenda =
-        document.getElementById('canalVenda');
-
-    if (filamentoSelect) {
-        filamentoSelect.selectedIndex = 0;
+    // Desativar multipartes e restaurar layout original.
+    const toggle = get('modoMultipartes');
+    if (toggle) {
+        toggle.checked = false;
+        toggle.dispatchEvent(new Event('change', { bubbles: true }));
     }
 
-    if (margem) {
-        margem.value = 100;
+    // Restaurar os campos originais.
+    const select = get('filamentoSelect');
+    if (select) select.selectedIndex = 0;
+
+    definir('margem', 100);
+    definir('peso', '');
+    definir('tempo', '00:00');
+    definir('quantidade', 1);
+
+    const canal = get('canalVenda');
+    if (canal) canal.selectedIndex = 0;
+
+    // Restaurar checkboxes.
+    [
+        'chkChaveiro',
+        'chkIma',
+        'chkLuminaria',
+        'chkPlastica',
+        'chkSacolaKraft',
+        'chkAdesivoFixo'
+    ].forEach(id => marcar(id, false));
+
+    [
+        'chkAcabamento',
+        'chkDepreciacao',
+        'chkCustosFixos'
+    ].forEach(id => marcar(id, true));
+
+    // Reiniciar todas as bandejas dinâmicas.
+    const area = get('bandejasArea');
+
+    if (area) {
+        const linhas = Array.from(
+            area.querySelectorAll('.duo-bandeja')
+        );
+
+        // Excluir as bandejas adicionais usando os
+        // próprios eventos da interface.
+        for (let i = linhas.length - 1; i >= 4; i--) {
+            const remover = linhas[i].querySelector(
+                '.duo-remover-bandeja'
+            );
+
+            if (remover) {
+                remover.click();
+            } else {
+                linhas[i].remove();
+            }
+        }
+
+        // Garantir quatro bandejas iniciais.
+        const adicionar = get('duoAdicionarBandeja');
+
+        if (adicionar) {
+            while (
+                area.querySelectorAll('.duo-bandeja').length < 4
+            ) {
+                adicionar.click();
+            }
+        }
+
+        // Limpar todos os dados das bandejas restantes.
+        area.querySelectorAll('.duo-bandeja').forEach(
+            (linha, indice) => {
+                const filamento = linha.querySelector('select');
+                const peso = linha.querySelector('.bandeja-peso');
+                const tempo = linha.querySelector('.bandeja-tempo');
+                const label = linha.querySelector('.duo-bandeja-label');
+
+                if (filamento) filamento.selectedIndex = 0;
+                if (peso) peso.value = '';
+                if (tempo) tempo.value = '00:00';
+                if (label) label.textContent = 'Bandeja ' + (indice + 1);
+            }
+        );
     }
 
-    if (peso) {
-        peso.value = 0;
+    // Sincronizar quantidade do multipartes.
+    const rodape = get('duoRodapeMultipartes');
+
+    if (rodape) {
+        const campoQuantidade = rodape.querySelector(
+            'input[type="number"]'
+        );
+
+        if (campoQuantidade) campoQuantidade.value = 1;
     }
 
-    if (tempo) {
-        tempo.value = "00:00";
-    }
+    // Fechar o Planner incorporado.
+    const overlay = get('duoPlannerOverlay');
+    if (overlay) overlay.hidden = true;
 
-    if (quantidade) {
-        quantidade.value = 1;
-    }
+    const frame = get('duoPlannerFrame');
+    if (frame) frame.src = 'about:blank';
 
-    if (canalVenda) {
-        canalVenda.selectedIndex = 0;
-    }
+    // Remover rascunho não confirmado.
+    sessionStorage.removeItem('duolab_planner_rascunho_v1');
 
-    definirCheckbox('chkChaveiro', false);
-    definirCheckbox('chkIma', false);
-    definirCheckbox('chkLuminaria', false);
-    definirCheckbox('chkPlastica', false);
-    definirCheckbox('chkSacolaKraft', false);
-    definirCheckbox('chkAdesivoFixo', false);
-
-    definirCheckbox('chkAcabamento', true);
-    definirCheckbox('chkDepreciacao', true);
-    definirCheckbox('chkCustosFixos', true);
-
+    // Restaurar armazenamento da calculadora.
     localStorage.removeItem('cal3d_duolab_final');
     localStorage.removeItem('cal3d_duolab_filamento');
 
-    if (filamentoSelect) {
+    // Restaurar o filamento padrão.
+    if (select && typeof atualizarFilamento === 'function') {
         atualizarFilamento();
-    } else {
+    }
+
+    // Recalcular o orçamento zerado.
+    if (typeof calcular === 'function') {
         calcular();
     }
-
-    if (custoKg && filamentoSelect) {
-        const indice =
-            parseInt(filamentoSelect.value) || 0;
-
-        if (filamentos[indice]) {
-            custoKg.value =
-                filamentos[indice].custo.toFixed(2);
-        }
-    }
 }
-
 function configurarBotaoLimpar() {
     const botao =
         document.getElementById('btnLimparCalculadora');
@@ -728,15 +783,13 @@ function configurarMultipartes() {
                 criarBandeja();
             }
 
-            toggle.lastChild.textContent =
-                ' Impressão multipartes';
+            
         } else {
             ancoraMargem.parentNode.insertBefore(
                 grupoMargem, ancoraMargem.nextSibling
             );
             linhaOriginal.hidden = false;
-            toggle.lastChild.textContent =
-                ' Impressão multipartes';
+            
         }
 
         calcular();
@@ -799,13 +852,6 @@ function configurarMultipartes() {
 
     // Restaurar corretamente os campos ao limpar.
     const botaoLimpar = document.getElementById('btnLimparCalculadora');
-
-    if (botaoLimpar) {
-        botaoLimpar.addEventListener('click', () => {
-            toggle.checked = false;
-            atualizarModo();
-        });
-    }
 }
 
 if (document.readyState === 'loading') {
