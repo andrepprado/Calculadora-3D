@@ -3402,6 +3402,22 @@ function formatarData(data) {
             );
     }
 
+    // Abre o formulário já preenchido, dentro da calculadora, sem mudar de página.
+    if (new URLSearchParams(location.search).get('novoOrcamento') === '1') {
+        try {
+            const draft=JSON.parse(sessionStorage.getItem('duolab_planner_rascunho_v1') || 'null');
+            if(draft){
+                abrirNovoPedido('produzir');
+                elements.cliente.value=draft.cliente || '';
+                elements.projeto.value=draft.projeto || '';
+                elements.quantidade.value=draft.quantidade || 1;
+                elements.cor.value=draft.cor || '';
+                elements.valor.value=formatarMoeda(draft.valor || 0);
+                elements.observacoes.value=draft.observacoes || '';
+            }
+        } catch(e){console.warn('Rascunho inválido',e)}
+    }
+
     elements.btnNovo.addEventListener(
         "click",
         () => {

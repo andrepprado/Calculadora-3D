@@ -29,7 +29,12 @@ const filamentos = [
     { nome: "ELEGOO - PLA MATTE LARANJA", custo: 103.80, cor: "#E67E22" },
     { nome: "ELEGOO - PLA SILK ROXO E AZUL", custo: 113.90, cor: "#5D3FD3" },
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6B4423" },
-    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" }
+    { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" },
+    { nome: "MASTERPRINT - PETG PRETO", custo: 99.99, cor: "#171717" },
+    { nome: "VOOLT - PLA ROSA PÚRPURA HIGH SPEED", custo: 97.14, cor: "#A62D78" },
+    { nome: "VOOLT - PLA OUTLET (COR VARIÁVEL)", custo: 74.78, cor: "#888888" },
+    { nome: "VOOLT - PLA VERDE V-SILK HIGH SPEED", custo: 96.18, cor: "#278F5B" },
+    { nome: "VOOLT - PLA DOURADO V-SILK HIGH SPEED", custo: 96.18, cor: "#C8A44B" }
 ];
 
 function popularFilamentos() {
@@ -79,14 +84,16 @@ function setText(id, valor) {
     }
 }
 function calcular() {
-    const peso = parseFloat(document.getElementById('peso').value) || 0;
+    const multiparte = document.getElementById('modoMultipartes')?.checked || false;
+    const bandejas = multiparte ? lerBandejas() : [];
+    const peso = multiparte ? bandejas.reduce((a,b)=>a+b.peso,0) : (parseFloat(document.getElementById('peso').value) || 0);
 
     const tempoRaw =
         document.getElementById('tempo').value || "00:00";
 
     const tVal = tempoRaw.split(':');
 
-    const horasDec =
+    const horasDec = multiparte ? bandejas.reduce((a,b)=>a+b.horas,0) :
         (parseInt(tVal[0]) || 0) +
         (parseInt(tVal[1]) || 0) / 60;
 
@@ -102,11 +109,9 @@ function calcular() {
     /*
      * MATERIAL
      */
-    const cMatTotal =
-        (peso / 1000) *
-        custoKg *
-        (1 + CONFIG.margem_perda_material) *
-        qtd;
+    const cMatTotal = multiparte
+        ? bandejas.reduce((total,b)=>total+(b.peso/1000)*b.custo*(1+CONFIG.margem_perda_material),0)*qtd
+        : (peso / 1000) * custoKg * (1 + CONFIG.margem_perda_material) * qtd;
 
     /*
      * ENERGIA + INFRAESTRUTURA
@@ -248,6 +253,7 @@ function calcular() {
     /*
      * RESULTADOS
      */
+    setText('resNomeFilamento', multiparte ? bandejas.filter(b=>b.peso>0).map(b=>b.nome).join(' + ') || 'Multipartes' : filamentos[parseInt(document.getElementById('filamentoSelect').value)]?.nome || '-');
     setText('resMatDetalhe', format(cMatTotal));
 
     setText('resEneDetalhe', format(cInfraTotal));
@@ -273,6 +279,7 @@ function calcular() {
     setText('resVendaUnid', format(vendaUnitaria));
 
     setText('resVendaTotal', format(vendaTotal));
+    window.duolabOrcamento = { valor:vendaTotal, quantidade:qtd, filamento:document.getElementById('resNomeFilamento').innerText, bandejas, peso, horas:horasDec, multiparte };
 
     setText('dataAtual', "Data: " +
         new Date().toLocaleDateString('pt-BR'));
@@ -485,3 +492,50 @@ if (document.readyState === 'loading') {
 }
 
 /* ===== CALCULADORA INIT END ===== */
+
+/* Modo multipartes: despesas de acabamento, embalagem, infraestrutura e depreciação
+   continuam calculadas uma única vez por unidade; material e energia somam bandejas. */
+function lerBandejas(){
+    return [...document.querySelectorAll('.duo-bandeja')].map((row)=>{
+        const index=Number(row.querySelector('select').value);
+        const f=filamentos[index] || filamentos[0];
+        const peso=Math.max(0,Number(row.querySelector('.bandeja-peso').value)||0);
+        const tempo=row.querySelector('.bandeja-tempo').value || '00:00';
+        const [h,m]=tempo.split(':').map(Number);
+        return {nome:f.nome,peso,horas:(h||0)+(m||0)/60,custo:f.custo,tempo};
+    });
+}
+function configurarMultipartes(){
+    const toggle=document.getElementById('modoMultipartes');
+    const area=document.getElementById('bandejasArea');
+    const campos=document.getElementById('camposPecaSimples');
+    const criar=()=>{
+        area.innerHTML='';
+        for(let i=0;i<4;i++){
+            const row=document.createElement('div');row.className='duo-bandeja';
+            const label=document.createElement('strong');label.textContent='Bandeja '+(i+1);
+            const select=document.createElement('select');select.setAttribute('aria-label','Filamento bandeja '+(i+1));
+            filamentos.forEach((f,j)=>{const opt=new Option(f.nome,j);select.add(opt)});
+            const peso=document.createElement('input');peso.type='number';peso.min='0';peso.step='0.01';peso.placeholder='Gramas';peso.className='bandeja-peso';
+            const tempo=document.createElement('input');tempo.type='time';tempo.value='00:00';tempo.className='bandeja-tempo';
+            row.append(label,select,peso,tempo);area.append(row);
+            [select,peso,tempo].forEach(el=>{el.addEventListener('input',calcular);el.addEventListener('change',calcular)});
+        }
+    };
+    criar();
+    toggle.addEventListener('change',()=>{area.hidden=!toggle.checked;campos.hidden=toggle.checked;calcular()});
+    const btn=document.getElementById('btnEnviarPlanner');
+    const overlay=document.getElementById('duoPlannerOverlay');
+    btn.addEventListener('click',()=>{
+        const o=window.duolabOrcamento;
+        if(!o)return;
+        const projeto=prompt('Nome do produto / projeto:');if(!projeto?.trim())return;
+        const cliente=prompt('Nome do cliente:');if(!cliente?.trim())return;
+        const draft={cliente:cliente.trim(),projeto:projeto.trim(),quantidade:o.quantidade,cor:o.filamento,valor:o.valor,observacoes:o.multiparte?o.bandejas.map((b,i)=>`Bandeja ${i+1}: ${b.nome} | ${b.peso}g | ${b.tempo}`).join('\n'):`Peso: ${o.peso}g | Tempo: ${o.horas.toFixed(2)}h`};
+        sessionStorage.setItem('duolab_planner_rascunho_v1',JSON.stringify(draft));
+        overlay.hidden=false;
+        document.getElementById('duoPlannerFrame').src='planner.html?novoOrcamento=1&v='+Date.now();
+    });
+    document.getElementById('fecharDuoPlanner').addEventListener('click',()=>{overlay.hidden=true;document.getElementById('duoPlannerFrame').src='about:blank'});
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',configurarMultipartes);else configurarMultipartes();

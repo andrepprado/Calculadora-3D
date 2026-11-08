@@ -3743,3 +3743,15 @@ input[type="checkbox"] {
 }
 
 /* ===== BOTAO LIMPAR CALCULADORA END ===== */
+
+/* Duo.Lab multipartes */
+.duo-toggle{display:flex;align-items:center;gap:10px;margin:18px 0;font-weight:700;cursor:pointer}
+#bandejasArea:not([hidden]){display:grid;gap:12px;margin:12px 0 24px}
+.duo-bandeja{display:grid;grid-template-columns:90px minmax(180px,1fr) 100px 125px;align-items:center;gap:9px}
+.duo-bandeja select,.duo-bandeja input{min-width:0;width:100%;padding:10px;border:1px solid #bbb;border-radius:8px;background:var(--card-bg,#fff);color:#222}
+.duo-planner-overlay[hidden],#bandejasArea[hidden],#camposPecaSimples[hidden]{display:none!important}
+.duo-planner-overlay{position:fixed;inset:2%;z-index:99999;background:#fff;border-radius:14px;box-shadow:0 0 0 100vmax #0009;display:flex;flex-direction:column;overflow:hidden}
+.duo-planner-top{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#003640;color:#fff}
+.duo-planner-top button{padding:9px 18px;cursor:pointer}
+.duo-planner-overlay iframe{border:0;width:100%;flex:1}
+@media(max-width:720px){.duo-bandeja{grid-template-columns:1fr 1fr}.duo-bandeja select{grid-column:span 2}.duo-planner-overlay{inset:0;border-radius:0}}

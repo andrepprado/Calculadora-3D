@@ -59,7 +59,7 @@
                 </div>
 
                 <h3>2. Dados da Peça</h3>
-                <div class="input-row equal-inputs">
+                <div class="input-row equal-inputs" id="camposPecaSimples">
                     <div class="input-group">
                         <label>Peso Unit. (g)</label>
                         <input type="number" id="peso" placeholder="0.0" step="0.01" class="calc-trigger">
@@ -74,6 +74,8 @@
                     </div>
                 </div>
 
+                <label class="duo-toggle"><input type="checkbox" id="modoMultipartes"> Impressão multipartes (até 4 bandejas / cores)</label>
+                <div id="bandejasArea" hidden></div>
                 <h3>3. Adicionais e Canais</h3>
 
                 <div class="chk-grid">
@@ -183,9 +185,14 @@
                         </div>
                     </div>
                 </div>
+                <button type="button" id="btnEnviarPlanner" class="btn-print no-print">TRANSFORMAR ORÇAMENTO EM PEDIDO</button>
                 <button onclick="window.print()" class="btn-print no-print">GERAR PDF / IMPRIMIR</button>
             </section>
         </main>
+    </div>
+    <div id="duoPlannerOverlay" class="duo-planner-overlay" hidden>
+      <div class="duo-planner-top"><strong>Planner — novo pedido</strong><button type="button" id="fecharDuoPlanner">Fechar ✕</button></div>
+      <iframe id="duoPlannerFrame" title="Planner de pedidos" src="about:blank"></iframe>
     </div>
     <script src="script.js"></script>
     <script src="mobile-menu.js"></script>
