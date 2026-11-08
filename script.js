@@ -505,37 +505,261 @@ function lerBandejas(){
         return {nome:f.nome,peso,horas:(h||0)+(m||0)/60,custo:f.custo,tempo};
     });
 }
-function configurarMultipartes(){
-    const toggle=document.getElementById('modoMultipartes');
-    const area=document.getElementById('bandejasArea');
-    const campos=document.getElementById('camposPecaSimples');
-    const criar=()=>{
-        area.innerHTML='';
-        for(let i=0;i<4;i++){
-            const row=document.createElement('div');row.className='duo-bandeja';
-            const label=document.createElement('strong');label.textContent='Bandeja '+(i+1);
-            const select=document.createElement('select');select.setAttribute('aria-label','Filamento bandeja '+(i+1));
-            filamentos.forEach((f,j)=>{const opt=new Option(f.nome,j);select.add(opt)});
-            const peso=document.createElement('input');peso.type='number';peso.min='0';peso.step='0.01';peso.placeholder='Gramas';peso.className='bandeja-peso';
-            const tempo=document.createElement('input');tempo.type='time';tempo.value='00:00';tempo.className='bandeja-tempo';
-            row.append(label,select,peso,tempo);area.append(row);
-            [select,peso,tempo].forEach(el=>{el.addEventListener('input',calcular);el.addEventListener('change',calcular)});
-        }
-    };
-    criar();
-    toggle.addEventListener('change',()=>{area.hidden=!toggle.checked;campos.hidden=toggle.checked;calcular()});
-    const btn=document.getElementById('btnEnviarPlanner');
-    const overlay=document.getElementById('duoPlannerOverlay');
-    btn.addEventListener('click',()=>{
-        const o=window.duolabOrcamento;
-        if(!o)return;
-        const projeto=prompt('Nome do produto / projeto:');if(!projeto?.trim())return;
-        const cliente=prompt('Nome do cliente:');if(!cliente?.trim())return;
-        const draft={cliente:cliente.trim(),projeto:projeto.trim(),quantidade:o.quantidade,cor:o.filamento,valor:o.valor,observacoes:o.multiparte?o.bandejas.map((b,i)=>`Bandeja ${i+1}: ${b.nome} | ${b.peso}g | ${b.tempo}`).join('\n'):`Peso: ${o.peso}g | Tempo: ${o.horas.toFixed(2)}h`};
-        sessionStorage.setItem('duolab_planner_rascunho_v1',JSON.stringify(draft));
-        overlay.hidden=false;
-        document.getElementById('duoPlannerFrame').src='planner.html?novoOrcamento=1&v='+Date.now();
+function configurarMultipartes() {
+    const toggle = document.getElementById('modoMultipartes');
+    const area = document.getElementById('bandejasArea');
+    const campos = document.getElementById('camposPecaSimples');
+    const margem = document.getElementById('margem');
+    const seletorPrincipal = document.getElementById('filamentoSelect');
+    const custoPrincipal = document.getElementById('custoKg');
+
+    if (!toggle || !area || !campos || !margem) return;
+
+    // Preservar o formulário e os estilos originais.
+    const card = toggle.closest('.card');
+    const tituloFilamento = card.querySelector('h3');
+    const grupoFilamento = seletorPrincipal.closest('.input-group');
+    const linhaOriginal = margem.closest('.input-row');
+    const grupoMargem = margem.closest('.input-group');
+    const grupoCusto = custoPrincipal.closest('.input-group');
+
+    const ancoraMargem = document.createComment('posicao-original-margem');
+    grupoMargem.parentNode.insertBefore(ancoraMargem, grupoMargem);
+
+    // Controles de quantidade e margem após a última bandeja.
+    const rodape = document.createElement('div');
+    rodape.id = 'duoRodapeMultipartes';
+
+    const linhaRodape = document.createElement('div');
+    linhaRodape.className = 'input-row duo-linha-rodape';
+
+    const grupoQuantidade = document.createElement('div');
+    grupoQuantidade.className = 'input-group';
+
+    const tituloQuantidade = document.createElement('label');
+    tituloQuantidade.textContent = 'Quantidade de produtos';
+
+    const quantidadeOriginal = document.getElementById('quantidade');
+
+    const quantidadeMulti = document.createElement('input');
+    quantidadeMulti.type = 'number';
+    quantidadeMulti.min = '1';
+    quantidadeMulti.step = '1';
+    quantidadeMulti.value = quantidadeOriginal.value || '1';
+    quantidadeMulti.className = 'calc-trigger';
+
+    quantidadeMulti.addEventListener('input', () => {
+        quantidadeOriginal.value = quantidadeMulti.value;
+        calcular();
     });
-    document.getElementById('fecharDuoPlanner').addEventListener('click',()=>{overlay.hidden=true;document.getElementById('duoPlannerFrame').src='about:blank'});
+
+    grupoQuantidade.append(tituloQuantidade, quantidadeMulti);
+    linhaRodape.append(grupoQuantidade, grupoMargem);
+    rodape.append(linhaRodape);
+    area.after(rodape);
+
+    // Controles para adicionar e excluir linhas.
+    const acoes = document.createElement('div');
+    acoes.id = 'duoAcoesBandejas';
+
+    const adicionar = document.createElement('button');
+    adicionar.type = 'button';
+    adicionar.id = 'duoAdicionarBandeja';
+    adicionar.className = 'btn-limpar-calculadora';
+    adicionar.textContent = '+ ADICIONAR BANDEJA';
+
+    acoes.append(adicionar);
+    area.after(acoes);
+    acoes.after(rodape);
+
+    let proximoId = 0;
+
+    function renumerar() {
+        area.querySelectorAll('.duo-bandeja').forEach((row, index) => {
+            const numero = index + 1;
+            row.querySelector('.duo-bandeja-label').textContent =
+                'Bandeja ' + numero;
+            row.querySelector('select').setAttribute(
+                'aria-label', 'Filamento da bandeja ' + numero
+            );
+        });
+    }
+
+    function criarBandeja(dados = null) {
+        proximoId++;
+
+        const row = document.createElement('div');
+        row.className = 'duo-bandeja';
+        row.dataset.id = String(proximoId);
+
+        const label = document.createElement('label');
+        label.className = 'duo-bandeja-label';
+        label.textContent = 'Bandeja';
+
+        const select = document.createElement('select');
+        select.className = 'calc-trigger duo-bandeja-filamento';
+
+        filamentos.forEach((filamento, index) => {
+            select.add(new Option(filamento.nome, String(index)));
+        });
+
+        const peso = document.createElement('input');
+        peso.type = 'number';
+        peso.className = 'calc-trigger bandeja-peso';
+        peso.min = '0';
+        peso.step = '0.01';
+        peso.placeholder = 'Gramas';
+        peso.setAttribute('aria-label', 'Peso em gramas');
+
+        const tempo = document.createElement('input');
+        tempo.type = 'time';
+        tempo.className = 'calc-trigger bandeja-tempo';
+        tempo.value = '00:00';
+        tempo.setAttribute('aria-label', 'Tempo de impressão');
+
+        const remover = document.createElement('button');
+        remover.type = 'button';
+        remover.className = 'btn-limpar-calculadora duo-remover-bandeja';
+        remover.textContent = 'REMOVER';
+        remover.title = 'Remover bandeja';
+
+        if (dados) {
+            if (dados.filamento != null) {
+                select.value = String(dados.filamento);
+            }
+            if (dados.peso != null) peso.value = dados.peso;
+            if (dados.tempo) tempo.value = dados.tempo;
+        }
+
+        remover.addEventListener('click', () => {
+            if (area.querySelectorAll('.duo-bandeja').length <= 1) {
+                return;
+            }
+            row.remove();
+            renumerar();
+            calcular();
+        });
+
+        [select, peso, tempo].forEach(elemento => {
+            elemento.addEventListener('input', calcular);
+            elemento.addEventListener('change', calcular);
+        });
+
+        row.append(label, select, peso, tempo, remover);
+        area.append(row);
+        renumerar();
+        calcular();
+    }
+
+    adicionar.addEventListener('click', () => criarBandeja());
+
+    function atualizarModo() {
+        const ativo = toggle.checked;
+
+        area.hidden = !ativo;
+        acoes.hidden = !ativo;
+        rodape.hidden = !ativo;
+        campos.hidden = ativo;
+
+        // Ocultar apenas os campos que não fazem sentido
+        // no modo multipartes.
+        tituloFilamento.hidden = ativo;
+        grupoFilamento.hidden = ativo;
+        grupoCusto.hidden = ativo;
+
+        if (ativo) {
+            rodape.append(linhaRodape);
+            linhaRodape.append(grupoMargem);
+            linhaOriginal.hidden = true;
+
+            quantidadeMulti.value = quantidadeOriginal.value || '1';
+
+            if (!area.querySelector('.duo-bandeja')) {
+                criarBandeja();
+            }
+
+            toggle.lastChild.textContent =
+                ' Impressão multipartes';
+        } else {
+            ancoraMargem.parentNode.insertBefore(
+                grupoMargem, ancoraMargem.nextSibling
+            );
+            linhaOriginal.hidden = false;
+            toggle.lastChild.textContent =
+                ' Impressão multipartes';
+        }
+
+        calcular();
+    }
+
+    toggle.addEventListener('change', atualizarModo);
+
+    // Criar quatro linhas iniciais, sem limitar a quantidade máxima.
+    for (let i = 0; i < 4; i++) {
+        criarBandeja();
+    }
+
+    atualizarModo();
+
+    // Integracao existente com o Planner.
+    const btn = document.getElementById('btnEnviarPlanner');
+    const overlay = document.getElementById('duoPlannerOverlay');
+
+    if (btn && overlay) {
+        btn.addEventListener('click', () => {
+            const o = window.duolabOrcamento;
+            if (!o) return;
+
+            const projeto = prompt('Nome do produto / projeto:');
+            if (!projeto?.trim()) return;
+
+            const cliente = prompt('Nome do cliente:');
+            if (!cliente?.trim()) return;
+
+            const draft = {
+                cliente: cliente.trim(),
+                projeto: projeto.trim(),
+                quantidade: o.quantidade,
+                cor: o.filamento,
+                valor: o.valor,
+                observacoes: o.multiparte
+                    ? o.bandejas.map((b, i) =>
+                        `Bandeja ${i + 1}: ${b.nome} | ${b.peso}g | ${b.tempo}`
+                      ).join('\n')
+                    : `Peso: ${o.peso}g | Tempo: ${o.horas.toFixed(2)}h`
+            };
+
+            sessionStorage.setItem(
+                'duolab_planner_rascunho_v1',
+                JSON.stringify(draft)
+            );
+
+            overlay.hidden = false;
+            document.getElementById('duoPlannerFrame').src =
+                'planner.html?novoOrcamento=1&v=' + Date.now();
+        });
+
+        document.getElementById('fecharDuoPlanner')
+            ?.addEventListener('click', () => {
+                overlay.hidden = true;
+                document.getElementById('duoPlannerFrame').src =
+                    'about:blank';
+            });
+    }
+
+    // Restaurar corretamente os campos ao limpar.
+    const botaoLimpar = document.getElementById('btnLimparCalculadora');
+
+    if (botaoLimpar) {
+        botaoLimpar.addEventListener('click', () => {
+            toggle.checked = false;
+            atualizarModo();
+        });
+    }
 }
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',configurarMultipartes);else configurarMultipartes();
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', configurarMultipartes);
+} else {
+    configurarMultipartes();
+}

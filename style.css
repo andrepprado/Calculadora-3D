@@ -3744,11 +3744,147 @@ input[type="checkbox"] {
 
 /* ===== BOTAO LIMPAR CALCULADORA END ===== */
 
-/* Duo.Lab multipartes */
-.duo-toggle{display:flex;align-items:center;gap:10px;margin:18px 0;font-weight:700;cursor:pointer}
-#bandejasArea:not([hidden]){display:grid;gap:12px;margin:12px 0 24px}
-.duo-bandeja{display:grid;grid-template-columns:90px minmax(180px,1fr) 100px 125px;align-items:center;gap:9px}
-.duo-bandeja select,.duo-bandeja input{min-width:0;width:100%;padding:10px;border:1px solid #bbb;border-radius:8px;background:var(--card-bg,#fff);color:#222}
+/* Duo.Lab multipartes - layout no padrão original */
+.duo-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.duo-toggle input {
+    margin: 0;
+    accent-color: #1976D2;
+}
+
+#bandejasArea:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.duo-bandeja {
+    display: grid;
+    grid-template-columns:
+        76px minmax(0, 1fr) 85px 105px 76px;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+}
+
+.duo-bandeja-label {
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.duo-bandeja select,
+.duo-bandeja input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 35px;
+    font-family: inherit;
+    font-size: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: #fff;
+    color: #243247;
+    padding: 6px 8px;
+}
+
+.duo-bandeja select {
+    text-overflow: ellipsis;
+}
+
+#duoAcoesBandejas {
+    display: flex;
+    justify-content: flex-start;
+    margin: 12px 0 18px;
+}
+
+#duoAdicionarBandeja {
+    width: auto;
+    min-height: 34px;
+    padding: 8px 12px;
+}
+
+.duo-remover-bandeja {
+    width: 100%;
+    min-height: 34px;
+    padding: 6px 5px;
+    font-size: 10px;
+}
+
+#duoRodapeMultipartes {
+    margin: 16px 0 24px;
+    padding-top: 14px;
+    border-top: 1px solid #e5eaf0;
+}
+
+.duo-linha-rodape {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.duo-linha-rodape .input-group {
+    min-width: 0;
+}
+
+#duoRodapeMultipartes[hidden],
+#duoAcoesBandejas[hidden],
+#bandejasArea[hidden],
+#camposPecaSimples[hidden],
+.input-group[hidden],
+.input-row[hidden],
+h3[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 800px) {
+    .duo-bandeja {
+        grid-template-columns: 72px minmax(0, 1fr) 75px 95px;
+        gap: 6px;
+    }
+
+    .duo-remover-bandeja {
+        grid-column: 2 / -1;
+        justify-self: end;
+        width: auto;
+        padding: 6px 12px;
+    }
+}
+
+@media (max-width: 460px) {
+    .duo-bandeja {
+        grid-template-columns: 1fr 1fr;
+        gap: 7px;
+        padding: 10px 0;
+        border-bottom: 1px solid #e5eaf0;
+    }
+
+    .duo-bandeja-label {
+        grid-column: 1;
+    }
+
+    .duo-bandeja select {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .duo-remover-bandeja {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    .duo-linha-rodape {
+        grid-template-columns: 1fr 1fr;
+    }
+}
 .duo-planner-overlay[hidden],#bandejasArea[hidden],#camposPecaSimples[hidden]{display:none!important}
 .duo-planner-overlay{position:fixed;inset:2%;z-index:99999;background:#fff;border-radius:14px;box-shadow:0 0 0 100vmax #0009;display:flex;flex-direction:column;overflow:hidden}
 .duo-planner-top{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;background:#003640;color:#fff}
