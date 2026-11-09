@@ -831,76 +831,115 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
-/* DUOLAB FILAMENTOS AGRUPADOS V10 */
+/* DUOLAB FINAL FILAMENT SELECT V9 */
 (function () {
     "use strict";
 
-    const CATALOGO = [
-        ["BAMBU LAB", "AMARELO", "PLA"],
-        ["BAMBU LAB", "AZUL", "PLA"],
-        ["BAMBU LAB", "VERDE", "PLA"],
-
-        ["ELEGOO", "LARANJA", "PLA"],
-        ["ELEGOO", "ROXO E AZUL", "PLA"],
-        ["ELEGOO", "ROXO E PRETO", "PLA"],
-
-        ["MASTERPRINT", "BEGE", "PETG"],
-        ["MASTERPRINT", "MARROM", "PETG"],
-        ["MASTERPRINT", "PRETO", "PETG"],
-
-        ["SUNLU", "AZUL BRILHANTE", "PETG"],
-        ["SUNLU", "MARMORE BRANCO", "PLA"],
-
-        ["VOOLT", "BEGE CAUCASIANO", "PLA"],
-        ["VOOLT", "BRANCO", "PLA"],
-        ["VOOLT", "DOURADO", "PLA"],
-        ["VOOLT", "OUTLET", "PLA"],
-        ["VOOLT", "PRETO", "PLA"],
-        ["VOOLT", "ROSA", "PLA"],
-        ["VOOLT", "VERDE", "PLA"],
-        ["VOOLT", "VERMELHO", "PLA"]
+    const marcas = [
+        "BAMBU LAB", "ELEGOO", "MASTERPRINT",
+        "SUNLU", "VOOLT"
     ];
 
-    function normalizar(texto) {
-        return String(texto || "")
+    const cores = [
+        "BEGE CAUCASIANO", "MARMORE BRANCO",
+        "ROXO E AZUL", "ROXO E PRETO",
+        "AZUL BRILHANTE", "ROSA PURPURA",
+        "AMARELO", "LARANJA", "DOURADO",
+        "VERMELHO", "MARROM", "BRANCO",
+        "PRETO", "VERDE", "AZUL",
+        "BEGE", "ROSA", "OUTLET"
+    ];
+
+    function normalizar(valor) {
+        return String(valor || "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
-            .toUpperCase()
-            .replace(/\s+/g, " ")
-            .trim();
+            .toUpperCase();
     }
 
     function identificar(option) {
-        const original = normalizar(
-            option.dataset.duolabNomeOriginal ||
+        const valor = String(option.value);
+        let item = null;
+
+        if (typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)) {
+            const indice = Number(valor);
+
+            if (Number.isInteger(indice) &&
+                indice >= 0 &&
+                indice < filamentos.length) {
+                item = filamentos[indice];
+            }
+        }
+
+        const nome = normalizar(
+            item && item.nome ||
+            option.dataset.duolabOriginal ||
             option.textContent
         );
 
-        return CATALOGO.find(([marca, cor]) => {
-            const base = marca + " - " + cor;
+        const descricao = normalizar([
+            nome,
+            item && item.tipo,
+            item && item.material,
+            option.textContent
+        ].filter(Boolean).join(" "));
 
-            return original === base ||
-                original === base + " - PLA" ||
-                original === base + " - PETG" ||
-                original.startsWith(base + " ");
-        });
+        const marca = marcas.find(m =>
+            descricao.includes(m)
+        ) || "";
+
+        const cor = cores.find(c =>
+            descricao.includes(c)
+        ) || "";
+
+        let tipo = "";
+
+        if (/\bPETG\b/.test(descricao)) {
+            tipo = "PETG";
+        } else if (/\bPLA\b/.test(descricao)) {
+            tipo = "PLA";
+        } else if (marca === "MASTERPRINT") {
+            tipo = "PETG";
+        }
+
+        return { marca, cor, tipo };
     }
 
-    function selecionar(select) {
-        const opcoes = Array.from(select.options);
-        const reconhecidas = opcoes.filter(identificar);
-
-        if (!reconhecidas.length) return;
-
+    function ehFilamento(select) {
         const identificacao = normalizar(
             (select.id || "") + " " +
-            (select.name || "") + " " +
             (select.className || "")
         );
 
+        if (/FILAMENTO|BANDEJA/.test(identificacao)) {
+            return true;
+        }
+
+        return Array.from(select.options).filter(o =>
+            marcas.some(m =>
+                normalizar(o.textContent).includes(m)
+            )
+        ).length >= 3;
+    }
+
+    function organizar(select) {
+        if (!ehFilamento(select)) return;
+
+        const opcoes = Array.from(select.options);
+        const validas = opcoes.filter(o =>
+            o.value !== "" && !o.disabled
+        );
+
+        if (!validas.length) return;
+
+        const assinatura = validas.map(o =>
+            o.value + ":" + o.textContent
+        ).sort().join("|");
+
         if (
-            reconhecidas.length < 3 &&
-            !/FILAMENTO|BANDEJA/.test(identificacao)
+            select.dataset.duolabFinalV9 === assinatura &&
+            select.querySelector("optgroup")
         ) return;
 
         const valorAtual = select.value;
@@ -908,91 +947,90 @@ if (document.readyState === 'loading') {
 
         const grupos = {
             PLA: document.createElement("optgroup"),
-            PETG: document.createElement("optgroup")
+            PETG: document.createElement("optgroup"),
+            OUTROS: document.createElement("optgroup")
         };
 
-        grupos.PLA.label = "PLA";
-        grupos.PETG.label = "PETG";
+        grupos.PLA.label = "──────── PLA ────────";
+        grupos.PETG.label = "──────── PETG ────────";
+        grupos.OUTROS.label = "──────── OUTROS ────────";
 
         for (const option of opcoes) {
-            const item = identificar(option);
-
-            if (!item) {
+            if (option.value === "" || option.disabled) {
                 fragmento.appendChild(option);
                 continue;
             }
 
-            if (!option.dataset.duolabNomeOriginal) {
-                option.dataset.duolabNomeOriginal =
-                    option.textContent.trim();
+            const info = identificar(option);
+
+            if (!option.dataset.duolabOriginal) {
+                option.dataset.duolabOriginal =
+                    option.textContent;
             }
 
-            const [marca, cor, tipo] = item;
+            if (!info.marca || !info.cor) {
+                grupos.OUTROS.appendChild(option);
+                continue;
+            }
 
-            option.textContent =
-                marca + " - " + cor + " - " + tipo;
+            option.textContent = [
+                info.marca,
+                info.cor,
+                info.tipo
+            ].filter(Boolean).join(" - ");
 
             option.style.backgroundColor = "#ffffff";
             option.style.color = "#17243a";
 
-            grupos[tipo].appendChild(option);
+            const destino = grupos[info.tipo] || grupos.OUTROS;
+            destino.appendChild(option);
         }
 
-        for (const tipo of ["PLA", "PETG"]) {
+        for (const tipo of ["PLA", "PETG", "OUTROS"]) {
             const grupo = grupos[tipo];
 
-            const ordenadas = Array.from(grupo.children)
+            if (!grupo.children.length) continue;
+
+            const itens = Array.from(grupo.children)
                 .sort((a, b) =>
                     a.textContent.localeCompare(
-                        b.textContent,
-                        "pt-BR"
+                        b.textContent, "pt-BR"
                     )
                 );
 
-            grupo.replaceChildren(...ordenadas);
-
-            if (grupo.children.length) {
-                fragmento.appendChild(grupo);
-            }
+            grupo.replaceChildren(...itens);
+            fragmento.appendChild(grupo);
         }
 
         select.replaceChildren(fragmento);
         select.value = valorAtual;
 
-        select.style.backgroundColor = "#ffffff";
-        select.style.color = "#17243a";
+        select.dataset.duolabFinalV9 =
+            Array.from(select.options)
+                .filter(o => o.value !== "" && !o.disabled)
+                .map(o => o.value + ":" + o.textContent)
+                .sort().join("|");
     }
 
-    let atualizando = false;
-
-    function atualizar() {
-        if (atualizando) return;
-
-        atualizando = true;
-
-        try {
-            document.querySelectorAll("select")
-                .forEach(selecionar);
-        } finally {
-            atualizando = false;
-        }
+    function aplicar() {
+        document.querySelectorAll("select").forEach(organizar);
     }
 
     function iniciar() {
-        atualizar();
+        aplicar();
 
         const observer = new MutationObserver(records => {
-            const houveNovasOpcoes = records.some(record =>
+            if (!records.some(record =>
                 Array.from(record.addedNodes).some(node =>
                     node.nodeType === 1 &&
                     (
-                        node.matches?.("select, option") ||
-                        node.querySelector?.("select, option")
+                        node.matches?.("select") ||
+                        node.querySelector?.("select")
                     )
                 )
-            );
+            )) return;
 
-            if (houveNovasOpcoes) atualizar();
+            aplicar();
         });
 
         observer.observe(document.body, {
@@ -1002,13 +1040,9 @@ if (document.readyState === 'loading') {
     }
 
     if (document.readyState === "loading") {
-        document.addEventListener(
-            "DOMContentLoaded",
-            iniciar,
-            { once: true }
-        );
+        document.addEventListener("DOMContentLoaded", iniciar);
     } else {
         iniciar();
     }
 })();
-/* FIM DUOLAB FILAMENTOS AGRUPADOS V10 */
+/* END DUOLAB FINAL FILAMENT SELECT V9 */
