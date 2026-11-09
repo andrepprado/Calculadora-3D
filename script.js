@@ -37,20 +37,88 @@ const filamentos = [
     { nome: "VOOLT - PLA DOURADO V-SILK HIGH SPEED", custo: 96.18, cor: "#C8A44B" }
 ];
 
+/* DUOLAB AGRUPAMENTO DEFINITIVO PLA PETG */
+
+function duoTipoFilamento(filamento) {
+    const nome = String(filamento.nome || '').toUpperCase();
+
+    if (/\bPETG\b/.test(nome)) return 'PETG';
+    if (/\bPLA\b/.test(nome)) return 'PLA';
+
+    return 'OUTROS';
+}
+
+function duoNomeFilamento(filamento) {
+    const nome = String(filamento.nome || '');
+
+    return nome
+        .replace(/\b(PLA|PETG)\b/gi, '')
+        .replace(/\b(VELVET|V-SILK|SILK|MATTE|HIGH SPEED|PREMIUM|ORIGINAL)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function duoPopularSelectFilamentos(select) {
+    if (!select) return;
+
+    const valorAnterior = select.value;
+    const fragmento = document.createDocumentFragment();
+
+    const grupos = ['PLA', 'PETG', 'OUTROS'];
+
+    for (const tipo of grupos) {
+        const itens = filamentos
+            .map((filamento, index) => ({
+                filamento,
+                index
+            }))
+            .filter(item => duoTipoFilamento(item.filamento) === tipo)
+            .sort((a, b) =>
+                duoNomeFilamento(a.filamento).localeCompare(
+                    duoNomeFilamento(b.filamento),
+                    'pt-BR',
+                    { sensitivity: 'base', numeric: true }
+                )
+            );
+
+        if (!itens.length) continue;
+
+        const grupo = document.createElement('optgroup');
+        grupo.label = tipo === 'OUTROS'
+            ? 'OUTROS MATERIAIS'
+            : 'FILAMENTOS ' + tipo;
+
+        for (const item of itens) {
+            const opcao = document.createElement('option');
+
+            // Preservar o indice original usado nos calculos.
+            opcao.value = String(item.index);
+            opcao.textContent = duoNomeFilamento(item.filamento);
+            opcao.dataset.tipo = tipo;
+            opcao.dataset.cor = item.filamento.cor || '';
+
+            grupo.appendChild(opcao);
+        }
+
+        fragmento.appendChild(grupo);
+    }
+
+    select.replaceChildren(fragmento);
+
+    if (Array.from(select.options).some(o => o.value === valorAnterior)) {
+        select.value = valorAnterior;
+    } else if (select.options.length) {
+        select.selectedIndex = 0;
+    }
+}
+
+/* FIM DUOLAB AGRUPAMENTO DEFINITIVO */
 function popularFilamentos() {
     const select = document.getElementById('filamentoSelect');
 
-    select.innerHTML = "";
+    if (!select) return;
 
-    filamentos.forEach((f, index) => {
-        const opt = document.createElement('option');
-
-        opt.value = index;
-        opt.text = f.nome;
-
-        select.add(opt);
-    });
-
+    duoPopularSelectFilamentos(select);
     carregarConfiguracoes();
     atualizarFilamento();
 }
@@ -560,55 +628,7 @@ function lerBandejas(){
     });
 }
 
-/* DUOLAB ORDENACAO FILAMENTOS V1 */
-function duoOrdenarFilamentosPorMarca() {
-    if (typeof filamentos === 'undefined' ||
-        !Array.isArray(filamentos)) return;
 
-    const obterMarca = (nome) => {
-        const texto = String(nome || '')
-            .replace(/^\s+/, '')
-            .replace(/^(?:[A-Z0-9_-]+\s*-\s*)/i, '')
-            .trim();
-
-        const marcas = [
-            'MASTERPRINT',
-            'VOOLT',
-            'CREALITY',
-            'ESUN',
-            'SUNLU',
-            'BAMBULAB',
-            'BAMBU LAB',
-            '3D FILA',
-            '3DFILA',
-            'GTMAX3D',
-            'VONDER',
-            'POLYMAKER'
-        ];
-
-        const marca = marcas.find(m =>
-            texto.toUpperCase().includes(m) ||
-            String(nome).toUpperCase().includes(m)
-        );
-
-        return marca || texto.split(/\s+/)[0] || 'OUTROS';
-    };
-
-    const comparador = new Intl.Collator('pt-BR', {
-        sensitivity: 'base',
-        numeric: true
-    });
-
-    filamentos.sort((a, b) => {
-        const marcaA = obterMarca(a.nome);
-        const marcaB = obterMarca(b.nome);
-
-        return comparador.compare(marcaA, marcaB) ||
-               comparador.compare(a.nome, b.nome);
-    });
-}
-
-duoOrdenarFilamentosPorMarca();
 function configurarMultipartes() {
     const toggle = document.getElementById('modoMultipartes');
     const area = document.getElementById('bandejasArea');
@@ -703,9 +723,7 @@ function configurarMultipartes() {
         const select = document.createElement('select');
         select.className = 'calc-trigger duo-bandeja-filamento';
 
-        filamentos.forEach((filamento, index) => {
-            select.add(new Option(filamento.nome, String(index)));
-        });
+        duoPopularSelectFilamentos(select);
 
         const peso = document.createElement('input');
         peso.type = 'number';
@@ -813,168 +831,4 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
-/* DUOLAB AGRUPAMENTO PLA PETG V1 */
-(function () {
-    "use strict";
 
-    const tipos = ["PLA", "PETG"];
-
-    function identificarTipo(texto) {
-        const nome = String(texto || "").toUpperCase();
-
-        if (/\bPETG\b/.test(nome)) return "PETG";
-        if (/\bPLA\b/.test(nome)) return "PLA";
-
-        return "";
-    }
-
-    function identificarMarca(texto) {
-        return String(texto || "")
-            .split(/\s*-\s*/)[0]
-            .trim()
-            .toUpperCase();
-    }
-
-    function encontrarTipo(option) {
-        const textos = [
-            option.textContent,
-            option.value,
-            option.dataset.tipo,
-            option.dataset.material,
-            option.dataset.filamento
-        ];
-
-        for (const texto of textos) {
-            const tipo = identificarTipo(texto);
-            if (tipo) return tipo;
-        }
-
-        const nome = String(option.textContent || "").toUpperCase();
-
-        if (nome.includes("MASTERPRINT")) {
-            return nome.includes("PRETO") ? "PETG" : "PLA";
-        }
-
-        return "PLA";
-    }
-
-    function organizar(select) {
-        if (!select || select.multiple) return;
-
-        const opcoes = Array.from(select.options);
-
-        if (opcoes.length < 2) return;
-
-        const opcoesValidas = opcoes.filter(op =>
-            op.value !== "" && !op.disabled
-        );
-
-        if (!opcoesValidas.length) return;
-
-        const valorAtual = select.value;
-
-        const grupos = {
-            PLA: [],
-            PETG: []
-        };
-
-        for (const opcao of opcoesValidas) {
-            const tipo = encontrarTipo(opcao);
-            grupos[tipo].push(opcao);
-        }
-
-        for (const tipo of tipos) {
-            grupos[tipo].sort((a, b) => {
-                const marcaA = identificarMarca(a.textContent);
-                const marcaB = identificarMarca(b.textContent);
-
-                const comparacaoMarca = marcaA.localeCompare(
-                    marcaB, "pt-BR"
-                );
-
-                if (comparacaoMarca !== 0) return comparacaoMarca;
-
-                return a.textContent.localeCompare(
-                    b.textContent, "pt-BR"
-                );
-            });
-        }
-
-        const fragmento = document.createDocumentFragment();
-
-        for (const opcao of opcoes) {
-            if (opcao.value === "" || opcao.disabled) {
-                fragmento.appendChild(opcao);
-            }
-        }
-
-        for (const tipo of tipos) {
-            if (!grupos[tipo].length) continue;
-
-            const grupo = document.createElement("optgroup");
-            grupo.label = tipo;
-
-            for (const opcao of grupos[tipo]) {
-                grupo.appendChild(opcao);
-            }
-
-            fragmento.appendChild(grupo);
-        }
-
-        select.replaceChildren(fragmento);
-        select.value = valorAtual;
-    }
-
-    function aplicar() {
-        const seletores = Array.from(
-            document.querySelectorAll("select")
-        );
-
-        for (const select of seletores) {
-            const id = String(select.id || "").toLowerCase();
-            const classe = String(select.className || "").toLowerCase();
-
-            const principal =
-                id === "filamentoselect" ||
-                id.includes("filamento");
-
-            const bandeja =
-                id.includes("bandeja") ||
-                classe.includes("bandeja") ||
-                classe.includes("filamento");
-
-            if (principal || bandeja) {
-                organizar(select);
-            }
-        }
-    }
-
-    function iniciar() {
-        aplicar();
-
-        let pendente = false;
-
-        const observer = new MutationObserver(() => {
-            if (pendente) return;
-
-            pendente = true;
-
-            requestAnimationFrame(() => {
-                pendente = false;
-                aplicar();
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", iniciar);
-    } else {
-        iniciar();
-    }
-})();
-/* FIM DUOLAB AGRUPAMENTO PLA PETG V1 */
