@@ -812,3 +812,169 @@ if (document.readyState === 'loading') {
 } else {
     configurarMultipartes();
 }
+
+/* DUOLAB AGRUPAMENTO PLA PETG V1 */
+(function () {
+    "use strict";
+
+    const tipos = ["PLA", "PETG"];
+
+    function identificarTipo(texto) {
+        const nome = String(texto || "").toUpperCase();
+
+        if (/\bPETG\b/.test(nome)) return "PETG";
+        if (/\bPLA\b/.test(nome)) return "PLA";
+
+        return "";
+    }
+
+    function identificarMarca(texto) {
+        return String(texto || "")
+            .split(/\s*-\s*/)[0]
+            .trim()
+            .toUpperCase();
+    }
+
+    function encontrarTipo(option) {
+        const textos = [
+            option.textContent,
+            option.value,
+            option.dataset.tipo,
+            option.dataset.material,
+            option.dataset.filamento
+        ];
+
+        for (const texto of textos) {
+            const tipo = identificarTipo(texto);
+            if (tipo) return tipo;
+        }
+
+        const nome = String(option.textContent || "").toUpperCase();
+
+        if (nome.includes("MASTERPRINT")) {
+            return nome.includes("PRETO") ? "PETG" : "PLA";
+        }
+
+        return "PLA";
+    }
+
+    function organizar(select) {
+        if (!select || select.multiple) return;
+
+        const opcoes = Array.from(select.options);
+
+        if (opcoes.length < 2) return;
+
+        const opcoesValidas = opcoes.filter(op =>
+            op.value !== "" && !op.disabled
+        );
+
+        if (!opcoesValidas.length) return;
+
+        const valorAtual = select.value;
+
+        const grupos = {
+            PLA: [],
+            PETG: []
+        };
+
+        for (const opcao of opcoesValidas) {
+            const tipo = encontrarTipo(opcao);
+            grupos[tipo].push(opcao);
+        }
+
+        for (const tipo of tipos) {
+            grupos[tipo].sort((a, b) => {
+                const marcaA = identificarMarca(a.textContent);
+                const marcaB = identificarMarca(b.textContent);
+
+                const comparacaoMarca = marcaA.localeCompare(
+                    marcaB, "pt-BR"
+                );
+
+                if (comparacaoMarca !== 0) return comparacaoMarca;
+
+                return a.textContent.localeCompare(
+                    b.textContent, "pt-BR"
+                );
+            });
+        }
+
+        const fragmento = document.createDocumentFragment();
+
+        for (const opcao of opcoes) {
+            if (opcao.value === "" || opcao.disabled) {
+                fragmento.appendChild(opcao);
+            }
+        }
+
+        for (const tipo of tipos) {
+            if (!grupos[tipo].length) continue;
+
+            const grupo = document.createElement("optgroup");
+            grupo.label = tipo;
+
+            for (const opcao of grupos[tipo]) {
+                grupo.appendChild(opcao);
+            }
+
+            fragmento.appendChild(grupo);
+        }
+
+        select.replaceChildren(fragmento);
+        select.value = valorAtual;
+    }
+
+    function aplicar() {
+        const seletores = Array.from(
+            document.querySelectorAll("select")
+        );
+
+        for (const select of seletores) {
+            const id = String(select.id || "").toLowerCase();
+            const classe = String(select.className || "").toLowerCase();
+
+            const principal =
+                id === "filamentoselect" ||
+                id.includes("filamento");
+
+            const bandeja =
+                id.includes("bandeja") ||
+                classe.includes("bandeja") ||
+                classe.includes("filamento");
+
+            if (principal || bandeja) {
+                organizar(select);
+            }
+        }
+    }
+
+    function iniciar() {
+        aplicar();
+
+        let pendente = false;
+
+        const observer = new MutationObserver(() => {
+            if (pendente) return;
+
+            pendente = true;
+
+            requestAnimationFrame(() => {
+                pendente = false;
+                aplicar();
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciar);
+    } else {
+        iniciar();
+    }
+})();
+/* FIM DUOLAB AGRUPAMENTO PLA PETG V1 */
