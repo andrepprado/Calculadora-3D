@@ -269,7 +269,7 @@ input[type="checkbox"] {
     }
 }
 
-/* --- IMPRESS├âO --- */
+/* --- IMPRESSÃO --- */
 @media print {
     @page {
         margin: 1cm;
@@ -1879,7 +1879,7 @@ input[type="checkbox"] {
 /* ===== PLANNER RESPONSIVO V2 START ===== */
 
 /* ----------------------------------------------------------
-   FORMATA├ç├âO DOS CAMPOS
+   FORMATAÇÃO DOS CAMPOS
 ---------------------------------------------------------- */
 
 #pedidoValor,
@@ -1900,7 +1900,7 @@ input[type="checkbox"] {
 }
 
 /* ----------------------------------------------------------
-   PROTE├ç├âO CONTRA OVERFLOW
+   PROTEÇÃO CONTRA OVERFLOW
 ---------------------------------------------------------- */
 
 .planner-page,
@@ -2252,7 +2252,7 @@ input[type="checkbox"] {
         min-height: 100px;
     }
 
-    /* Evita zoom autom├ítico do iOS */
+    /* Evita zoom automático do iOS */
 
     input,
     select,
@@ -2260,7 +2260,7 @@ input[type="checkbox"] {
         font-size: 16px;
     }
 
-    /* A├ç├òES DO MODAL */
+    /* AÇÕES DO MODAL */
 
     .planner-modal-actions {
         position: sticky;
@@ -2376,7 +2376,7 @@ input[type="checkbox"] {
 
 /*
  * O app-header.no-print funciona SEMPRE como
- * menu hamb├║rguer, independentemente da resolu├º├úo.
+ * menu hambúrguer, independentemente da resolução.
  */
 
 .app-header.no-print {
@@ -2485,8 +2485,8 @@ input[type="checkbox"] {
 
 /*
  * Primeiro filho = marca/logo.
- * Segundo elemento vis├¡vel = hamb├║rguer.
- * Restante = conte├║do do menu.
+ * Segundo elemento visível = hambúrguer.
+ * Restante = conteúdo do menu.
  */
 
 .app-header.no-print
@@ -2695,10 +2695,10 @@ input[type="checkbox"] {
 /* ===== HAMBURGER FLOATING FIX START ===== */
 
 /*
- * REMOVE COMPLETAMENTE A APAR├èNCIA DE HEADER.
+ * REMOVE COMPLETAMENTE A APARÊNCIA DE HEADER.
  *
  * O header continua no DOM apenas como container
- * do menu, mas n├úo ocupa mais uma barra horizontal.
+ * do menu, mas não ocupa mais uma barra horizontal.
  */
 
 .app-header.no-print {
@@ -2865,7 +2865,7 @@ input[type="checkbox"] {
 
 /*
  * Quando aberto, o HEADER continua pequeno.
- * Quem cresce ├® somente o painel do menu.
+ * Quem cresce é somente o painel do menu.
  */
 
 .app-header.no-print.app-menu-open {
@@ -2878,7 +2878,7 @@ input[type="checkbox"] {
 }
 
 /*
- * O inner tamb├®m continua pequeno.
+ * O inner também continua pequeno.
  */
 
 .app-header.no-print.app-menu-open
@@ -2902,7 +2902,7 @@ input[type="checkbox"] {
 }
 
 /*
- * O conte├║do do menu vira painel flutuante.
+ * O conteúdo do menu vira painel flutuante.
  */
 
 .app-header.no-print.app-menu-open
@@ -3290,10 +3290,10 @@ input[type="checkbox"] {
 /* ===== REMOVE BOARD TITLE ICONS START ===== */
 
 /*
- * Cabe├ºalhos do Planner sem ├¡cones decorativos.
+ * Cabeçalhos do Planner sem ícones decorativos.
  */
 
-/* Marcadores em elementos pr├│prios */
+/* Marcadores em elementos próprios */
 
 .kanban-column-dot,
 .kanban-status-dot,
@@ -3329,11 +3329,11 @@ input[type="checkbox"] {
 /*
  * Limita visualmente cada bucket do Planner.
  *
- * A ├írea interna comporta aproximadamente 5 tickets.
- * Quando houver mais conte├║do, a rolagem acontece
+ * A área interna comporta aproximadamente 5 tickets.
+ * Quando houver mais conteúdo, a rolagem acontece
  * somente dentro do bucket.
  *
- * Nenhum ticket ├® ocultado ou removido.
+ * Nenhum ticket é ocultado ou removido.
  */
 
 .kanban-column {
@@ -3347,7 +3347,7 @@ input[type="checkbox"] {
 }
 
 /*
- * Cabe├ºalho do bucket permanece sempre vis├¡vel.
+ * Cabeçalho do bucket permanece sempre visível.
  */
 
 .kanban-column-header {
@@ -3355,9 +3355,9 @@ input[type="checkbox"] {
 }
 
 /*
- * ├ürea que cont├®m os tickets.
+ * Área que contém os tickets.
  *
- * Esta ├® a ├║nica ├írea que deve crescer internamente
+ * Esta é a única área que deve crescer internamente
  * e receber a barra de rolagem.
  */
 
@@ -3744,7 +3744,7 @@ input[type="checkbox"] {
 
 /* ===== BOTAO LIMPAR CALCULADORA END ===== */
 
-/* Duo.Lab multipartes - layout no padr├úo original */
+/* Duo.Lab multipartes - layout no padrão original */
 .duo-toggle {
     display: flex;
     align-items: center;

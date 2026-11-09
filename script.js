@@ -31,8 +31,8 @@ const filamentos = [
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6B4423" },
     { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" },
     { nome: "MASTERPRINT - PETG PRETO", custo: 99.99, cor: "#171717" },
-    { nome: "VOOLT - PLA ROSA P├ÜRPURA HIGH SPEED", custo: 97.14, cor: "#A62D78" },
-    { nome: "VOOLT - PLA OUTLET (COR VARI├üVEL)", custo: 74.78, cor: "#888888" },
+    { nome: "VOOLT - PLA ROSA PÚRPURA HIGH SPEED", custo: 97.14, cor: "#A62D78" },
+    { nome: "VOOLT - PLA OUTLET (COR VARIÁVEL)", custo: 74.78, cor: "#888888" },
     { nome: "VOOLT - PLA VERDE V-SILK HIGH SPEED", custo: 96.18, cor: "#278F5B" },
     { nome: "VOOLT - PLA DOURADO V-SILK HIGH SPEED", custo: 96.18, cor: "#C8A44B" }
 ];
@@ -387,30 +387,30 @@ function calcular() {
 
         setText('cliAcabamento', document.getElementById('chkAcabamento').checked
                 ? "Sim"
-                : "N├úo");
+                : "Não");
 
         setText('cliLuminaria', document.getElementById('chkLuminaria').checked
                 ? "Sim"
-                : "N├úo");
+                : "Não");
 
         setText('cliChaveiro', document.getElementById('chkChaveiro').checked
                 ? "Sim"
-                : "N├úo");
+                : "Não");
 
         setText('cliIma', document.getElementById('chkIma').checked
                 ? "Sim"
-                : "N├úo");
+                : "Não");
 
         setText('cliAdesivo', document.getElementById('chkAdesivoFixo').checked
                 ? "Sim"
-                : "N├úo");
+                : "Não");
 
         setText('cliEmbalagem', (
                 document.getElementById('chkPlastica').checked ||
                 document.getElementById('chkSacolaKraft').checked
             )
                 ? "Sim"
-                : "N├úo");
+                : "Não");
     }
 }
 function format(v) {
@@ -501,7 +501,7 @@ function resetarCalculadora() {
         'chkCustosFixos'
     ].forEach(id => marcar(id, true));
 
-    // Reiniciar todas as bandejas din├ómicas.
+    // Reiniciar todas as bandejas dinâmicas.
     const area = get('bandejasArea');
 
     if (area) {
@@ -510,7 +510,7 @@ function resetarCalculadora() {
         );
 
         // Excluir as bandejas adicionais usando os
-        // pr├│prios eventos da interface.
+        // próprios eventos da interface.
         for (let i = linhas.length - 1; i >= 4; i--) {
             const remover = linhas[i].querySelector(
                 '.duo-remover-bandeja'
@@ -568,19 +568,19 @@ function resetarCalculadora() {
     const frame = get('duoPlannerFrame');
     if (frame) frame.src = 'about:blank';
 
-    // Remover rascunho n├úo confirmado.
+    // Remover rascunho não confirmado.
     sessionStorage.removeItem('duolab_planner_rascunho_v1');
 
     // Restaurar armazenamento da calculadora.
     localStorage.removeItem('cal3d_duolab_final');
     localStorage.removeItem('cal3d_duolab_filamento');
 
-    // Restaurar o filamento padr├úo.
+    // Restaurar o filamento padrão.
     if (select && typeof atualizarFilamento === 'function') {
         atualizarFilamento();
     }
 
-    // Recalcular o or├ºamento zerado.
+    // Recalcular o orçamento zerado.
     if (typeof calcular === 'function') {
         calcular();
     }
@@ -630,8 +630,8 @@ if (document.readyState === 'loading') {
 
 /* ===== CALCULADORA INIT END ===== */
 
-/* Modo multipartes: despesas de acabamento, embalagem, infraestrutura e deprecia├º├úo
-   continuam calculadas uma ├║nica vez por unidade; material e energia somam bandejas. */
+/* Modo multipartes: despesas de acabamento, embalagem, infraestrutura e depreciação
+   continuam calculadas uma única vez por unidade; material e energia somam bandejas. */
 function lerBandejas(){
     return [...document.querySelectorAll('.duo-bandeja')].map((row)=>{
         const index=Number(row.querySelector('select').value);
@@ -654,7 +654,7 @@ function configurarMultipartes() {
 
     if (!toggle || !area || !campos || !margem) return;
 
-    // Preservar o formul├írio e os estilos originais.
+    // Preservar o formulário e os estilos originais.
     const card = toggle.closest('.card');
     const tituloFilamento = card.querySelector('h3');
     const grupoFilamento = seletorPrincipal.closest('.input-group');
@@ -665,7 +665,7 @@ function configurarMultipartes() {
     const ancoraMargem = document.createComment('posicao-original-margem');
     grupoMargem.parentNode.insertBefore(ancoraMargem, grupoMargem);
 
-    // Controles de quantidade e margem ap├│s a ├║ltima bandeja.
+    // Controles de quantidade e margem após a última bandeja.
     const rodape = document.createElement('div');
     rodape.id = 'duoRodapeMultipartes';
 
@@ -752,7 +752,7 @@ function configurarMultipartes() {
         tempo.type = 'time';
         tempo.className = 'calc-trigger bandeja-tempo';
         tempo.value = '00:00';
-        tempo.setAttribute('aria-label', 'Tempo de impress├úo');
+        tempo.setAttribute('aria-label', 'Tempo de impressão');
 
         const remover = document.createElement('button');
         remover.type = 'button';
@@ -798,7 +798,7 @@ function configurarMultipartes() {
         rodape.hidden = !ativo;
         campos.hidden = ativo;
 
-        // Ocultar apenas os campos que n├úo fazem sentido
+        // Ocultar apenas os campos que não fazem sentido
         // no modo multipartes.
         tituloFilamento.hidden = ativo;
         grupoFilamento.hidden = ativo;
@@ -829,7 +829,7 @@ function configurarMultipartes() {
 
     toggle.addEventListener('change', atualizarModo);
 
-    // Criar quatro linhas iniciais, sem limitar a quantidade m├íxima.
+    // Criar quatro linhas iniciais, sem limitar a quantidade máxima.
     for (let i = 0; i < 4; i++) {
         criarBandeja();
     }
