@@ -183,7 +183,7 @@ function calcular() {
         parseInt(document.getElementById('quantidade').value) || 1;
 
     const custoKg =
-        parseFloat(document.getElementById('custoKg').value) || 0;
+        window.Calculadora3DMascaras.numero(document.getElementById('custoKg').value);
 
     const margemLucro =
         parseFloat(document.getElementById('margem').value) || 0;
