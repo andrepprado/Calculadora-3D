@@ -4622,3 +4622,20 @@ select {
 }
 
 /* FIM DUOLAB CORES PASTEIS V2 */
+
+/* DUOLAB SELECT PASTEL V4 */
+select optgroup {
+    background: #edf2f7 !important;
+    color: #17243a !important;
+    font-weight: 700 !important;
+}
+
+select option {
+    color: #17243a !important;
+    font-weight: 500 !important;
+}
+
+select option:checked {
+    color: #17243a !important;
+}
+/* FIM DUOLAB SELECT PASTEL V4 */
