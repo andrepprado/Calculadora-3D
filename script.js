@@ -831,4 +831,257 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
+/* DUOLAB FILAMENTOS VISUAIS V3 */
+(function () {
+    "use strict";
 
+    const cores = {
+        AMARELO: ["#fff1b8", "#332700"],
+        AZUL: ["#d6eaff", "#173653"],
+        VERDE: ["#d7f3df", "#17452a"],
+        LARANJA: ["#ffe3c7", "#613500"],
+        ROXO: ["#e7ddff", "#39225e"],
+        BEGE: ["#f2e5d5", "#493a2b"],
+        MARROM: ["#e6d1bf", "#49301e"],
+        PRETO: ["#e0e3e8", "#202733"],
+        BRANCO: ["#ffffff", "#263449"],
+        DOURADO: ["#f7e9bd", "#584414"],
+        ROSA: ["#f9dce9", "#663047"],
+        VERMELHO: ["#ffdddd", "#692626"],
+        OUTLET: ["#e9edf2", "#334155"],
+        CINZA: ["#e5e7eb", "#334155"]
+    };
+
+    function tipoDoFilamento(nome) {
+        const texto = String(nome || "").toUpperCase();
+
+        if (/\bPETG\b/.test(texto)) return "PETG";
+        if (/\bPLA\b/.test(texto)) return "PLA";
+
+        if (texto.includes("MASTERPRINT") &&
+            texto.includes("PRETO")) return "PETG";
+
+        return "PLA";
+    }
+
+    function nomeVisual(nome) {
+        return String(nome || "")
+            .replace(/\b(PETG|PLA)\b/gi, "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function corVisual(nome) {
+        const texto = String(nome || "").toUpperCase();
+
+        for (const [cor, valores] of Object.entries(cores)) {
+            if (texto.includes(cor)) return valores;
+        }
+
+        return ["#f1f5f9", "#243247"];
+    }
+
+    function ehSeletorFilamento(select) {
+        const id = String(select.id || "").toLowerCase();
+        const classe = String(select.className || "").toLowerCase();
+
+        if (
+            id.includes("filamento") ||
+            id.includes("bandeja") ||
+            classe.includes("filamento") ||
+            classe.includes("bandeja")
+        ) return true;
+
+        const opcoes = Array.from(select.options)
+            .filter(o => o.value !== "");
+
+        if (opcoes.length < 2) return false;
+
+        const marcas = [
+            "BAMBU LAB",
+            "ELEGOO",
+            "MASTERPRINT",
+            "SUNLU",
+            "VOOLT"
+        ];
+
+        const encontrados = opcoes.filter(o =>
+            marcas.some(marca =>
+                o.textContent.toUpperCase().includes(marca)
+            )
+        );
+
+        return encontrados.length >= 2 &&
+            encontrados.length >= opcoes.length * 0.6;
+    }
+
+    function encontrarCadastro(option) {
+        const texto = String(option.textContent || "");
+        const valor = String(option.value || "");
+
+        if (typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)) {
+
+            const indice = Number(valor);
+
+            if (
+                Number.isInteger(indice) &&
+                indice >= 0 &&
+                indice < filamentos.length
+            ) {
+                return filamentos[indice];
+            }
+
+            return filamentos.find(f =>
+                String(f.nome || "").toUpperCase() ===
+                texto.toUpperCase()
+            );
+        }
+
+        return null;
+    }
+
+    function organizar(select) {
+        if (!ehSeletorFilamento(select)) return;
+
+        const opcoes = Array.from(select.options);
+        const valorAtual = select.value;
+
+        const assinatura = opcoes.map(o =>
+            o.value + ":" + o.textContent
+        ).sort().join("|");
+
+        if (select.dataset.duoAssinatura === assinatura) {
+            return;
+        }
+
+        const grupos = {
+            PLA: [],
+            PETG: []
+        };
+
+        const extras = [];
+
+        for (const option of opcoes) {
+            if (!option.value || option.disabled) {
+                extras.push(option);
+                continue;
+            }
+
+            const cadastro = encontrarCadastro(option);
+
+            const nomeCompleto = cadastro
+                ? String(cadastro.nome || option.textContent)
+                : option.textContent;
+
+            const tipo = tipoDoFilamento(nomeCompleto);
+
+            option.textContent = nomeVisual(nomeCompleto);
+
+            const [fundo, texto] = corVisual(nomeCompleto);
+
+            option.style.setProperty(
+                "background-color",
+                fundo,
+                "important"
+            );
+
+            option.style.setProperty(
+                "color",
+                texto,
+                "important"
+            );
+
+            option.style.fontWeight = "500";
+            option.dataset.tipo = tipo;
+
+            grupos[tipo].push(option);
+        }
+
+        for (const tipo of ["PLA", "PETG"]) {
+            grupos[tipo].sort((a, b) =>
+                a.textContent.localeCompare(
+                    b.textContent,
+                    "pt-BR",
+                    { sensitivity: "base", numeric: true }
+                )
+            );
+        }
+
+        const fragmento = document.createDocumentFragment();
+
+        extras.forEach(o => fragmento.appendChild(o));
+
+        for (const tipo of ["PLA", "PETG"]) {
+            if (!grupos[tipo].length) continue;
+
+            const grupo = document.createElement("optgroup");
+            grupo.label = "──────── " + tipo + " ────────";
+
+            grupo.style.backgroundColor = "#edf2f7";
+            grupo.style.color = "#243247";
+            grupo.style.fontWeight = "700";
+
+            grupos[tipo].forEach(o => grupo.appendChild(o));
+
+            fragmento.appendChild(grupo);
+        }
+
+        select.replaceChildren(fragmento);
+
+        if (Array.from(select.options).some(o =>
+            o.value === valorAtual
+        )) {
+            select.value = valorAtual;
+        }
+
+        select.dataset.duoAssinatura = Array.from(
+            select.options
+        ).map(o =>
+            o.value + ":" + o.textContent
+        ).sort().join("|");
+    }
+
+    function atualizar() {
+        document.querySelectorAll("select").forEach(organizar);
+    }
+
+    function iniciar() {
+        atualizar();
+
+        let agendado = false;
+
+        const observer = new MutationObserver(() => {
+            if (agendado) return;
+
+            agendado = true;
+
+            requestAnimationFrame(() => {
+                agendado = false;
+                atualizar();
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+
+        document.addEventListener(
+            "change",
+            event => {
+                if (event.target.matches("select")) {
+                    atualizar();
+                }
+            },
+            true
+        );
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciar);
+    } else {
+        iniciar();
+    }
+})();
+/* FIM DUOLAB FILAMENTOS VISUAIS V3 */
