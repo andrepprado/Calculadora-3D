@@ -804,32 +804,42 @@ function configurarMultipartes() {
 
     atualizarModo();
 
-    // Integracao existente com o Planner.
+    // Conversão direta, sem prompts e sem modais nativos.
     const btn = document.getElementById('btnEnviarPlanner');
     const overlay = document.getElementById('duoPlannerOverlay');
+    const frame = document.getElementById('duoPlannerFrame');
+    const fechar = document.getElementById('fecharDuoPlanner');
 
-    if (btn && overlay) {
+    function fecharPedidoIncorporado() {
+        if (overlay) overlay.hidden = true;
+        if (frame) frame.src = 'about:blank';
+    }
+
+    if (btn && overlay && frame) {
         btn.addEventListener('click', () => {
+            if (!window.duolabOrcamento) {
+                console.error('Orçamento ainda não calculado.');
+                return;
+            }
+
             const o = window.duolabOrcamento;
-            if (!o) return;
-
-            const projeto = prompt('Nome do produto / projeto:');
-            if (!projeto?.trim()) return;
-
-            const cliente = prompt('Nome do cliente:');
-            if (!cliente?.trim()) return;
+            const bandejas = Array.isArray(o.bandejas)
+                ? o.bandejas
+                : [];
 
             const draft = {
-                cliente: cliente.trim(),
-                projeto: projeto.trim(),
-                quantidade: o.quantidade,
-                cor: o.filamento,
-                valor: o.valor,
+                cliente: '',
+                contato: '',
+                projeto: '',
+                quantidade: Math.max(1, Number(o.quantidade) || 1),
+                cor: String(o.filamento || ''),
+                valor: Number(o.valor) || 0,
+                bandejas: o.multiparte ? bandejas : [],
                 observacoes: o.multiparte
-                    ? o.bandejas.map((b, i) =>
-                        `Bandeja ${i + 1}: ${b.nome} | ${b.peso}g | ${b.tempo}`
+                    ? bandejas.map((b, i) =>
+                        `Bandeja ${i + 1}: ${b.nome || ''} | ${b.peso || 0}g | ${b.tempo || '00:00'}`
                       ).join('\n')
-                    : `Peso: ${o.peso}g | Tempo: ${o.horas.toFixed(2)}h`
+                    : `Peso: ${o.peso || 0}g | Tempo: ${Number(o.horas || 0).toFixed(2)}h`
             };
 
             sessionStorage.setItem(
@@ -838,18 +848,28 @@ function configurarMultipartes() {
             );
 
             overlay.hidden = false;
-            document.getElementById('duoPlannerFrame').src =
-                'planner.html?novoOrcamento=1&v=' + Date.now();
-        });
+            frame.src = 'planner.html?novoOrcamento=1&embedded=1&v='
+                + Date.now();
 
-        document.getElementById('fecharDuoPlanner')
-            ?.addEventListener('click', () => {
-                overlay.hidden = true;
-                document.getElementById('duoPlannerFrame').src =
-                    'about:blank';
+            requestAnimationFrame(() => {
+                overlay.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             });
+        });
     }
 
+    if (fechar) {
+        fechar.addEventListener('click', fecharPedidoIncorporado);
+    }
+
+    window.addEventListener('message', event => {
+        if (event.origin !== location.origin) return;
+        if (event.data?.tipo === 'DUOLAB_FECHAR_PEDIDO') {
+            fecharPedidoIncorporado();
+        }
+    });
     // Restaurar corretamente os campos ao limpar.
     const botaoLimpar = document.getElementById('btnLimparCalculadora');
 }

@@ -3402,6 +3402,10 @@ function formatarData(data) {
             );
     }
 
+    // DUOLAB_EMBEDDED_INIT_V2
+    if (new URLSearchParams(location.search).get('embedded') === '1') {
+        document.body.classList.add('duo-planner-embedded');
+    }
     // Abre o formulário já preenchido, dentro da calculadora, sem mudar de página.
     if (new URLSearchParams(location.search).get('novoOrcamento') === '1') {
     try {

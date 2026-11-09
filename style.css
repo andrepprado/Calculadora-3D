@@ -4340,3 +4340,46 @@ body.duo-planner-embedded .planner-field textarea {
         grid-column: 1;
     }
 }
+/* DUOLAB_INLINE_FORM_V2_START */
+#duoPlannerOverlay:not([hidden]) {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    flex-direction: column;
+    width: min(calc(100% - 24px), 1100px);
+    height: auto !important;
+    max-height: none !important;
+    margin: 20px auto 40px;
+    padding: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    overflow: visible !important;
+    z-index: auto !important;
+}
+
+#duoPlannerOverlay[hidden] {
+    display: none !important;
+}
+
+#duoPlannerFrame {
+    display: block;
+    width: 100% !important;
+    height: 850px;
+    min-height: 650px;
+    border: 0;
+    background: #fff;
+    border-radius: 0 0 12px 12px;
+}
+
+@media (max-width: 600px) {
+    #duoPlannerOverlay:not([hidden]) {
+        width: calc(100% - 16px);
+        margin: 12px auto 24px;
+    }
+
+    #duoPlannerFrame {
+        height: 1000px;
+    }
+}
+/* DUOLAB_INLINE_FORM_V2_END */
