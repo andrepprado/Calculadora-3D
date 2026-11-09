@@ -22,7 +22,7 @@
                 <span class="app-menu-toggle-line"></span>
                 <span class="app-menu-toggle-line"></span>
             </button>
-            
+
         <a href="index.html" class="app-brand" aria-label="Duo.Lab">
             <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
         </a>
@@ -42,7 +42,7 @@
 
                 <div class="input-group full-width">
                     <div class="filament-select-wrapper">
-    <div id="colorPreview" class="color-dot"></div>
+
     <select id="filamentoSelect" class="calc-trigger"></select>
 </div>
                 </div>
@@ -190,11 +190,204 @@
             </section>
         </main>
     </div>
-    <div id="duoPlannerOverlay" class="duo-planner-overlay" hidden>
-      <div class="duo-planner-top"><strong>Planner — novo pedido</strong><button type="button" id="fecharDuoPlanner">Fechar ✕</button></div>
-      <iframe id="duoPlannerFrame" title="Planner de pedidos" src="about:blank"></iframe>
+
+
+<section id="duoPedidoView" class="duo-pedido-view" hidden>
+  <div class="duo-pedido-shell">
+    <div class="duo-pedido-navegacao">
+      <button type="button"
+        id="duoVoltarOrcamento"
+        class="planner-secondary-btn">
+        Voltar ao orçamento
+      </button>
+      <span>DUO.LAB / NOVO PEDIDO</span>
     </div>
-    <script src="script.js"></script>
+    <div class="duo-pedido-pagina" id="pedidoModal" hidden>
+
+        <div
+            class="planner-modal"
+            role="region"
+            aria-label="Novo Pedido"
+            aria-labelledby="modalTitulo"
+        >
+
+            <div class="planner-modal-header">
+
+                <div>
+                    <span class="planner-eyebrow">PEDIDO</span>
+                    <h2 id="modalTitulo">Novo Pedido</h2>
+                </div>
+
+
+
+            </div>
+
+            <form id="pedidoForm">
+
+                <input type="hidden" id="pedidoId">
+
+                <div class="planner-form-grid">
+
+                    <div class="planner-field">
+                        <label for="pedidoCliente">Cliente *</label>
+                        <input
+                            type="text"
+                            id="pedidoCliente"
+                            required
+                            maxlength="120"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoContato">Contato</label>
+                        <input
+                            type="text"
+                            id="pedidoContato"
+                            maxlength="120"
+                        >
+                    </div>
+
+                    <div class="planner-field planner-field-full">
+                        <label for="pedidoProjeto">Produto / Projeto *</label>
+                        <input
+                            type="text"
+                            id="pedidoProjeto"
+                            required
+                            maxlength="180"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoQuantidade">Quantidade</label>
+                        <input
+                            type="number"
+                            id="pedidoQuantidade"
+                            min="1"
+                            step="1"
+                            value="1"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoCor">Cor / Material</label>
+                        <input
+                            type="text"
+                            id="pedidoCor"
+                            maxlength="120"
+                            placeholder="Ex.: Roxo, Mármore Branco"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoValor">Valor do pedido</label>
+                        <input
+    type="text"
+    id="pedidoValor"
+    inputmode="decimal"
+    autocomplete="off"
+    placeholder="R$ 0,00"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoData">Data do pedido</label>
+                        <input
+    type="text"
+    id="pedidoData"
+    inputmode="numeric"
+    autocomplete="off"
+    maxlength="10"
+    placeholder="DD/MM/AAAA"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoPrazo">Prazo / Entrega</label>
+                        <input
+    type="text"
+    id="pedidoPrazo"
+    inputmode="numeric"
+    autocomplete="off"
+    maxlength="10"
+    placeholder="DD/MM/AAAA"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoPrioridade">Prioridade</label>
+
+                        <select id="pedidoPrioridade">
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="baixa">Baixa</option>
+                        </select>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoStatus">Etapa</label>
+
+                        <select id="pedidoStatus">
+                            <option value="modelar">Modelar</option>
+                            <option value="produzir">A Produzir</option>
+                            <option value="producao">Em Produção</option>
+                            <option value="backlog">Backlog</option>
+                            <option value="receber">Concluído / Receber Pagamento</option>
+                            <option value="entregue">Pago / Entregue</option>
+                        </select>
+                    </div>
+
+                    <div class="planner-field planner-field-full">
+                        <label for="pedidoObservacoes">Observações</label>
+
+                        <textarea
+                            id="pedidoObservacoes"
+                            rows="4"
+                            maxlength="1000"
+                            placeholder="Ex.: Reimpressão, corrigir árvores e escala"
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <div class="planner-modal-actions">
+
+
+
+                    <div class="planner-modal-actions-right">
+
+                        <button
+                            type="button"
+                            class="planner-secondary-btn"
+                            id="btnCancelarModal"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="planner-primary-btn"
+                        >
+                            Salvar Pedido
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+    <p id="duoPedidoMensagem"
+       class="duo-pedido-mensagem"
+       role="status"
+       aria-live="polite"></p>
+  </div>
+</section>
+<script src="script.js"></script>
     <script src="mobile-menu.js"></script>
 <script id="duolab-cores-visuais-v1">
 (() => {
@@ -445,6 +638,12 @@
     }
 })();
 </script>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="duo-pedido.js"></script>
+
 </body>
 
 </html>

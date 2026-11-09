@@ -4383,3 +4383,162 @@ body.duo-planner-embedded .planner-field textarea {
     }
 }
 /* DUOLAB_INLINE_FORM_V2_END */
+
+/* DUOLAB PEDIDO FULL PAGE V5 */
+
+body.duo-pedido-ativo {
+  overflow-x: hidden !important;
+}
+
+body.duo-pedido-ativo > .container,
+body.duo-pedido-ativo > #duoPlannerOverlay {
+  display: none !important;
+}
+
+#duoPedidoView[hidden],
+#duoPedidoView #pedidoModal[hidden] {
+  display: none !important;
+}
+
+#duoPedidoView {
+  position: relative !important;
+  inset: auto !important;
+  z-index: auto !important;
+  display: block;
+  width: 100%;
+  min-height: 100dvh;
+  padding: 24px 16px 64px;
+  background: #f3f6fb;
+  overflow: visible;
+  font-family: inherit;
+}
+
+.duo-pedido-shell {
+  width: min(100%, 780px);
+  margin: 0 auto;
+}
+
+.duo-pedido-navegacao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.duo-pedido-navegacao span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  color: #64748b;
+}
+
+#duoPedidoView #pedidoModal {
+  position: relative !important;
+  inset: auto !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: visible !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+#duoPedidoView .planner-modal {
+  position: relative !important;
+  width: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0 !important;
+  overflow: visible !important;
+  transform: none !important;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(15,23,42,.08);
+}
+
+#duoPedidoView .planner-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+#duoPedidoView .planner-field {
+  min-width: 0;
+}
+
+#duoPedidoView .planner-field-full {
+  grid-column: 1 / -1;
+}
+
+#duoPedidoView input,
+#duoPedidoView select,
+#duoPedidoView textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  font-family: inherit;
+}
+
+#duoPedidoView .planner-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+#duoPedidoView .planner-modal-actions-right {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.duo-pedido-mensagem {
+  margin: 14px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.duo-pedido-mensagem[data-erro="true"] {
+  color: #b91c1c;
+}
+
+/* O indicador externo nao deve reaparecer */
+#colorPreview {
+  display: none !important;
+}
+
+@media (max-width: 600px) {
+  #duoPedidoView {
+    padding: 12px 10px 30px;
+  }
+
+  #duoPedidoView .planner-modal {
+    border-radius: 10px;
+  }
+
+  #duoPedidoView .planner-form-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  #duoPedidoView .planner-field-full {
+    grid-column: 1;
+  }
+
+  #duoPedidoView .planner-modal-actions-right {
+    width: 100%;
+  }
+
+  #duoPedidoView .planner-modal-actions-right button {
+    flex: 1;
+    min-width: 0;
+  }
+}
