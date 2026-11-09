@@ -831,313 +831,156 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
-/* DUOLAB NOMENCLATURA V6 */
+/* DUOLAB MATERIAL GROUPS V8 */
 (function () {
     "use strict";
 
     const marcas = [
-        "BAMBU LAB",
-        "ELEGOO",
-        "MASTERPRINT",
-        "SUNLU",
-        "VOOLT"
+        "BAMBU LAB", "ELEGOO", "MASTERPRINT",
+        "SUNLU", "VOOLT"
     ];
 
-    const cores = [
-        "BEGE CAUCASIANO",
-        "MARMORE BRANCO",
-        "ROXO E AZUL",
-        "ROXO E PRETO",
-        "AZUL BRILHANTE",
-        "ROSA PURPURA",
-        "AMARELO",
-        "LARANJA",
-        "DOURADO",
-        "VERMELHO",
-        "MARROM",
-        "BRANCO",
-        "PRETO",
-        "VERDE",
-        "AZUL",
-        "BEGE",
-        "ROSA",
-        "OUTLET"
-    ];
-
-    function normalizar(texto) {
-        return String(texto || "")
+    function normalizar(valor) {
+        return String(valor || "")
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "")
             .toUpperCase();
     }
 
-    function identificar(nome) {
-        const texto = normalizar(nome);
+    function dados(option) {
+        const valor = String(option.value);
+        const texto = String(option.textContent || "");
+        let item = null;
 
-        const marca = marcas.find(m =>
-            texto.includes(m)
-        ) || "";
-
-        const cor = cores.find(c =>
-            texto.includes(c)
-        ) || "";
-
-        let tipo = "";
-
-        if (/\bPETG\b/.test(texto)) {
-            tipo = "PETG";
-        } else if (/\bPLA\b/.test(texto)) {
-            tipo = "PLA";
-        } else if (
-            marca === "MASTERPRINT" &&
-            cor === "PRETO"
-        ) {
-            tipo = "PETG";
-        }
-
-        return { marca, cor, tipo };
-    }
-
-    function nomeOriginal(option) {
-        const valor = String(option.value || "");
-
-        if (
-            typeof filamentos !== "undefined" &&
-            Array.isArray(filamentos)
-        ) {
+        if (typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)) {
             const indice = Number(valor);
-
-            if (
-                Number.isInteger(indice) &&
-                indice >= 0 &&
-                indice < filamentos.length
-            ) {
-                const item = filamentos[indice];
-
-                if (item && item.nome) {
-                    return String(item.nome);
-                }
+            if (Number.isInteger(indice) &&
+                indice >= 0 && indice < filamentos.length) {
+                item = filamentos[indice];
             }
         }
 
-        return String(
-            option.dataset.nomeOriginal ||
-            option.textContent ||
-            ""
+        const nome = String(
+            item && item.nome || option.dataset.nomeOriginal || texto
         );
-    }
 
-    function ehFilamento(select) {
-        const id = normalizar(select.id);
-        const classe = normalizar(select.className);
+        const descricao = normalizar([
+            nome,
+            item && item.tipo,
+            item && item.material,
+            texto
+        ].filter(Boolean).join(" "));
 
-        if (
-            id.includes("FILAMENTO") ||
-            id.includes("BANDEJA") ||
-            classe.includes("FILAMENTO") ||
-            classe.includes("BANDEJA")
-        ) return true;
+        const marca = marcas.find(m => descricao.includes(m)) || "";
+        const tipo = /\bPETG\b/.test(descricao) ? "PETG" :
+            /\bPLA\b/.test(descricao) ? "PLA" :
+            marca === "MASTERPRINT" ? "PETG" :
+            "NAO IDENTIFICADO";
 
-        return Array.from(select.options).some(option =>
-            marcas.some(m =>
-                normalizar(option.textContent).includes(m)
-            )
-        );
-    }
+        let cor = normalizar(texto)
+            .replace(/\s*-\s*(PLA|PETG)\s*$/, "")
+            .trim();
 
-    function aplicar() {
-        document.querySelectorAll("select").forEach(select => {
-            if (!ehFilamento(select)) return;
-
-            // Desfazer optgroups sem remover as opcoes.
-            const opcoes = Array.from(select.options);
-            const valorAtual = select.value;
-
-            for (const option of opcoes) {
-                if (!option.value || option.disabled) continue;
-
-                const original = nomeOriginal(option);
-
-                if (!option.dataset.nomeOriginal) {
-                    option.dataset.nomeOriginal = original;
-                }
-
-                const info = identificar(original);
-
-                if (info.marca && info.cor) {
-                    option.textContent = [
-                        info.marca,
-                        info.cor,
-                        info.tipo
-                    ].filter(Boolean).join(" - ");
-                }
-
-                option.style.removeProperty("background");
-                option.style.removeProperty("background-color");
-                option.style.removeProperty("color");
-
-                option.style.setProperty(
-                    "background-color",
-                    "#ffffff",
-                    "important"
-                );
-
-                option.style.setProperty(
-                    "color",
-                    "#17243a",
-                    "important"
-                );
-            }
-
-            if (select.querySelector("optgroup")) {
-                select.replaceChildren(...opcoes);
-            }
-
-            select.value = valorAtual;
-        });
-    }
-
-    function iniciar() {
-        aplicar();
-
-        let pendente = false;
-
-        const observer = new MutationObserver(() => {
-            if (pendente) return;
-
-            pendente = true;
-
-            requestAnimationFrame(() => {
-                pendente = false;
-                aplicar();
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    }
-
-    if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", iniciar);
-    } else {
-        iniciar();
-    }
-})();
-/* FIM DUOLAB NOMENCLATURA V6 */
-
-/* DUOLAB GRUPOS PLA PETG V7 */
-(function () {
-    "use strict";
-
-    function ehFilamento(select) {
-        const identificacao = (
-            String(select.id || "") + " " +
-            String(select.className || "")
-        ).toLowerCase();
-
-        if (/filamento|bandeja/.test(identificacao)) {
-            return true;
+        if (marca && cor.startsWith(marca)) {
+            cor = cor.slice(marca.length)
+                .replace(/^\s*-\s*/, "");
         }
 
-        return Array.from(select.options).some(option =>
-            /(?:BAMBU LAB|ELEGOO|MASTERPRINT|SUNLU|VOOLT)\s*-/.test(
-                option.textContent.toUpperCase()
-            )
-        );
+        if (!cor || cor === descricao) {
+            cor = normalizar(nome)
+                .replace(marca, "")
+                .replace(/\b(PLA|PETG|VELVET|HIGH SPEED|PREMIUM|V-SILK|SILK|ORIGINAL)\b/g, "")
+                .replace(/\s+/g, " ")
+                .replace(/^\s*-\s*/, "")
+                .trim();
+        }
+
+        return {
+            marca,
+            cor,
+            tipo,
+            nome: [marca, cor, tipo].filter(Boolean).join(" - ")
+        };
     }
 
-    function agrupar(select) {
+    function ehFilamento(select) {
+        const identificacao = normalizar(
+            (select.id || "") + " " + (select.className || "")
+        );
+
+        if (/FILAMENTO|BANDEJA/.test(identificacao)) return true;
+
+        return Array.from(select.options).filter(o =>
+            marcas.some(m => normalizar(o.textContent).includes(m))
+        ).length >= 3;
+    }
+
+    function organizar(select) {
         if (!ehFilamento(select)) return;
 
-        const opcoes = Array.from(select.options);
-
-        const validas = opcoes.filter(option =>
-            option.value !== "" &&
-            !option.disabled &&
-            /\s-\s(?:PLA|PETG)\s*$/i.test(option.textContent)
+        const options = Array.from(select.options);
+        const validas = options.filter(o =>
+            o.value !== "" && !o.disabled
         );
 
         if (!validas.length) return;
 
-        const assinatura = validas.map(option =>
-            option.value + "|" + option.textContent
-        ).sort().join(";");
-
-        if (select.dataset.duolabGruposV7 === assinatura &&
-            select.querySelector("optgroup")) {
-            return;
-        }
-
-        const selecionado = select.value;
-        const fragmento = document.createDocumentFragment();
-
+        const valorAtual = select.value;
         const grupos = {
             PLA: document.createElement("optgroup"),
-            PETG: document.createElement("optgroup")
+            PETG: document.createElement("optgroup"),
+            "NAO IDENTIFICADO": document.createElement("optgroup")
         };
 
         grupos.PLA.label = "PLA";
         grupos.PETG.label = "PETG";
+        grupos["NAO IDENTIFICADO"].label = "TIPO NAO IDENTIFICADO";
 
-        for (const grupo of Object.values(grupos)) {
-            grupo.style.backgroundColor = "#ffffff";
-            grupo.style.color = "#17243a";
-            grupo.style.fontWeight = "700";
-        }
+        const fragmento = document.createDocumentFragment();
 
-        for (const option of opcoes) {
-            const texto = option.textContent.trim();
+        for (const option of options) {
+            if (option.value === "" || option.disabled) {
+                fragmento.appendChild(option);
+                continue;
+            }
 
+            const info = dados(option);
+
+            if (!info.marca) {
+                fragmento.appendChild(option);
+                continue;
+            }
+
+            option.textContent = info.nome;
             option.style.backgroundColor = "#ffffff";
             option.style.color = "#17243a";
 
-            if (/\s-\sPETG$/i.test(texto)) {
-                grupos.PETG.appendChild(option);
-            } else if (/\s-\sPLA$/i.test(texto)) {
-                grupos.PLA.appendChild(option);
-            } else {
-                fragmento.appendChild(option);
-            }
+            grupos[info.tipo].appendChild(option);
         }
 
-        for (const tipo of ["PLA", "PETG"]) {
-            if (grupos[tipo].children.length) {
-                fragmento.appendChild(grupos[tipo]);
-            }
+        for (const tipo of ["PLA", "PETG", "NAO IDENTIFICADO"]) {
+            const grupo = grupos[tipo];
+
+            if (!grupo.children.length) continue;
+
+            const ordenadas = Array.from(grupo.children)
+                .sort((a, b) =>
+                    a.textContent.localeCompare(
+                        b.textContent, "pt-BR"
+                    )
+                );
+
+            grupo.replaceChildren(...ordenadas);
+            fragmento.appendChild(grupo);
         }
 
         select.replaceChildren(fragmento);
-        select.value = selecionado;
-
-        select.dataset.duolabGruposV7 = assinatura;
-    }
-
-    function aplicar() {
-        document.querySelectorAll("select").forEach(agrupar);
+        select.value = valorAtual;
     }
 
     function iniciar() {
-        aplicar();
-
-        let pendente = false;
-
-        const observer = new MutationObserver(() => {
-            if (pendente) return;
-
-            pendente = true;
-
-            requestAnimationFrame(() => {
-                pendente = false;
-                aplicar();
-            });
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
+        document.querySelectorAll("select").forEach(organizar);
     }
 
     if (document.readyState === "loading") {
@@ -1145,5 +988,40 @@ if (document.readyState === 'loading') {
     } else {
         iniciar();
     }
+
+    document.addEventListener("change", function (event) {
+        if (event.target instanceof HTMLSelectElement) {
+            if (ehFilamento(event.target)) {
+                const valor = event.target.value;
+                organizar(event.target);
+                event.target.value = valor;
+            }
+        }
+    });
+
+    const observer = new MutationObserver(records => {
+        const novos = records.some(record =>
+            Array.from(record.addedNodes).some(node =>
+                node.nodeType === 1 &&
+                (node.matches?.("select") ||
+                 node.querySelector?.("select"))
+            )
+        );
+
+        if (novos) iniciar();
+    });
+
+    function observar() {
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", observar);
+    } else {
+        observar();
+    }
 })();
-/* FIM DUOLAB GRUPOS PLA PETG V7 */
+/* END DUOLAB MATERIAL GROUPS V8 */
