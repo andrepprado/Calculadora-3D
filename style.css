@@ -4221,3 +4221,39 @@ body .results .btn-print {
 }
 
 /* DUOLAB RESPONSIVIDADE MULTIPARTES V3 - FIM */
+
+/* DUOLAB CORES VISUAIS V1 */
+#filamentoSelect.duo-select-cor,
+#bandejasArea select.duo-select-cor {
+    --duo-cor-filamento: #A0A0A0;
+    background-image:
+        linear-gradient(
+            var(--duo-cor-filamento),
+            var(--duo-cor-filamento)
+        );
+    background-repeat: no-repeat;
+    background-position: 9px center;
+    background-size: 12px 17px;
+    padding-left: 27px !important;
+    font-family: inherit;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+#filamentoSelect.duo-select-cor {
+    background-size: 15px 19px;
+    padding-left: 33px !important;
+}
+
+#bandejasArea .duo-bandeja select.duo-select-cor {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+}
+
+@media (max-width: 650px) {
+    #bandejasArea select.duo-select-cor {
+        min-height: 38px;
+    }
+}
+/* FIM DUOLAB CORES VISUAIS V1 */
