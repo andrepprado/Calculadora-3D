@@ -4542,3 +4542,83 @@ body.duo-pedido-ativo > #duoPlannerOverlay {
     min-width: 0;
   }
 }
+
+/* DUOLAB CORES PASTEIS V2 */
+
+/* Seletor principal e bandejas multipartes */
+select option {
+    color: #17243a !important;
+    font-weight: 500;
+}
+
+/* Agrupamento PLA e PETG */
+select optgroup {
+    background-color: #edf2f8 !important;
+    color: #243653 !important;
+    font-weight: 700 !important;
+}
+
+/* Tons suaves por cor */
+select option[data-cor*="amarelo" i] {
+    background-color: #fff3b0 !important;
+}
+
+select option[data-cor*="azul" i] {
+    background-color: #cfe7ff !important;
+}
+
+select option[data-cor*="verde" i] {
+    background-color: #d0f2dc !important;
+}
+
+select option[data-cor*="laranja" i] {
+    background-color: #ffe0bd !important;
+}
+
+select option[data-cor*="roxo" i] {
+    background-color: #e5d7ff !important;
+}
+
+select option[data-cor*="bege" i] {
+    background-color: #f2e2cb !important;
+}
+
+select option[data-cor*="marrom" i] {
+    background-color: #e4cbb5 !important;
+}
+
+select option[data-cor*="preto" i] {
+    background-color: #dce0e6 !important;
+}
+
+select option[data-cor*="branco" i] {
+    background-color: #ffffff !important;
+}
+
+select option[data-cor*="dourado" i] {
+    background-color: #f8e8ad !important;
+}
+
+select option[data-cor*="rosa" i] {
+    background-color: #fbd5e8 !important;
+}
+
+select option[data-cor*="vermelho" i] {
+    background-color: #ffd2d2 !important;
+}
+
+select option[data-cor*="outlet" i] {
+    background-color: #e9edf3 !important;
+}
+
+/* Opcoes selecionadas */
+select option:checked {
+    font-weight: 700;
+}
+
+/* Preservar o estilo original dos campos */
+select {
+    border-radius: 6px;
+}
+
+/* FIM DUOLAB CORES PASTEIS V2 */
