@@ -4558,12 +4558,21 @@ select option:checked {
 }
 /* FIM DUOLAB SELECT BRANCO V6 */
 
-/* DUOLAB SELECT SEM INDICADOR DE COR */
+
+
+/* DUOLAB INDICADOR DE COR V2 */
 #filamentoSelect.duo-select-cor,
 #bandejasArea select.duo-select-cor {
-    background-image: none !important;
-    padding-left: 12px !important;
     background-color: #ffffff !important;
+    background-image:
+        linear-gradient(
+            var(--duo-cor-filamento, #A0A0A0),
+            var(--duo-cor-filamento, #A0A0A0)
+        ) !important;
+    background-repeat: no-repeat !important;
+    background-position: 9px center !important;
+    background-size: 13px 17px !important;
+    padding-left: 32px !important;
 }
 
 #filamentoSelect option,
@@ -4573,4 +4582,4 @@ select option:checked {
     background-color: #ffffff !important;
     color: #17243a !important;
 }
-/* FIM DUOLAB SELECT SEM INDICADOR DE COR */
+/* FIM DUOLAB INDICADOR DE COR V2 */

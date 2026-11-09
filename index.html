@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Calculadora Duo.Lab</title>
     <link rel="icon" type="image/svg+xml" href="img/Sem-título-_3_.svg">
-    <link rel="stylesheet" href="style.css?v=1794185088">
+    <link rel="stylesheet" href="style.css?v=1794185198">
 </head>
 
 <body>
@@ -396,6 +396,81 @@
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="duo-pedido.js"></script>
 
+<!-- DUOLAB INDICADOR DE COR V2 -->
+<script>
+(() => {
+    "use strict";
+
+    function atualizarCor(select) {
+        if (!select) return;
+
+        const indice = Number(select.value);
+
+        const item = (
+            typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)
+        ) ? filamentos[indice] : null;
+
+        const cor = item?.cor || "#A0A0A0";
+
+        select.classList.add("duo-select-cor");
+        select.style.setProperty("--duo-cor-filamento", cor);
+    }
+
+    function atualizarTodos() {
+        document.querySelectorAll(
+            "#filamentoSelect, #bandejasArea select"
+        ).forEach(atualizarCor);
+    }
+
+    function iniciar() {
+        atualizarTodos();
+
+        document.addEventListener("change", event => {
+            if (event.target.matches(
+                "#filamentoSelect, #bandejasArea select"
+            )) {
+                atualizarCor(event.target);
+            }
+        });
+
+        document.addEventListener("input", event => {
+            if (event.target.matches(
+                "#filamentoSelect, #bandejasArea select"
+            )) {
+                atualizarCor(event.target);
+            }
+        });
+
+        // Atualizar tambem bandejas adicionadas dinamicamente.
+        const area = document.getElementById("bandejasArea");
+
+        if (area) {
+            const observer = new MutationObserver(() => {
+                area.querySelectorAll(
+                    "select:not(.duo-select-cor)"
+                ).forEach(atualizarCor);
+            });
+
+            observer.observe(area, {
+                childList: true,
+                subtree: true
+            });
+        }
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciar,
+            { once: true }
+        );
+    } else {
+        iniciar();
+    }
+})();
+</script>
+<!-- FIM DUOLAB INDICADOR DE COR V2 -->
 </body>
 
 </html>
