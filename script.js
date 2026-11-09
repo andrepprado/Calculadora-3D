@@ -1026,3 +1026,124 @@ if (document.readyState === 'loading') {
     }
 })();
 /* FIM DUOLAB NOMENCLATURA V6 */
+
+/* DUOLAB GRUPOS PLA PETG V7 */
+(function () {
+    "use strict";
+
+    function ehFilamento(select) {
+        const identificacao = (
+            String(select.id || "") + " " +
+            String(select.className || "")
+        ).toLowerCase();
+
+        if (/filamento|bandeja/.test(identificacao)) {
+            return true;
+        }
+
+        return Array.from(select.options).some(option =>
+            /(?:BAMBU LAB|ELEGOO|MASTERPRINT|SUNLU|VOOLT)\s*-/.test(
+                option.textContent.toUpperCase()
+            )
+        );
+    }
+
+    function agrupar(select) {
+        if (!ehFilamento(select)) return;
+
+        const opcoes = Array.from(select.options);
+
+        const validas = opcoes.filter(option =>
+            option.value !== "" &&
+            !option.disabled &&
+            /\s-\s(?:PLA|PETG)\s*$/i.test(option.textContent)
+        );
+
+        if (!validas.length) return;
+
+        const assinatura = validas.map(option =>
+            option.value + "|" + option.textContent
+        ).sort().join(";");
+
+        if (select.dataset.duolabGruposV7 === assinatura &&
+            select.querySelector("optgroup")) {
+            return;
+        }
+
+        const selecionado = select.value;
+        const fragmento = document.createDocumentFragment();
+
+        const grupos = {
+            PLA: document.createElement("optgroup"),
+            PETG: document.createElement("optgroup")
+        };
+
+        grupos.PLA.label = "PLA";
+        grupos.PETG.label = "PETG";
+
+        for (const grupo of Object.values(grupos)) {
+            grupo.style.backgroundColor = "#ffffff";
+            grupo.style.color = "#17243a";
+            grupo.style.fontWeight = "700";
+        }
+
+        for (const option of opcoes) {
+            const texto = option.textContent.trim();
+
+            option.style.backgroundColor = "#ffffff";
+            option.style.color = "#17243a";
+
+            if (/\s-\sPETG$/i.test(texto)) {
+                grupos.PETG.appendChild(option);
+            } else if (/\s-\sPLA$/i.test(texto)) {
+                grupos.PLA.appendChild(option);
+            } else {
+                fragmento.appendChild(option);
+            }
+        }
+
+        for (const tipo of ["PLA", "PETG"]) {
+            if (grupos[tipo].children.length) {
+                fragmento.appendChild(grupos[tipo]);
+            }
+        }
+
+        select.replaceChildren(fragmento);
+        select.value = selecionado;
+
+        select.dataset.duolabGruposV7 = assinatura;
+    }
+
+    function aplicar() {
+        document.querySelectorAll("select").forEach(agrupar);
+    }
+
+    function iniciar() {
+        aplicar();
+
+        let pendente = false;
+
+        const observer = new MutationObserver(() => {
+            if (pendente) return;
+
+            pendente = true;
+
+            requestAnimationFrame(() => {
+                pendente = false;
+                aplicar();
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciar);
+    } else {
+        iniciar();
+    }
+})();
+/* FIM DUOLAB GRUPOS PLA PETG V7 */
