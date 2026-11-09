@@ -4557,3 +4557,20 @@ select option:checked {
     color: #17243a !important;
 }
 /* FIM DUOLAB SELECT BRANCO V6 */
+
+/* DUOLAB SELECT SEM INDICADOR DE COR */
+#filamentoSelect.duo-select-cor,
+#bandejasArea select.duo-select-cor {
+    background-image: none !important;
+    padding-left: 12px !important;
+    background-color: #ffffff !important;
+}
+
+#filamentoSelect option,
+#filamentoSelect optgroup,
+#bandejasArea select option,
+#bandejasArea select optgroup {
+    background-color: #ffffff !important;
+    color: #17243a !important;
+}
+/* FIM DUOLAB SELECT SEM INDICADOR DE COR */
