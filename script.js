@@ -831,233 +831,220 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
-/* DUOLAB FILAMENTOS VISUAIS V3 */
+/* DUOLAB FILAMENTOS V5 */
 (function () {
     "use strict";
 
     const cores = {
-        AMARELO: ["#fff1b8", "#332700"],
-        AZUL: ["#d6eaff", "#173653"],
-        VERDE: ["#d7f3df", "#17452a"],
-        LARANJA: ["#ffe3c7", "#613500"],
-        ROXO: ["#e7ddff", "#39225e"],
-        BEGE: ["#f2e5d5", "#493a2b"],
-        MARROM: ["#e6d1bf", "#49301e"],
-        PRETO: ["#e0e3e8", "#202733"],
-        BRANCO: ["#ffffff", "#263449"],
-        DOURADO: ["#f7e9bd", "#584414"],
-        ROSA: ["#f9dce9", "#663047"],
-        VERMELHO: ["#ffdddd", "#692626"],
-        OUTLET: ["#e9edf2", "#334155"],
-        CINZA: ["#e5e7eb", "#334155"]
+        amarelo: "#fff2bd",
+        azul: "#d9eaff",
+        verde: "#d9f2df",
+        laranja: "#ffe5cb",
+        roxo: "#e7ddff",
+        bege: "#f1e4d4",
+        marrom: "#e6d2bf",
+        preto: "#dce1e8",
+        branco: "#ffffff",
+        dourado: "#f8eabc",
+        rosa: "#f9deeb",
+        vermelho: "#ffdddd",
+        outlet: "#e9edf3"
     };
 
-    function tipoDoFilamento(nome) {
-        const texto = String(nome || "").toUpperCase();
+    const marcas = [
+        "BAMBU LAB",
+        "ELEGOO",
+        "MASTERPRINT",
+        "SUNLU",
+        "VOOLT"
+    ];
 
-        if (/\bPETG\b/.test(texto)) return "PETG";
-        if (/\bPLA\b/.test(texto)) return "PLA";
-
-        if (texto.includes("MASTERPRINT") &&
-            texto.includes("PRETO")) return "PETG";
-
-        return "PLA";
+    function normalizar(texto) {
+        return String(texto || "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toUpperCase();
     }
 
-    function nomeVisual(nome) {
-        return String(nome || "")
-            .replace(/\b(PETG|PLA)\b/gi, "")
-            .replace(/\s+/g, " ")
-            .trim();
-    }
+    function cadastro(option) {
+        if (typeof filamentos === "undefined" ||
+            !Array.isArray(filamentos)) return null;
 
-    function corVisual(nome) {
-        const texto = String(nome || "").toUpperCase();
+        const indice = Number(option.value);
 
-        for (const [cor, valores] of Object.entries(cores)) {
-            if (texto.includes(cor)) return valores;
-        }
-
-        return ["#f1f5f9", "#243247"];
-    }
-
-    function ehSeletorFilamento(select) {
-        const id = String(select.id || "").toLowerCase();
-        const classe = String(select.className || "").toLowerCase();
-
-        if (
-            id.includes("filamento") ||
-            id.includes("bandeja") ||
-            classe.includes("filamento") ||
-            classe.includes("bandeja")
-        ) return true;
-
-        const opcoes = Array.from(select.options)
-            .filter(o => o.value !== "");
-
-        if (opcoes.length < 2) return false;
-
-        const marcas = [
-            "BAMBU LAB",
-            "ELEGOO",
-            "MASTERPRINT",
-            "SUNLU",
-            "VOOLT"
-        ];
-
-        const encontrados = opcoes.filter(o =>
-            marcas.some(marca =>
-                o.textContent.toUpperCase().includes(marca)
-            )
-        );
-
-        return encontrados.length >= 2 &&
-            encontrados.length >= opcoes.length * 0.6;
-    }
-
-    function encontrarCadastro(option) {
-        const texto = String(option.textContent || "");
-        const valor = String(option.value || "");
-
-        if (typeof filamentos !== "undefined" &&
-            Array.isArray(filamentos)) {
-
-            const indice = Number(valor);
-
-            if (
-                Number.isInteger(indice) &&
-                indice >= 0 &&
-                indice < filamentos.length
-            ) {
-                return filamentos[indice];
-            }
-
-            return filamentos.find(f =>
-                String(f.nome || "").toUpperCase() ===
-                texto.toUpperCase()
-            );
+        if (Number.isInteger(indice) &&
+            indice >= 0 &&
+            indice < filamentos.length) {
+            return filamentos[indice];
         }
 
         return null;
     }
 
-    function organizar(select) {
-        if (!ehSeletorFilamento(select)) return;
+    function tipo(option, item) {
+        const texto = [
+            item && item.nome,
+            item && item.tipo,
+            item && item.material,
+            option.dataset.tipo,
+            option.dataset.material,
+            option.textContent
+        ].filter(Boolean).join(" ").toUpperCase();
+
+        if (/\bPETG\b/.test(texto)) return "PETG";
+        if (/\bPLA\b/.test(texto)) return "PLA";
+
+        if (/MASTERPRINT/.test(texto) &&
+            /PRETO/.test(texto)) return "PETG";
+
+        return "OUTROS";
+    }
+
+    function cor(nome) {
+        const texto = normalizar(nome);
+
+        for (const [chave, valor] of Object.entries(cores)) {
+            if (texto.includes(chave.toUpperCase())) {
+                return valor;
+            }
+        }
+
+        return "#edf2f7";
+    }
+
+    function marca(nome) {
+        const texto = normalizar(nome);
+
+        return marcas.find(m => texto.includes(m)) ||
+            "OUTRAS MARCAS";
+    }
+
+    function ehFilamento(select) {
+        const identificacao = normalizar(
+            (select.id || "") + " " +
+            (select.className || "")
+        );
+
+        if (/FILAMENTO|BANDEJA/.test(identificacao)) return true;
 
         const opcoes = Array.from(select.options);
-        const valorAtual = select.value;
 
-        const assinatura = opcoes.map(o =>
-            o.value + ":" + o.textContent
-        ).sort().join("|");
+        return opcoes.filter(o =>
+            marcas.some(m =>
+                normalizar(o.textContent).includes(m)
+            )
+        ).length >= 3;
+    }
 
-        if (select.dataset.duoAssinatura === assinatura) {
-            return;
-        }
+    function aplicar(select) {
+        if (!ehFilamento(select)) return;
 
-        const grupos = {
-            PLA: [],
-            PETG: []
-        };
+        const opcoes = Array.from(select.options);
+        const validas = opcoes.filter(o =>
+            o.value !== "" && !o.disabled
+        );
 
-        const extras = [];
+        if (!validas.length) return;
 
-        for (const option of opcoes) {
-            if (!option.value || option.disabled) {
-                extras.push(option);
-                continue;
-            }
+        const valor = select.value;
 
-            const cadastro = encontrarCadastro(option);
+        const assinatura = validas.map(o =>
+            o.value + "|" + o.textContent
+        ).sort().join(";");
 
-            const nomeCompleto = cadastro
-                ? String(cadastro.nome || option.textContent)
-                : option.textContent;
+        if (select.dataset.duolabV5 === assinatura) return;
 
-            const tipo = tipoDoFilamento(nomeCompleto);
+        const grupos = new Map();
 
-            option.textContent = nomeVisual(nomeCompleto);
+        for (const option of validas) {
+            const item = cadastro(option);
 
-            const [fundo, texto] = corVisual(nomeCompleto);
-
-            option.style.setProperty(
-                "background-color",
-                fundo,
-                "important"
+            const nome = String(
+                item && item.nome || option.textContent
             );
 
-            option.style.setProperty(
-                "color",
-                texto,
-                "important"
-            );
+            const material = tipo(option, item);
+            const fabricante = marca(nome);
 
+            const chave = material + " | " + fabricante;
+
+            if (!grupos.has(chave)) grupos.set(chave, []);
+
+            option.style.backgroundColor = cor(nome);
+            option.style.color = "#17243a";
             option.style.fontWeight = "500";
-            option.dataset.tipo = tipo;
 
-            grupos[tipo].push(option);
-        }
-
-        for (const tipo of ["PLA", "PETG"]) {
-            grupos[tipo].sort((a, b) =>
-                a.textContent.localeCompare(
-                    b.textContent,
-                    "pt-BR",
-                    { sensitivity: "base", numeric: true }
-                )
-            );
+            grupos.get(chave).push(option);
         }
 
         const fragmento = document.createDocumentFragment();
 
-        extras.forEach(o => fragmento.appendChild(o));
+        for (const option of opcoes) {
+            if (option.value === "" || option.disabled) {
+                fragmento.appendChild(option);
+            }
+        }
 
-        for (const tipo of ["PLA", "PETG"]) {
-            if (!grupos[tipo].length) continue;
+        const ordem = ["PLA", "PETG", "OUTROS"];
 
-            const grupo = document.createElement("optgroup");
-            grupo.label = "ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ " + tipo + " ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ";
+        for (const material of ordem) {
+            const chaves = Array.from(grupos.keys())
+                .filter(chave => chave.startsWith(material + " | "))
+                .sort((a, b) =>
+                    a.localeCompare(b, "pt-BR")
+                );
 
-            grupo.style.backgroundColor = "#edf2f7";
-            grupo.style.color = "#243247";
-            grupo.style.fontWeight = "700";
+            for (const chave of chaves) {
+                const grupo = document.createElement("optgroup");
+                grupo.label = chave;
 
-            grupos[tipo].forEach(o => grupo.appendChild(o));
+                grupo.style.backgroundColor = "#edf2f7";
+                grupo.style.color = "#17243a";
 
-            fragmento.appendChild(grupo);
+                const itens = grupos.get(chave);
+
+                itens.sort((a, b) =>
+                    a.textContent.localeCompare(
+                        b.textContent, "pt-BR"
+                    )
+                );
+
+                for (const option of itens) {
+                    grupo.appendChild(option);
+                }
+
+                fragmento.appendChild(grupo);
+            }
         }
 
         select.replaceChildren(fragmento);
 
-        if (Array.from(select.options).some(o =>
-            o.value === valorAtual
-        )) {
-            select.value = valorAtual;
+        if (Array.from(select.options).some(o => o.value === valor)) {
+            select.value = valor;
         }
 
-        select.dataset.duoAssinatura = Array.from(
-            select.options
-        ).map(o =>
-            o.value + ":" + o.textContent
-        ).sort().join("|");
+        select.dataset.duolabV5 = Array.from(select.options)
+            .filter(o => o.value !== "" && !o.disabled)
+            .map(o => o.value + "|" + o.textContent)
+            .sort().join(";");
     }
 
     function atualizar() {
-        document.querySelectorAll("select").forEach(organizar);
+        document.querySelectorAll("select").forEach(aplicar);
     }
 
     function iniciar() {
         atualizar();
 
-        let agendado = false;
+        let pendente = false;
 
         const observer = new MutationObserver(() => {
-            if (agendado) return;
+            if (pendente) return;
 
-            agendado = true;
+            pendente = true;
 
             requestAnimationFrame(() => {
-                agendado = false;
+                pendente = false;
                 atualizar();
             });
         });
@@ -1066,16 +1053,6 @@ if (document.readyState === 'loading') {
             childList: true,
             subtree: true
         });
-
-        document.addEventListener(
-            "change",
-            event => {
-                if (event.target.matches("select")) {
-                    atualizar();
-                }
-            },
-            true
-        );
     }
 
     if (document.readyState === "loading") {
@@ -1084,4 +1061,4 @@ if (document.readyState === 'loading') {
         iniciar();
     }
 })();
-/* FIM DUOLAB FILAMENTOS VISUAIS V3 */
+/* FIM DUOLAB FILAMENTOS V5 */
