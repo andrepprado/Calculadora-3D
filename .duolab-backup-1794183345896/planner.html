@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planner de Pedidos | Duo.Lab</title>
+    <link rel="icon" type="image/svg+xml" href="img/Sem-título-_3_.svg">
+    <link rel="stylesheet" href="style.css">
+<!-- DUOLAB_FORM_INLINE_V2_START -->
+<style>
+body.duo-planner-embedded {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow-x: hidden !important;
+}
+
+body.duo-planner-embedded #pedidoModal {
+    position: relative !important;
+    inset: auto !important;
+    display: flex !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 12px !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+    box-shadow: none !important;
+}
+
+body.duo-planner-embedded #pedidoModal .planner-modal {
+    position: relative !important;
+    width: 100% !important;
+    max-width: 760px !important;
+    max-height: none !important;
+    margin: 0 auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+}
+
+body.duo-planner-embedded #pedidoModal input,
+body.duo-planner-embedded #pedidoModal select,
+body.duo-planner-embedded #pedidoModal textarea {
+    min-width: 0;
+    max-width: 100%;
+    font-family: inherit;
+}
+
+body.duo-planner-embedded #pedidoModal form {
+    min-width: 0;
+    max-width: 100%;
+}
+
+@media (max-width: 600px) {
+    body.duo-planner-embedded #pedidoModal {
+        padding: 8px !important;
+    }
+
+    body.duo-planner-embedded #pedidoModal .planner-modal {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+</style>
+<!-- DUOLAB_FORM_INLINE_V2_END -->
+</head>
+
+<body class="planner-page">
+
+    <header class="app-header no-print">
+        <div class="app-header-inner">
+            <button
+                type="button"
+                class="app-menu-toggle"
+                aria-label="Abrir menu"
+                aria-expanded="false"
+            >
+                <span class="app-menu-toggle-line"></span>
+                <span class="app-menu-toggle-line"></span>
+                <span class="app-menu-toggle-line"></span>
+            </button>
+            
+            <a href="index.html" class="app-brand" aria-label="Duo.Lab">
+                <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+            </a>
+
+            <nav class="app-nav" aria-label="Navegação principal">
+                <a href="index.html">Calculadora</a>
+                <a href="planner.html" class="active">Planner de Pedidos</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="planner-shell">
+
+        <section class="planner-hero">
+            <div>
+                <span class="planner-eyebrow">DUO.LAB</span>
+                <h1>Planner de Pedidos</h1>
+                <p>Controle de modelagem, produção, entrega e recebimento.</p>
+            </div>
+
+            <button type="button" class="planner-primary-btn" id="btnNovoPedido">
+                + Novo Pedido
+            </button>
+        </section>
+
+        <section class="planner-stats">
+
+            <article class="planner-stat-card">
+                <span class="planner-stat-label">Pendentes</span>
+                <strong id="statAtivos">0</strong>
+            </article>
+
+            <article class="planner-stat-card">
+                <span class="planner-stat-label">Em produção</span>
+                <strong id="statProducao">0</strong>
+            </article>
+
+            <article class="planner-stat-card">
+                <span class="planner-stat-label">Atrasados</span>
+                <strong id="statAtrasados">0</strong>
+            </article>
+
+            <article class="planner-stat-card">
+                <span class="planner-stat-label">A receber</span>
+                <strong id="statReceber">0</strong>
+            </article>
+
+            <article class="planner-stat-card planner-stat-money">
+                <span class="planner-stat-label">Valor a receber</span>
+                <strong id="statValorAberto">R$ 0,00</strong>
+            </article>
+
+        </section>
+
+        <section class="planner-toolbar">
+
+            <div class="planner-search">
+                <span>⌕</span>
+
+                <input
+                    type="search"
+                    id="buscaPedidos"
+                    placeholder="Buscar cliente, produto, cor ou observação..."
+                    autocomplete="off"
+                >
+            </div>
+
+            <select id="filtroPrioridade">
+                <option value="">Todas as prioridades</option>
+                <option value="alta">Alta</option>
+                <option value="media">Média</option>
+                <option value="baixa">Baixa</option>
+            </select>
+
+            <button
+                type="button"
+                class="planner-secondary-btn"
+                id="btnLimparFiltros"
+            >
+                Limpar filtros
+            </button>
+            <!-- PLANNER_BOARD_SETTINGS_START -->
+            <!-- PLANNER_WHATSAPP_EXPORT_START -->
+
+            <div class="planner-whatsapp-export">
+
+                <button
+                    type="button"
+                    class="planner-secondary-btn planner-whatsapp-copy"
+                    id="btnExportarWhatsApp"
+                    title="Copiar todos os pedidos para WhatsApp"
+                >
+                    WhatsApp
+                </button>
+
+                <button
+                    type="button"
+                    class="planner-secondary-btn planner-whatsapp-options"
+                    id="btnOpcoesWhatsApp"
+                    title="Escolher quadros para copiar"
+                    aria-label="Escolher quadros para copiar"
+                    aria-expanded="false"
+                >
+                    ▾
+                </button>
+
+                <div
+                    class="planner-whatsapp-menu"
+                    id="menuOpcoesWhatsApp"
+                    hidden
+                >
+
+                    <div class="planner-whatsapp-menu-header">
+
+                        <strong>
+                            Exportar para WhatsApp
+                        </strong>
+
+                        <span>
+                            Escolha os quadros
+                        </span>
+
+                    </div>
+
+                    <div
+                        class="planner-whatsapp-buckets"
+                        id="listaBucketsWhatsApp"
+                    ></div>
+
+                    <div class="planner-whatsapp-menu-tools">
+
+                        <button
+                            type="button"
+                            class="planner-whatsapp-link"
+                            id="btnMarcarTodosWhatsApp"
+                        >
+                            Marcar todos
+                        </button>
+
+                        <button
+                            type="button"
+                            class="planner-whatsapp-link"
+                            id="btnDesmarcarTodosWhatsApp"
+                        >
+                            Limpar
+                        </button>
+
+                    </div>
+
+                    <button
+                        type="button"
+                        class="planner-primary-btn planner-whatsapp-copy-selected"
+                        id="btnCopiarSelecionadosWhatsApp"
+                    >
+                        Copiar selecionados
+                    </button>
+
+                </div>
+
+            </div>
+
+            <!-- PLANNER_WHATSAPP_EXPORT_END -->
+<div class="planner-board-settings">
+                <button
+                    type="button"
+                    class="planner-secondary-btn"
+                    id="btnConfigurarQuadros"
+                    aria-expanded="false"
+                >
+                    Quadros
+                </button>
+
+                <div
+                    class="planner-board-settings-menu"
+                    id="menuConfigurarQuadros"
+                    hidden
+                ></div>
+            </div>
+            <!-- PLANNER_BOARD_SETTINGS_END -->
+
+        </section>
+
+        <section class="kanban-wrapper">
+
+            <div class="kanban-board" id="kanbanBoard">
+
+                <section class="kanban-column" data-status="modelar">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-modelar"></span>
+                            <h2>Modelar</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="modelar">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="modelar"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="modelar"></div>
+                </section>
+
+                <section class="kanban-column" data-status="produzir">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-produzir"></span>
+                            <h2>A Produzir</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="produzir">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="produzir"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="produzir"></div>
+                </section>
+
+                <section class="kanban-column" data-status="producao">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-producao"></span>
+                            <h2>Em Produção</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="producao">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="producao"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="producao"></div>
+                </section>
+
+                <section class="kanban-column" data-status="backlog">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-backlog"></span>
+                            <h2>Backlog</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="backlog">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="backlog"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="backlog"></div>
+                </section>
+
+                <section class="kanban-column" data-status="receber">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-receber"></span>
+                            <h2>Concluído / Receber</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="receber">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="receber"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="receber"></div>
+                </section>
+
+                <section class="kanban-column" data-status="entregue">
+                    <header class="kanban-column-header">
+                        <div>
+                            <span class="kanban-dot status-entregue"></span>
+                            <h2>Pago / Entregue</h2>
+                        </div>
+
+                        <span class="kanban-count" data-count="entregue">0</span>
+                        <button
+                            type="button"
+                            class="kanban-add-btn"
+                            data-add-status="entregue"
+                            title="Adicionar pedido nesta etapa"
+                            aria-label="Adicionar pedido nesta etapa"
+                        >+</button>
+                    </header>
+
+                    <div class="kanban-list" data-list="entregue"></div>
+                </section>
+
+            </div>
+
+        </section>
+
+    </main>
+
+    <div class="planner-modal-backdrop" id="pedidoModal" hidden>
+
+        <div
+            class="planner-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modalTitulo"
+        >
+
+            <div class="planner-modal-header">
+
+                <div>
+                    <span class="planner-eyebrow">PEDIDO</span>
+                    <h2 id="modalTitulo">Novo Pedido</h2>
+                </div>
+
+                <button
+                    type="button"
+                    class="planner-modal-close"
+                    id="btnFecharModal"
+                    aria-label="Fechar"
+                >
+                    ×
+                </button>
+
+            </div>
+
+            <form id="pedidoForm">
+
+                <input type="hidden" id="pedidoId">
+
+                <div class="planner-form-grid">
+
+                    <div class="planner-field">
+                        <label for="pedidoCliente">Cliente *</label>
+                        <input
+                            type="text"
+                            id="pedidoCliente"
+                            required
+                            maxlength="120"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoContato">Contato</label>
+                        <input
+                            type="text"
+                            id="pedidoContato"
+                            maxlength="120"
+                        >
+                    </div>
+
+                    <div class="planner-field planner-field-full">
+                        <label for="pedidoProjeto">Produto / Projeto *</label>
+                        <input
+                            type="text"
+                            id="pedidoProjeto"
+                            required
+                            maxlength="180"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoQuantidade">Quantidade</label>
+                        <input
+                            type="number"
+                            id="pedidoQuantidade"
+                            min="1"
+                            step="1"
+                            value="1"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoCor">Cor / Material</label>
+                        <input
+                            type="text"
+                            id="pedidoCor"
+                            maxlength="120"
+                            placeholder="Ex.: Roxo, Mármore Branco"
+                        >
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoValor">Valor do pedido</label>
+                        <input
+    type="text"
+    id="pedidoValor"
+    inputmode="decimal"
+    autocomplete="off"
+    placeholder="R$ 0,00"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoData">Data do pedido</label>
+                        <input
+    type="text"
+    id="pedidoData"
+    inputmode="numeric"
+    autocomplete="off"
+    maxlength="10"
+    placeholder="DD/MM/AAAA"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoPrazo">Prazo / Entrega</label>
+                        <input
+    type="text"
+    id="pedidoPrazo"
+    inputmode="numeric"
+    autocomplete="off"
+    maxlength="10"
+    placeholder="DD/MM/AAAA"
+>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoPrioridade">Prioridade</label>
+
+                        <select id="pedidoPrioridade">
+                            <option value="media">Média</option>
+                            <option value="alta">Alta</option>
+                            <option value="baixa">Baixa</option>
+                        </select>
+                    </div>
+
+                    <div class="planner-field">
+                        <label for="pedidoStatus">Etapa</label>
+
+                        <select id="pedidoStatus">
+                            <option value="modelar">Modelar</option>
+                            <option value="produzir">A Produzir</option>
+                            <option value="producao">Em Produção</option>
+                            <option value="backlog">Backlog</option>
+                            <option value="receber">Concluído / Receber Pagamento</option>
+                            <option value="entregue">Pago / Entregue</option>
+                        </select>
+                    </div>
+
+                    <div class="planner-field planner-field-full">
+                        <label for="pedidoObservacoes">Observações</label>
+
+                        <textarea
+                            id="pedidoObservacoes"
+                            rows="4"
+                            maxlength="1000"
+                            placeholder="Ex.: Reimpressão, corrigir árvores e escala"
+                        ></textarea>
+                    </div>
+
+                </div>
+
+                <div class="planner-modal-actions">
+
+                    <button
+                        type="button"
+                        class="planner-danger-btn"
+                        id="btnExcluirPedido"
+                        hidden
+                    >
+                        Excluir
+                    </button>
+
+                    <div class="planner-modal-actions-right">
+
+                        <button
+                            type="button"
+                            class="planner-secondary-btn"
+                            id="btnCancelarModal"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="planner-primary-btn"
+                        >
+                            Salvar Pedido
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+        <!-- FIREBASE_PLANNER_START -->
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+    <!-- FIREBASE_PLANNER_END -->
+<script src="planner.js"></script>
+
+    <script src="mobile-menu.js"></script>
+</body>
+
+</html>
