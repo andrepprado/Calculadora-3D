@@ -4257,3 +4257,17 @@ body .results .btn-print {
     }
 }
 /* FIM DUOLAB CORES VISUAIS V1 */
+/* DUOLAB REMOVER BOLINHA FILAMENTO UNICO */
+
+/* Ocultar apenas o indicador externo do filamento principal */
+#filamentoSelect.duo-select-cor {
+    margin-left: 0 !important;
+}
+
+/* Preservar o quadradinho colorido dentro do select */
+#filamentoSelect.duo-select-cor {
+    background-position: 9px center;
+    padding-left: 33px !important;
+}
+
+/* FIM DUOLAB REMOVER BOLINHA */
