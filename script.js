@@ -31,13 +31,88 @@ const filamentos = [
     { nome: "MASTERPRINT - PETG MARROM", custo: 83.90, cor: "#6B4423" },
     { nome: "MASTERPRINT - PETG BEGE", custo: 83.90, cor: "#D9C2A0" },
     { nome: "MASTERPRINT - PETG PRETO", custo: 99.99, cor: "#171717" },
-    { nome: "VOOLT - PLA ROSA PÚRPURA HIGH SPEED", custo: 97.14, cor: "#A62D78" },
-    { nome: "VOOLT - PLA OUTLET (COR VARIÁVEL)", custo: 74.78, cor: "#888888" },
+    { nome: "VOOLT - PLA ROSA P├ÜRPURA HIGH SPEED", custo: 97.14, cor: "#A62D78" },
+    { nome: "VOOLT - PLA OUTLET (COR VARI├üVEL)", custo: 74.78, cor: "#888888" },
     { nome: "VOOLT - PLA VERDE V-SILK HIGH SPEED", custo: 96.18, cor: "#278F5B" },
     { nome: "VOOLT - PLA DOURADO V-SILK HIGH SPEED", custo: 96.18, cor: "#C8A44B" }
 ];
 
+/* DUOLAB AGRUPAMENTO DEFINITIVO PLA PETG */
 
+function duoTipoFilamento(filamento) {
+    const nome = String(filamento.nome || '').toUpperCase();
+
+    if (/\bPETG\b/.test(nome)) return 'PETG';
+    if (/\bPLA\b/.test(nome)) return 'PLA';
+
+    return 'OUTROS';
+}
+
+function duoNomeFilamento(filamento) {
+    const nome = String(filamento.nome || '');
+
+    return nome
+        .replace(/\b(PLA|PETG)\b/gi, '')
+        .replace(/\b(VELVET|V-SILK|SILK|MATTE|HIGH SPEED|PREMIUM|ORIGINAL)\b/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function duoPopularSelectFilamentos(select) {
+    if (!select) return;
+
+    const valorAnterior = select.value;
+    const fragmento = document.createDocumentFragment();
+
+    const grupos = ['PLA', 'PETG', 'OUTROS'];
+
+    for (const tipo of grupos) {
+        const itens = filamentos
+            .map((filamento, index) => ({
+                filamento,
+                index
+            }))
+            .filter(item => duoTipoFilamento(item.filamento) === tipo)
+            .sort((a, b) =>
+                duoNomeFilamento(a.filamento).localeCompare(
+                    duoNomeFilamento(b.filamento),
+                    'pt-BR',
+                    { sensitivity: 'base', numeric: true }
+                )
+            );
+
+        if (!itens.length) continue;
+
+        const grupo = document.createElement('optgroup');
+        grupo.label = tipo === 'OUTROS'
+            ? 'OUTROS MATERIAIS'
+            : 'FILAMENTOS ' + tipo;
+
+        for (const item of itens) {
+            const opcao = document.createElement('option');
+
+            // Preservar o indice original usado nos calculos.
+            opcao.value = String(item.index);
+            opcao.textContent = duoNomeFilamento(item.filamento);
+            opcao.dataset.tipo = tipo;
+            opcao.dataset.cor = item.filamento.cor || '';
+
+            grupo.appendChild(opcao);
+        }
+
+        fragmento.appendChild(grupo);
+    }
+
+    select.replaceChildren(fragmento);
+
+    if (Array.from(select.options).some(o => o.value === valorAnterior)) {
+        select.value = valorAnterior;
+    } else if (select.options.length) {
+        select.selectedIndex = 0;
+    }
+}
+
+/* FIM DUOLAB AGRUPAMENTO DEFINITIVO */
 function popularFilamentos() {
     const select = document.getElementById('filamentoSelect');
 
@@ -297,30 +372,30 @@ function calcular() {
 
         setText('cliAcabamento', document.getElementById('chkAcabamento').checked
                 ? "Sim"
-                : "Não");
+                : "N├úo");
 
         setText('cliLuminaria', document.getElementById('chkLuminaria').checked
                 ? "Sim"
-                : "Não");
+                : "N├úo");
 
         setText('cliChaveiro', document.getElementById('chkChaveiro').checked
                 ? "Sim"
-                : "Não");
+                : "N├úo");
 
         setText('cliIma', document.getElementById('chkIma').checked
                 ? "Sim"
-                : "Não");
+                : "N├úo");
 
         setText('cliAdesivo', document.getElementById('chkAdesivoFixo').checked
                 ? "Sim"
-                : "Não");
+                : "N├úo");
 
         setText('cliEmbalagem', (
                 document.getElementById('chkPlastica').checked ||
                 document.getElementById('chkSacolaKraft').checked
             )
                 ? "Sim"
-                : "Não");
+                : "N├úo");
     }
 }
 function format(v) {
@@ -411,7 +486,7 @@ function resetarCalculadora() {
         'chkCustosFixos'
     ].forEach(id => marcar(id, true));
 
-    // Reiniciar todas as bandejas dinâmicas.
+    // Reiniciar todas as bandejas din├ómicas.
     const area = get('bandejasArea');
 
     if (area) {
@@ -420,7 +495,7 @@ function resetarCalculadora() {
         );
 
         // Excluir as bandejas adicionais usando os
-        // próprios eventos da interface.
+        // pr├│prios eventos da interface.
         for (let i = linhas.length - 1; i >= 4; i--) {
             const remover = linhas[i].querySelector(
                 '.duo-remover-bandeja'
@@ -478,19 +553,19 @@ function resetarCalculadora() {
     const frame = get('duoPlannerFrame');
     if (frame) frame.src = 'about:blank';
 
-    // Remover rascunho não confirmado.
+    // Remover rascunho n├úo confirmado.
     sessionStorage.removeItem('duolab_planner_rascunho_v1');
 
     // Restaurar armazenamento da calculadora.
     localStorage.removeItem('cal3d_duolab_final');
     localStorage.removeItem('cal3d_duolab_filamento');
 
-    // Restaurar o filamento padrão.
+    // Restaurar o filamento padr├úo.
     if (select && typeof atualizarFilamento === 'function') {
         atualizarFilamento();
     }
 
-    // Recalcular o orçamento zerado.
+    // Recalcular o or├ºamento zerado.
     if (typeof calcular === 'function') {
         calcular();
     }
@@ -540,8 +615,8 @@ if (document.readyState === 'loading') {
 
 /* ===== CALCULADORA INIT END ===== */
 
-/* Modo multipartes: despesas de acabamento, embalagem, infraestrutura e depreciação
-   continuam calculadas uma única vez por unidade; material e energia somam bandejas. */
+/* Modo multipartes: despesas de acabamento, embalagem, infraestrutura e deprecia├º├úo
+   continuam calculadas uma ├║nica vez por unidade; material e energia somam bandejas. */
 function lerBandejas(){
     return [...document.querySelectorAll('.duo-bandeja')].map((row)=>{
         const index=Number(row.querySelector('select').value);
@@ -564,7 +639,7 @@ function configurarMultipartes() {
 
     if (!toggle || !area || !campos || !margem) return;
 
-    // Preservar o formulário e os estilos originais.
+    // Preservar o formul├írio e os estilos originais.
     const card = toggle.closest('.card');
     const tituloFilamento = card.querySelector('h3');
     const grupoFilamento = seletorPrincipal.closest('.input-group');
@@ -575,7 +650,7 @@ function configurarMultipartes() {
     const ancoraMargem = document.createComment('posicao-original-margem');
     grupoMargem.parentNode.insertBefore(ancoraMargem, grupoMargem);
 
-    // Controles de quantidade e margem após a última bandeja.
+    // Controles de quantidade e margem ap├│s a ├║ltima bandeja.
     const rodape = document.createElement('div');
     rodape.id = 'duoRodapeMultipartes';
 
@@ -662,7 +737,7 @@ function configurarMultipartes() {
         tempo.type = 'time';
         tempo.className = 'calc-trigger bandeja-tempo';
         tempo.value = '00:00';
-        tempo.setAttribute('aria-label', 'Tempo de impressão');
+        tempo.setAttribute('aria-label', 'Tempo de impress├úo');
 
         const remover = document.createElement('button');
         remover.type = 'button';
@@ -708,7 +783,7 @@ function configurarMultipartes() {
         rodape.hidden = !ativo;
         campos.hidden = ativo;
 
-        // Ocultar apenas os campos que não fazem sentido
+        // Ocultar apenas os campos que n├úo fazem sentido
         // no modo multipartes.
         tituloFilamento.hidden = ativo;
         grupoFilamento.hidden = ativo;
@@ -739,7 +814,7 @@ function configurarMultipartes() {
 
     toggle.addEventListener('change', atualizarModo);
 
-    // Criar quatro linhas iniciais, sem limitar a quantidade máxima.
+    // Criar quatro linhas iniciais, sem limitar a quantidade m├íxima.
     for (let i = 0; i < 4; i++) {
         criarBandeja();
     }
@@ -756,111 +831,57 @@ if (document.readyState === 'loading') {
     configurarMultipartes();
 }
 
-/* DUOLAB SELECT FILAMENTOS V4 */
+/* DUOLAB FILAMENTOS VISUAIS V3 */
 (function () {
     "use strict";
 
-    const paleta = [
-        ["AMARELO", "#fff1b8"],
-        ["AZUL", "#d6eaff"],
-        ["VERDE", "#d8f3df"],
-        ["LARANJA", "#ffe4c7"],
-        ["ROXO", "#e7dcff"],
-        ["BEGE", "#f1e2cf"],
-        ["MARROM", "#e5cfbc"],
-        ["PRETO", "#dce1e8"],
-        ["BRANCO", "#ffffff"],
-        ["DOURADO", "#f8e9b6"],
-        ["ROSA", "#f9dce9"],
-        ["VERMELHO", "#ffdddd"],
-        ["OUTLET", "#e9edf3"]
-    ];
+    const cores = {
+        AMARELO: ["#fff1b8", "#332700"],
+        AZUL: ["#d6eaff", "#173653"],
+        VERDE: ["#d7f3df", "#17452a"],
+        LARANJA: ["#ffe3c7", "#613500"],
+        ROXO: ["#e7ddff", "#39225e"],
+        BEGE: ["#f2e5d5", "#493a2b"],
+        MARROM: ["#e6d1bf", "#49301e"],
+        PRETO: ["#e0e3e8", "#202733"],
+        BRANCO: ["#ffffff", "#263449"],
+        DOURADO: ["#f7e9bd", "#584414"],
+        ROSA: ["#f9dce9", "#663047"],
+        VERMELHO: ["#ffdddd", "#692626"],
+        OUTLET: ["#e9edf2", "#334155"],
+        CINZA: ["#e5e7eb", "#334155"]
+    };
 
-    const marcas = [
-        "BAMBU LAB",
-        "ELEGOO",
-        "MASTERPRINT",
-        "SUNLU",
-        "VOOLT"
-    ];
-
-    const materiais = ["PLA", "PETG"];
-
-    function obterCadastro(option) {
-        if (typeof filamentos === "undefined" ||
-            !Array.isArray(filamentos)) {
-            return null;
-        }
-
-        const indice = Number(option.value);
-
-        if (
-            Number.isInteger(indice) &&
-            indice >= 0 &&
-            indice < filamentos.length
-        ) {
-            return filamentos[indice];
-        }
-
-        return filamentos.find(item =>
-            String(item.nome || "").toUpperCase() ===
-            String(option.textContent || "").toUpperCase()
-        ) || null;
-    }
-
-    function obterTipo(option, cadastro) {
-        const textos = [
-            cadastro && cadastro.tipo,
-            cadastro && cadastro.material,
-            cadastro && cadastro.nome,
-            option.dataset.tipo,
-            option.dataset.material,
-            option.textContent
-        ];
-
-        const texto = textos.filter(Boolean)
-            .join(" ")
-            .toUpperCase();
+    function tipoDoFilamento(nome) {
+        const texto = String(nome || "").toUpperCase();
 
         if (/\bPETG\b/.test(texto)) return "PETG";
         if (/\bPLA\b/.test(texto)) return "PLA";
 
-        // Material explicitamente conhecido das compras.
-        if (/MASTERPRINT/.test(texto) &&
-            /PRETO/.test(texto)) {
-            return "PETG";
-        }
+        if (texto.includes("MASTERPRINT") &&
+            texto.includes("PRETO")) return "PETG";
 
-        // Nao inventar tipo para cadastro sem material.
-        return "NAO CLASSIFICADO";
+        return "PLA";
     }
 
-    function obterMarca(nome) {
-        const texto = String(nome || "").toUpperCase();
-
-        return marcas.find(marca => texto.includes(marca)) ||
-            "OUTRAS MARCAS";
-    }
-
-    function obterCor(nome) {
-        const texto = String(nome || "").toUpperCase();
-
-        const entrada = paleta.find(item =>
-            texto.includes(item[0])
-        );
-
-        return entrada ? entrada[1] : "#edf2f7";
-    }
-
-    function obterNome(nome) {
+    function nomeVisual(nome) {
         return String(nome || "")
-            .replace(/\b(PLA|PETG)\b/gi, "")
-            .replace(/\b(VELVET|SILK|V-SILK|HIGH SPEED|PREMIUM|ORIGINAL)\b/gi, "")
+            .replace(/\b(PETG|PLA)\b/gi, "")
             .replace(/\s+/g, " ")
             .trim();
     }
 
-    function ehFilamento(select) {
+    function corVisual(nome) {
+        const texto = String(nome || "").toUpperCase();
+
+        for (const [cor, valores] of Object.entries(cores)) {
+            if (texto.includes(cor)) return valores;
+        }
+
+        return ["#f1f5f9", "#243247"];
+    }
+
+    function ehSeletorFilamento(select) {
         const id = String(select.id || "").toLowerCase();
         const classe = String(select.className || "").toLowerCase();
 
@@ -874,130 +895,136 @@ if (document.readyState === 'loading') {
         const opcoes = Array.from(select.options)
             .filter(o => o.value !== "");
 
-        if (opcoes.length < 3) return false;
+        if (opcoes.length < 2) return false;
 
-        const correspondencias = opcoes.filter(o =>
+        const marcas = [
+            "BAMBU LAB",
+            "ELEGOO",
+            "MASTERPRINT",
+            "SUNLU",
+            "VOOLT"
+        ];
+
+        const encontrados = opcoes.filter(o =>
             marcas.some(marca =>
                 o.textContent.toUpperCase().includes(marca)
             )
         );
 
-        return correspondencias.length >=
-            Math.ceil(opcoes.length * 0.6);
+        return encontrados.length >= 2 &&
+            encontrados.length >= opcoes.length * 0.6;
+    }
+
+    function encontrarCadastro(option) {
+        const texto = String(option.textContent || "");
+        const valor = String(option.value || "");
+
+        if (typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)) {
+
+            const indice = Number(valor);
+
+            if (
+                Number.isInteger(indice) &&
+                indice >= 0 &&
+                indice < filamentos.length
+            ) {
+                return filamentos[indice];
+            }
+
+            return filamentos.find(f =>
+                String(f.nome || "").toUpperCase() ===
+                texto.toUpperCase()
+            );
+        }
+
+        return null;
     }
 
     function organizar(select) {
-        if (!ehFilamento(select)) return;
+        if (!ehSeletorFilamento(select)) return;
 
         const opcoes = Array.from(select.options);
+        const valorAtual = select.value;
 
-        const validas = opcoes.filter(o =>
-            o.value !== "" && !o.disabled
-        );
-
-        if (!validas.length) return;
-
-        const assinatura = validas.map(o =>
+        const assinatura = opcoes.map(o =>
             o.value + ":" + o.textContent
         ).sort().join("|");
 
-        if (select.dataset.duolabV4 === assinatura) return;
+        if (select.dataset.duoAssinatura === assinatura) {
+            return;
+        }
 
-        const valorAtual = select.value;
         const grupos = {
             PLA: [],
-            PETG: [],
-            "NAO CLASSIFICADO": []
+            PETG: []
         };
 
         const extras = [];
 
         for (const option of opcoes) {
-            if (option.value === "" || option.disabled) {
+            if (!option.value || option.disabled) {
                 extras.push(option);
                 continue;
             }
 
-            const cadastro = obterCadastro(option);
-            const nome = cadastro
+            const cadastro = encontrarCadastro(option);
+
+            const nomeCompleto = cadastro
                 ? String(cadastro.nome || option.textContent)
                 : option.textContent;
 
-            const tipo = obterTipo(option, cadastro);
-            const marca = obterMarca(nome);
+            const tipo = tipoDoFilamento(nomeCompleto);
 
-            option.textContent = obterNome(nome);
-            option.dataset.duolabMaterial = tipo;
-            option.dataset.duolabMarca = marca;
+            option.textContent = nomeVisual(nomeCompleto);
+
+            const [fundo, texto] = corVisual(nomeCompleto);
 
             option.style.setProperty(
                 "background-color",
-                obterCor(nome),
+                fundo,
                 "important"
             );
 
             option.style.setProperty(
                 "color",
-                "#17243a",
+                texto,
                 "important"
             );
 
             option.style.fontWeight = "500";
+            option.dataset.tipo = tipo;
 
             grupos[tipo].push(option);
         }
 
+        for (const tipo of ["PLA", "PETG"]) {
+            grupos[tipo].sort((a, b) =>
+                a.textContent.localeCompare(
+                    b.textContent,
+                    "pt-BR",
+                    { sensitivity: "base", numeric: true }
+                )
+            );
+        }
+
         const fragmento = document.createDocumentFragment();
 
-        extras.forEach(option =>
-            fragmento.appendChild(option)
-        );
+        extras.forEach(o => fragmento.appendChild(o));
 
-        for (const tipo of [
-            "PLA",
-            "PETG",
-            "NAO CLASSIFICADO"
-        ]) {
+        for (const tipo of ["PLA", "PETG"]) {
             if (!grupos[tipo].length) continue;
 
-            const porMarca = new Map();
+            const grupo = document.createElement("optgroup");
+            grupo.label = "ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ " + tipo + " ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ";
 
-            for (const option of grupos[tipo]) {
-                const marca = option.dataset.duolabMarca;
+            grupo.style.backgroundColor = "#edf2f7";
+            grupo.style.color = "#243247";
+            grupo.style.fontWeight = "700";
 
-                if (!porMarca.has(marca)) {
-                    porMarca.set(marca, []);
-                }
+            grupos[tipo].forEach(o => grupo.appendChild(o));
 
-                porMarca.get(marca).push(option);
-            }
-
-            for (const marca of Array.from(
-                porMarca.keys()
-            ).sort((a, b) =>
-                a.localeCompare(b, "pt-BR")
-            )) {
-                const grupo = document.createElement("optgroup");
-
-                grupo.label = tipo + " | " + marca;
-                grupo.style.backgroundColor = "#edf2f7";
-                grupo.style.color = "#17243a";
-
-                const itens = porMarca.get(marca);
-
-                itens.sort((a, b) =>
-                    a.textContent.localeCompare(
-                        b.textContent,
-                        "pt-BR"
-                    )
-                );
-
-                itens.forEach(option =>
-                    grupo.appendChild(option)
-                );
-
-                fragmento.appendChild(grupo);
-            }
+            fragmento.appendChild(grupo);
         }
 
         select.replaceChildren(fragmento);
@@ -1008,19 +1035,19 @@ if (document.readyState === 'loading') {
             select.value = valorAtual;
         }
 
-        select.dataset.duolabV4 = Array.from(
+        select.dataset.duoAssinatura = Array.from(
             select.options
-        ).filter(o => o.value !== "" && !o.disabled)
-         .map(o => o.value + ":" + o.textContent)
-         .sort().join("|");
+        ).map(o =>
+            o.value + ":" + o.textContent
+        ).sort().join("|");
     }
 
-    function aplicar() {
+    function atualizar() {
         document.querySelectorAll("select").forEach(organizar);
     }
 
     function iniciar() {
-        aplicar();
+        atualizar();
 
         let agendado = false;
 
@@ -1031,7 +1058,7 @@ if (document.readyState === 'loading') {
 
             requestAnimationFrame(() => {
                 agendado = false;
-                aplicar();
+                atualizar();
             });
         });
 
@@ -1039,6 +1066,16 @@ if (document.readyState === 'loading') {
             childList: true,
             subtree: true
         });
+
+        document.addEventListener(
+            "change",
+            event => {
+                if (event.target.matches("select")) {
+                    atualizar();
+                }
+            },
+            true
+        );
     }
 
     if (document.readyState === "loading") {
@@ -1047,4 +1084,4 @@ if (document.readyState === 'loading') {
         iniciar();
     }
 })();
-/* FIM DUOLAB SELECT FILAMENTOS V4 */
+/* FIM DUOLAB FILAMENTOS VISUAIS V3 */

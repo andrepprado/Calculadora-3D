@@ -269,7 +269,7 @@ input[type="checkbox"] {
     }
 }
 
-/* --- IMPRESSÃO --- */
+/* --- IMPRESS├âO --- */
 @media print {
     @page {
         margin: 1cm;
@@ -1879,7 +1879,7 @@ input[type="checkbox"] {
 /* ===== PLANNER RESPONSIVO V2 START ===== */
 
 /* ----------------------------------------------------------
-   FORMATAÇÃO DOS CAMPOS
+   FORMATA├ç├âO DOS CAMPOS
 ---------------------------------------------------------- */
 
 #pedidoValor,
@@ -1900,7 +1900,7 @@ input[type="checkbox"] {
 }
 
 /* ----------------------------------------------------------
-   PROTEÇÃO CONTRA OVERFLOW
+   PROTE├ç├âO CONTRA OVERFLOW
 ---------------------------------------------------------- */
 
 .planner-page,
@@ -2252,7 +2252,7 @@ input[type="checkbox"] {
         min-height: 100px;
     }
 
-    /* Evita zoom automático do iOS */
+    /* Evita zoom autom├ítico do iOS */
 
     input,
     select,
@@ -2260,7 +2260,7 @@ input[type="checkbox"] {
         font-size: 16px;
     }
 
-    /* AÇÕES DO MODAL */
+    /* A├ç├òES DO MODAL */
 
     .planner-modal-actions {
         position: sticky;
@@ -2376,7 +2376,7 @@ input[type="checkbox"] {
 
 /*
  * O app-header.no-print funciona SEMPRE como
- * menu hambúrguer, independentemente da resolução.
+ * menu hamb├║rguer, independentemente da resolu├º├úo.
  */
 
 .app-header.no-print {
@@ -2485,8 +2485,8 @@ input[type="checkbox"] {
 
 /*
  * Primeiro filho = marca/logo.
- * Segundo elemento visível = hambúrguer.
- * Restante = conteúdo do menu.
+ * Segundo elemento vis├¡vel = hamb├║rguer.
+ * Restante = conte├║do do menu.
  */
 
 .app-header.no-print
@@ -2695,10 +2695,10 @@ input[type="checkbox"] {
 /* ===== HAMBURGER FLOATING FIX START ===== */
 
 /*
- * REMOVE COMPLETAMENTE A APARÊNCIA DE HEADER.
+ * REMOVE COMPLETAMENTE A APAR├èNCIA DE HEADER.
  *
  * O header continua no DOM apenas como container
- * do menu, mas não ocupa mais uma barra horizontal.
+ * do menu, mas n├úo ocupa mais uma barra horizontal.
  */
 
 .app-header.no-print {
@@ -2865,7 +2865,7 @@ input[type="checkbox"] {
 
 /*
  * Quando aberto, o HEADER continua pequeno.
- * Quem cresce é somente o painel do menu.
+ * Quem cresce ├® somente o painel do menu.
  */
 
 .app-header.no-print.app-menu-open {
@@ -2878,7 +2878,7 @@ input[type="checkbox"] {
 }
 
 /*
- * O inner também continua pequeno.
+ * O inner tamb├®m continua pequeno.
  */
 
 .app-header.no-print.app-menu-open
@@ -2902,7 +2902,7 @@ input[type="checkbox"] {
 }
 
 /*
- * O conteúdo do menu vira painel flutuante.
+ * O conte├║do do menu vira painel flutuante.
  */
 
 .app-header.no-print.app-menu-open
@@ -3290,10 +3290,10 @@ input[type="checkbox"] {
 /* ===== REMOVE BOARD TITLE ICONS START ===== */
 
 /*
- * Cabeçalhos do Planner sem ícones decorativos.
+ * Cabe├ºalhos do Planner sem ├¡cones decorativos.
  */
 
-/* Marcadores em elementos próprios */
+/* Marcadores em elementos pr├│prios */
 
 .kanban-column-dot,
 .kanban-status-dot,
@@ -3329,11 +3329,11 @@ input[type="checkbox"] {
 /*
  * Limita visualmente cada bucket do Planner.
  *
- * A área interna comporta aproximadamente 5 tickets.
- * Quando houver mais conteúdo, a rolagem acontece
+ * A ├írea interna comporta aproximadamente 5 tickets.
+ * Quando houver mais conte├║do, a rolagem acontece
  * somente dentro do bucket.
  *
- * Nenhum ticket é ocultado ou removido.
+ * Nenhum ticket ├® ocultado ou removido.
  */
 
 .kanban-column {
@@ -3347,7 +3347,7 @@ input[type="checkbox"] {
 }
 
 /*
- * Cabeçalho do bucket permanece sempre visível.
+ * Cabe├ºalho do bucket permanece sempre vis├¡vel.
  */
 
 .kanban-column-header {
@@ -3355,9 +3355,9 @@ input[type="checkbox"] {
 }
 
 /*
- * Área que contém os tickets.
+ * ├ürea que cont├®m os tickets.
  *
- * Esta é a única área que deve crescer internamente
+ * Esta ├® a ├║nica ├írea que deve crescer internamente
  * e receber a barra de rolagem.
  */
 
@@ -3744,7 +3744,7 @@ input[type="checkbox"] {
 
 /* ===== BOTAO LIMPAR CALCULADORA END ===== */
 
-/* Duo.Lab multipartes - layout no padrão original */
+/* Duo.Lab multipartes - layout no padr├úo original */
 .duo-toggle {
     display: flex;
     align-items: center;
@@ -4622,20 +4622,3 @@ select {
 }
 
 /* FIM DUOLAB CORES PASTEIS V2 */
-
-/* DUOLAB SELECT PASTEL V4 */
-select optgroup {
-    background: #edf2f7 !important;
-    color: #17243a !important;
-    font-weight: 700 !important;
-}
-
-select option {
-    color: #17243a !important;
-    font-weight: 500 !important;
-}
-
-select option:checked {
-    color: #17243a !important;
-}
-/* FIM DUOLAB SELECT PASTEL V4 */
