@@ -3404,21 +3404,84 @@ function formatarData(data) {
 
     // Abre o formulário já preenchido, dentro da calculadora, sem mudar de página.
     if (new URLSearchParams(location.search).get('novoOrcamento') === '1') {
-        try {
-            const draft=JSON.parse(sessionStorage.getItem('duolab_planner_rascunho_v1') || 'null');
-            if(draft){
-                abrirNovoPedido('produzir');
-                elements.cliente.value=draft.cliente || '';
-                elements.projeto.value=draft.projeto || '';
-                elements.quantidade.value=draft.quantidade || 1;
-                elements.cor.value=draft.cor || '';
-                elements.valor.value=formatarMoeda(draft.valor || 0);
-                elements.observacoes.value=draft.observacoes || '';
-            }
-        } catch(e){console.warn('Rascunho inválido',e)}
-    }
+    try {
+        const draft = JSON.parse(
+            sessionStorage.getItem('duolab_planner_rascunho_v1') || 'null'
+        );
 
-    elements.btnNovo.addEventListener(
+        if (draft) {
+            abrirNovoPedido('produzir');
+
+            // Somente dados que o orçamento já conhece.
+            elements.quantidade.value = String(
+                Math.max(1, Number(draft.quantidade) || 1)
+            );
+
+            elements.valor.value = formatarMoeda(
+                Number(draft.valor) || 0
+            );
+
+            // Remover características comerciais dos nomes,
+            // mantendo marca, cor e informação de material.
+            const simplificar = texto => {
+                return String(texto || '')
+                    .replace(/\b(PLA|PETG)\b/gi, '')
+                    .replace(/\b(VELVET|V-SILK|SILK|HIGH SPEED|PREMIUM|ORIGINAL)\b/gi, '')
+                    .replace(/\b(1KG|1\.75MM)\b/gi, '')
+                    .replace(/\s+/g, ' ')
+                    .replace(/\s*-\s*-\s*/g, ' - ')
+                    .trim();
+            };
+
+            const cores = Array.isArray(draft.bandejas)
+                ? draft.bandejas.map(b => simplificar(b.nome))
+                : String(draft.cor || '')
+                    .split(/\s*[,;]\s*/)
+                    .map(simplificar);
+
+            const unicas = [...new Set(cores.filter(Boolean))];
+
+            elements.cor.value = unicas.join(', ').slice(0, 120);
+
+            const detalhes = String(draft.observacoes || '').trim();
+
+            elements.observacoes.value = detalhes;
+
+            // Campos desconhecidos continuam para preenchimento manual.
+            elements.cliente.value = '';
+            elements.contato.value = '';
+            elements.projeto.value = '';
+            elements.prazo.value = '';
+
+            elements.prioridade.value = 'media';
+            elements.status.value = 'produzir';
+
+            // Data já é preenchida por abrirNovoPedido().
+            if (new URLSearchParams(location.search).get('embedded') === '1') {
+                document.body.classList.add('duo-planner-embedded');
+
+                elements.modal.setAttribute('aria-modal', 'false');
+                elements.modal.setAttribute('role', 'region');
+
+                const formulario = elements.modal.querySelector('.planner-modal');
+
+                if (formulario) {
+                    formulario.setAttribute(
+                        'aria-label',
+                        'Novo pedido a partir do orçamento'
+                    );
+                }
+
+                requestAnimationFrame(() => {
+                    elements.cliente.focus();
+                });
+            }
+        }
+    } catch (erro) {
+        console.error('Erro ao carregar orçamento no Planner:', erro);
+    }
+}
+elements.btnNovo.addEventListener(
         "click",
         () => {
             abrirNovoPedido(

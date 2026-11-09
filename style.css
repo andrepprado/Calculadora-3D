@@ -4271,3 +4271,72 @@ body .results .btn-print {
 }
 
 /* FIM DUOLAB REMOVER BOLINHA */
+/* DUOLAB FORMULARIO ORIGINAL DO PLANNER INCORPORADO */
+body.duo-planner-embedded {
+    background: #fff !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+}
+
+body.duo-planner-embedded #pedidoModal {
+    display: block !important;
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+    backdrop-filter: none !important;
+}
+
+body.duo-planner-embedded #pedidoModal .planner-modal {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    border-radius: 12px !important;
+}
+
+body.duo-planner-embedded #pedidoForm {
+    width: 100%;
+    min-width: 0;
+}
+
+body.duo-planner-embedded .planner-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+}
+
+body.duo-planner-embedded .planner-field {
+    min-width: 0;
+}
+
+body.duo-planner-embedded .planner-field-full {
+    grid-column: 1 / -1;
+}
+
+body.duo-planner-embedded .planner-field input,
+body.duo-planner-embedded .planner-field select,
+body.duo-planner-embedded .planner-field textarea {
+    max-width: 100%;
+    min-width: 0;
+    font-family: inherit;
+}
+
+@media (max-width: 520px) {
+    body.duo-planner-embedded .planner-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    body.duo-planner-embedded .planner-field-full {
+        grid-column: 1;
+    }
+}
