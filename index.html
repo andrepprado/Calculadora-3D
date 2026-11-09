@@ -307,9 +307,47 @@
 
             // Cor da opção onde o navegador permite estilização.
             option.style.backgroundColor = info.hex;
-            option.style.color = (
-                ["#222222", "#181818"].includes(info.hex.toUpperCase())
-            ) ? "#FFFFFF" : "#172033";
+            // Contraste WCAG: selecionar automaticamente
+            // texto branco ou preto conforme a luminosidade.
+            const contraste = (hex) => {
+                const cor = String(hex || "#A0A0A0")
+                    .replace("#", "").trim();
+
+                const completo = cor.length === 3
+                    ? cor.split("").map(c => c + c).join("")
+                    : cor;
+
+                if (!/^[0-9a-f]{6}$/i.test(completo)) {
+                    return "#000000";
+                }
+
+                const rgb = [0, 2, 4].map(i =>
+                    parseInt(completo.slice(i, i + 2), 16) / 255
+                );
+
+                const linear = rgb.map(v =>
+                    v <= 0.04045
+                        ? v / 12.92
+                        : Math.pow((v + 0.055) / 1.055, 2.4)
+                );
+
+                const luminancia =
+                    0.2126 * linear[0] +
+                    0.7152 * linear[1] +
+                    0.0722 * linear[2];
+
+                const contrastePreto =
+                    (luminancia + 0.05) / 0.05;
+
+                const contrasteBranco =
+                    1.05 / (luminancia + 0.05);
+
+                return contrastePreto >= contrasteBranco
+                    ? "#000000"
+                    : "#FFFFFF";
+            };
+
+            option.style.color = contraste(info.hex);
         }
 
         const ordenadas = opcoes.slice().sort((a, b) => {
