@@ -228,3 +228,196 @@
         iniciar();
     }
 })();
+
+/* DUOLAB_IMAGE_PERFORMANCE_V3_START */
+(function () {
+    "use strict";
+
+    if (window.__duolabImagePerformanceV3) return;
+    window.__duolabImagePerformanceV3 = true;
+
+    const imagensProcessadas = new WeakSet();
+    const urlsPrecarregadas = new Set();
+
+    function visivel(elemento) {
+        const rect = elemento.getBoundingClientRect();
+
+        return (
+            rect.width > 0 &&
+            rect.height > 0 &&
+            rect.bottom >= -400 &&
+            rect.top <= window.innerHeight + 400
+        );
+    }
+
+    function urlValida(src) {
+        if (!src) return false;
+
+        const valor = String(src).trim();
+
+        return (
+            valor.length > 0 &&
+            !valor.startsWith("data:") &&
+            !valor.startsWith("blob:") &&
+            !valor.startsWith("javascript:")
+        );
+    }
+
+    function preload(src, prioridade) {
+        if (!urlValida(src)) return;
+        if (urlsPrecarregadas.has(src)) return;
+
+        urlsPrecarregadas.add(src);
+
+        const imagem = new Image();
+
+        imagem.decoding = "async";
+
+        if ("fetchPriority" in imagem) {
+            imagem.fetchPriority = prioridade ? "high" : "low";
+        }
+
+        imagem.src = src;
+    }
+
+    function otimizarImagem(img) {
+        if (!(img instanceof HTMLImageElement)) return;
+        if (imagensProcessadas.has(img)) return;
+
+        imagensProcessadas.add(img);
+
+        const importante = visivel(img);
+
+        img.decoding = "async";
+
+        if (importante) {
+            img.loading = "eager";
+
+            if ("fetchPriority" in img) {
+                img.fetchPriority = "high";
+            }
+        } else {
+            img.loading = "lazy";
+
+            if ("fetchPriority" in img) {
+                img.fetchPriority = "low";
+            }
+        }
+
+        if (img.complete && img.naturalWidth > 0) {
+            img.dataset.duolabLoaded = "true";
+        } else {
+            img.addEventListener("load", function () {
+                img.dataset.duolabLoaded = "true";
+            }, { once: true });
+        }
+
+        const src = img.currentSrc || img.getAttribute("src");
+
+        if (importante && src) {
+            preload(src, true);
+        }
+    }
+
+    function otimizarImagens() {
+        document.querySelectorAll("img").forEach(otimizarImagem);
+    }
+
+    function precarregarImagensDaPagina() {
+        const imagens = [...document.querySelectorAll("img")];
+
+        const principais = imagens
+            .filter(visivel)
+            .slice(0, 8);
+
+        for (const img of principais) {
+            const src = img.currentSrc || img.getAttribute("src");
+
+            if (src) preload(src, true);
+        }
+
+        /*
+         * Precarrega as imagens abaixo da dobra gradualmente.
+         * Limita a concorrencia para nao prejudicar OCR,
+         * scripts e demais recursos da calculadora.
+         */
+        const restantes = imagens
+            .filter(img => !visivel(img))
+            .slice(0, 24);
+
+        let indice = 0;
+
+        function proximoLote() {
+            const lote = restantes.slice(indice, indice + 3);
+
+            for (const img of lote) {
+                const src = img.currentSrc || img.getAttribute("src");
+
+                if (src) preload(src, false);
+            }
+
+            indice += lote.length;
+
+            if (indice < restantes.length) {
+                if ("requestIdleCallback" in window) {
+                    window.requestIdleCallback(proximoLote, {
+                        timeout: 2000
+                    });
+                } else {
+                    window.setTimeout(proximoLote, 350);
+                }
+            }
+        }
+
+        if ("requestIdleCallback" in window) {
+            window.requestIdleCallback(proximoLote, {
+                timeout: 2000
+            });
+        } else {
+            window.setTimeout(proximoLote, 350);
+        }
+    }
+
+    function iniciar() {
+        otimizarImagens();
+        precarregarImagensDaPagina();
+
+        const observer = new MutationObserver(function (mutations) {
+            let encontrouImagem = false;
+
+            for (const mutation of mutations) {
+                for (const node of mutation.addedNodes) {
+                    if (!(node instanceof Element)) continue;
+
+                    if (
+                        node.matches("img") ||
+                        node.querySelector("img")
+                    ) {
+                        encontrouImagem = true;
+                        break;
+                    }
+                }
+
+                if (encontrouImagem) break;
+            }
+
+            if (encontrouImagem) {
+                otimizarImagens();
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", iniciar, {
+            once: true
+        });
+    } else {
+        iniciar();
+    }
+})();
+/* DUOLAB_IMAGE_PERFORMANCE_V3_END */
