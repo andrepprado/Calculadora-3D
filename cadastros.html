@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cadastros e Configurações - Duo.Lab</title>
 <link rel="stylesheet" href="style.css">
+<link rel="icon" type="image/svg+xml" href="img/LOGO_SFUNDO.svg">
 </head>
 <body>
 <header class="app-header no-print">
@@ -49,8 +50,15 @@
 <tbody id="tabelaFil"></tbody>
 </table>
 </section>
-<section>
-<h2>Adicionais e acessórios</h2>
+
+<p id="statusCadastro" role="status"></p>
+
+<section id="duoOpcoesFixas" class="duo-opcoes-section">
+<h2>3. Adicionais e Canais</h2>
+<p>Gerencie os custos e a disponibilidade das opções da calculadora.</p>
+
+
+<h3>Adicionais e acessórios</h3>
 <p>Itens ativos aparecem automaticamente na calculadora.</p>
 <form id="formAdi">
 <div><label for="adiNome">Adicional</label><input id="adiNome" required maxlength="120"></div>
@@ -64,12 +72,6 @@
 <thead><tr><th>Adicional</th><th>Custo</th><th>Status</th><th>Ações</th></tr></thead>
 <tbody id="tabelaAdi"></tbody>
 </table>
-</section>
-<p id="statusCadastro" role="status"></p>
-
-<section id="duoOpcoesFixas" class="duo-opcoes-section">
-<h2>3. Adicionais e Canais</h2>
-<p>Gerencie os custos e a disponibilidade das opções da calculadora.</p>
 
 <div class="duo-opcoes-table-wrap">
 <table class="duo-opcoes-table">
