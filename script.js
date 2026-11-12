@@ -15,6 +15,100 @@ const CONFIG = {
     valor_sacola_kraft: 1.50
 };
 
+/* DUOLAB OPCOES CONFIGURAVEIS V1 */
+(function () {
+    const chave = "duolab_opcoes_fixos_v1";
+    let dados = {};
+
+    try {
+        dados = JSON.parse(localStorage.getItem(chave)) || {};
+    } catch {
+        dados = {};
+    }
+
+    const campos = [
+        "valor_chaveiro",
+        "valor_ima",
+        "valor_acabamento_unit",
+        "valor_luminaria",
+        "valor_embalagem_plastica_fixa",
+        "valor_sacola_kraft",
+        "valor_adesivo",
+        "depreciacao_impressora_hora",
+        "depreciacao_pc_hora",
+        "custo_infra_hora"
+    ];
+
+    campos.forEach(campo => {
+        const valor = Number(dados[campo]);
+
+        if (
+            Object.prototype.hasOwnProperty.call(dados, campo) &&
+            Number.isFinite(valor) &&
+            valor >= 0
+        ) {
+            CONFIG[campo] = valor;
+        }
+    });
+})();
+
+function duoAplicarDisponibilidade() {
+    let dados = {};
+
+    try {
+        dados = JSON.parse(
+            localStorage.getItem("duolab_opcoes_ativas_v1")
+        ) || {};
+    } catch {
+        dados = {};
+    }
+
+    const ids = [
+        "chkChaveiro",
+        "chkIma",
+        "chkAcabamento",
+        "chkLuminaria",
+        "chkPlastica",
+        "chkSacolaKraft",
+        "chkAdesivoFixo",
+        "chkDepreciacao",
+        "chkCustosFixos"
+    ];
+
+    ids.forEach(id => {
+        const campo = document.getElementById(id);
+        if (!campo) return;
+
+        const ativo = dados[id] !== false;
+        const label = campo.closest("label");
+
+        if (label) label.hidden = !ativo;
+
+        if (!ativo) campo.checked = false;
+    });
+
+    if (typeof calcular === "function") calcular();
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    duoAplicarDisponibilidade
+);
+(function () {
+    try {
+        const canais = JSON.parse(
+            localStorage.getItem("duolab_canais_v1")
+        ) || {};
+
+        if (
+            canais.shopee &&
+            Number.isFinite(Number(canais.shopee.fixa))
+        ) {
+            CONFIG.taxa_fixa_shopee =
+                Number(canais.shopee.fixa);
+        }
+    } catch {}
+})();
 const filamentos = [
     { nome: "VOOLT - PLA BEGE CAUCASIANO VELVET HIGH SPEED PREMIUM", custo: 92.32, cor: "#D6BC9B" },
     { nome: "VOOLT - PLA BRANCO VELVET HIGH SPEED PREMIUM", custo: 92.32, cor: "#F8F8F6" },
@@ -369,7 +463,52 @@ function calcular() {
     /*
      * CANAL DE VENDA
      */
-    const canalVenda =
+    /* DUOLAB CANAIS CONFIGURAVEIS V1 */
+function duoConfigurarCanais() {
+    const select = document.getElementById("canalVenda");
+    if (!select) return;
+
+    let dados = {};
+    try {
+        dados = JSON.parse(
+            localStorage.getItem("duolab_canais_v1")
+        ) || {};
+    } catch {
+        dados = {};
+    }
+
+    const canais = [
+        {id:"direta",nome:"Venda Direta",taxa:0,fixa:0},
+        {id:"shopee",nome:"Shopee",taxa:14,fixa:3},
+        {id:"mercadolivre",nome:"Mercado Livre",taxa:20,fixa:0}
+    ];
+
+    const anterior = select.selectedIndex;
+    select.replaceChildren();
+
+    canais.forEach(canal => {
+        const cfg = dados[canal.id] || canal;
+        const option = document.createElement("option");
+        option.value = String(Number(cfg.taxa) / 100);
+        option.dataset.canal = canal.id;
+        option.dataset.fixa = String(cfg.fixa);
+        option.textContent =
+            canal.nome + " (" + cfg.taxa + "% + R$ " +
+            Number(cfg.fixa).toFixed(2) + ")";
+        select.appendChild(option);
+    });
+
+    select.selectedIndex = Math.min(
+        Math.max(anterior,0),
+        select.options.length - 1
+    );
+}
+
+document.addEventListener(
+    "DOMContentLoaded",
+    duoConfigurarCanais
+);
+const canalVenda =
         document.getElementById('canalVenda');
 
     const percTaxaCanal =

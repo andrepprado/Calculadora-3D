@@ -4618,3 +4618,32 @@ table { max-width: 100%; }
 .duo-admin table{width:100%;border-collapse:collapse;margin-top:20px}
 .duo-admin th,.duo-admin td{padding:12px;border-bottom:1px solid #bbb;text-align:left}
 @media(max-width:700px){.duo-admin form{grid-template-columns:1fr}.duo-admin table{display:block;overflow-x:auto}}
+/* DUOLAB ADMIN OPCOES V1 */
+.duo-opcoes-section{margin-top:28px}
+.duo-opcoes-table-wrap{width:100%;overflow-x:auto}
+.duo-opcoes-table{width:100%;border-collapse:collapse}
+.duo-opcoes-table th,.duo-opcoes-table td{
+padding:12px;border-bottom:1px solid #ddd;text-align:left
+}
+.duo-opcao-numero{
+width:110px;max-width:100%;padding:10px;
+border:1px solid #bbb;border-radius:8px
+}
+.duo-opcao-salvar{
+background:#00a091!important;color:#fff!important;
+padding:10px 15px!important;border-radius:8px!important
+}
+.duo-opcoes-sucesso{
+padding:12px;margin:14px 0;background:#e8f7f3;
+color:#006b58;border-radius:8px
+}
+.duo-opcoes-erro{
+padding:12px;margin:14px 0;background:#fff0f0;
+color:#a32020;border-radius:8px
+}
+.duo-opcoes-table input[type=checkbox]{
+width:20px;height:20px;accent-color:#00a091
+}
+@media(max-width:700px){
+.duo-opcoes-table{min-width:620px}
+}

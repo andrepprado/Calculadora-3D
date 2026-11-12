@@ -67,8 +67,47 @@
 </section>
 <p id="statusCadastro" role="status"></p>
 <p>Os cadastros ficam armazenados neste navegador.</p>
+<section id="duoOpcoesFixas" class="duo-opcoes-section">
+<h2>3. Adicionais e Canais</h2>
+<p>Gerencie os custos e a disponibilidade das opções da calculadora.</p>
+
+<div class="duo-opcoes-table-wrap">
+<table class="duo-opcoes-table">
+<thead>
+<tr>
+<th>Opção</th>
+<th>Custo (R$)</th>
+<th>Unidade</th>
+<th>Disponibilidade</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="duoTabelaOpcoes"></tbody>
+</table>
+</div>
+
+<p id="duoStatusOpcoes" role="status"></p>
+
+<h3>Canais de venda</h3>
+<p>Configure as taxas percentuais dos canais de venda.</p>
+
+<div class="duo-opcoes-table-wrap">
+<table class="duo-opcoes-table">
+<thead>
+<tr>
+<th>Canal</th>
+<th>Taxa (%)</th>
+<th>Taxa fixa (R$)</th>
+<th>Ação</th>
+</tr>
+</thead>
+<tbody id="duoTabelaCanais"></tbody>
+</table>
+</div>
+</section>
 </main>
 <script src="cadastros.js"></script>
     <script src="mobile-menu.js"></script>
+<script src="cadastros-opcoes.js"></script>
 </body>
 </html>
