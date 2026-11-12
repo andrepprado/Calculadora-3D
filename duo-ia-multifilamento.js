@@ -1318,7 +1318,7 @@ function lerPeso(texto) {
 
             try {
                 const itens = preencher(dados);
-                resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link);
+                resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link); duoAtualizarPrecosWhatsApp();
                 status("ANALISE CONCLUIDA. CALCULADORA ATUALIZADA.");
             } catch {
                 revisarLeitura(dados, validas, link);
@@ -1747,7 +1747,7 @@ function lerPeso(texto) {
             };
 
             const itens = preencher(dados);
-            resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link);
+            resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link); duoAtualizarPrecosWhatsApp();
 
             status(
                 "ANALISE CONCLUIDA: " +
@@ -1794,9 +1794,9 @@ function lerPeso(texto) {
         return [
             tituloWhatsApp,
             "Custo Produção Total: R$ " +
-                duoFormatarMoedaWhatsApp(custo),
+                (Number.isFinite(custo) && custo > 0 ? duoFormatarMoedaWhatsApp(custo) : "AGUARDANDO CALCULO"),
             "Valor Unitário Sugerido: R$ " +
-                duoFormatarMoedaWhatsApp(sugerido),
+                (Number.isFinite(sugerido) && sugerido > 0 ? duoFormatarMoedaWhatsApp(sugerido) : "AGUARDANDO CALCULO"),
             String(link || "").trim()
         ].filter(Boolean).join("\n");
     }
@@ -1968,6 +1968,215 @@ function lerPeso(texto) {
     }
 
     // DUOLAB_WHATSAPP_FIM
+    // DUOLAB_WHATSAPP_PRECOS_V2_INICIO
+
+    function duoLerMoedaCalculadora(elemento) {
+        if (!elemento) return null;
+
+        const texto = String(
+            elemento.value ??
+            elemento.textContent ??
+            ""
+        ).trim();
+
+        const valores = [...texto.matchAll(
+            /(?:R\$\s*)?(-?\d{1,3}(?:\.\d{3})*,\d{2}|-?\d+,\d{2}|-?\d+(?:\.\d+)?)/g
+        )];
+
+        if (!valores.length) return null;
+
+        const ultimo = valores[valores.length - 1][1];
+
+        const numero = Number(
+            ultimo.replace(/\./g, "").replace(",", ".")
+        );
+
+        return Number.isFinite(numero) ? numero : null;
+    }
+
+    function duoEncontrarPrecoCalculadora(expressoes) {
+        const elementos = [
+            ...document.querySelectorAll(
+                "input, output, span, strong, b, div, p, td"
+            )
+        ];
+
+        for (const expressao of expressoes) {
+            const encontrados = elementos.filter(elemento => {
+                if (elemento.children.length > 0) return false;
+
+                const texto = String(
+                    elemento.textContent || ""
+                ).trim();
+
+                return expressao.test(texto);
+            });
+
+            for (const elemento of encontrados) {
+                const valorDireto = duoLerMoedaCalculadora(
+                    elemento
+                );
+
+                if (
+                    valorDireto !== null &&
+                    /R\$/.test(elemento.textContent || "")
+                ) {
+                    return valorDireto;
+                }
+
+                const pai = elemento.parentElement;
+
+                if (!pai) continue;
+
+                const candidatos = [
+                    ...pai.querySelectorAll(
+                        "input, output, strong, span, b"
+                    )
+                ];
+
+                for (const candidato of candidatos) {
+                    if (candidato === elemento) continue;
+
+                    const valor = duoLerMoedaCalculadora(
+                        candidato
+                    );
+
+                    if (valor !== null) {
+                        return valor;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    function duoObterValoresReaisWhatsApp() {
+        const custoSeletores = [
+            "#custoProducaoTotal",
+            "#custoTotal",
+            "#custoProducao",
+            "#custoTotalProducao",
+            "[data-custo-producao]"
+        ];
+
+        const precoSeletores = [
+            "#valorUnitarioSugerido",
+            "#precoSugerido",
+            "#precoVenda",
+            "#valorVenda",
+            "#precoFinal",
+            "[data-preco-sugerido]"
+        ];
+
+        function buscar(seletores) {
+            for (const seletor of seletores) {
+                const elemento = document.querySelector(
+                    seletor
+                );
+
+                const valor = duoLerMoedaCalculadora(
+                    elemento
+                );
+
+                if (valor !== null && valor > 0) {
+                    return valor;
+                }
+            }
+
+            return null;
+        }
+
+        let custo = buscar(custoSeletores);
+        let sugerido = buscar(precoSeletores);
+
+        if (custo === null) {
+            custo = duoEncontrarPrecoCalculadora([
+                /custo\s*(?:de\s*)?produ[cç][aã]o/i,
+                /custo\s*total/i
+            ]);
+        }
+
+        if (sugerido === null) {
+            sugerido = duoEncontrarPrecoCalculadora([
+                /valor\s*unit[aá]rio\s*sugerido/i,
+                /pre[cç]o\s*sugerido/i,
+                /pre[cç]o\s*(?:de\s*)?venda/i
+            ]);
+        }
+
+        return { custo, sugerido };
+    }
+
+    function duoAtualizarPrecosWhatsApp() {
+        const area = document.getElementById(
+            "duoIAWhatsAppResultado"
+        );
+
+        if (!area) return;
+
+        const textarea = area.querySelector(
+            "#duoIAMensagemWhatsApp"
+        );
+
+        if (!textarea) return;
+
+        const valores = duoObterValoresReaisWhatsApp();
+
+        const linhas = textarea.value.split("\n");
+
+        const moeda = valor => Number(valor).toLocaleString(
+            "pt-BR",
+            {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }
+        );
+
+        const custoValido =
+            Number.isFinite(valores.custo) &&
+            valores.custo > 0;
+
+        const sugeridoValido =
+            Number.isFinite(valores.sugerido) &&
+            valores.sugerido > 0;
+
+        textarea.value = linhas.map(linha => {
+            if (
+                /^Custo Produção Total:/i.test(linha)
+            ) {
+                return "Custo Produção Total: " +
+                    (custoValido
+                        ? "R$ " + moeda(valores.custo)
+                        : "AGUARDANDO CALCULO");
+            }
+
+            if (
+                /^Valor Unitário Sugerido:/i.test(linha)
+            ) {
+                return "Valor Unitário Sugerido: " +
+                    (sugeridoValido
+                        ? "R$ " + moeda(valores.sugerido)
+                        : "AGUARDANDO CALCULO");
+            }
+
+            return linha;
+        }).join("\n");
+
+        const botao = area.querySelector("button");
+
+        if (botao) {
+            botao.disabled = !(
+                custoValido && sugeridoValido
+            );
+
+            botao.title = botao.disabled
+                ? "Calcule os valores antes de copiar."
+                : "";
+        }
+    }
+
+    // DUOLAB_WHATSAPP_PRECOS_V2_FIM
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
