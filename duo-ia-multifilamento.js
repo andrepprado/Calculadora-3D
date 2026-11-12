@@ -1785,10 +1785,14 @@ function lerPeso(texto) {
     }
 
     function duoGerarMensagemWhatsApp(titulo, custo, sugerido, link) {
-        const nome = String(titulo || "Modelo 3D").trim();
+        const nome = String(titulo || "Modelo 3D")
+            .trim()
+            .replace(/^\*+|\*+$/g, "");
+
+        const tituloWhatsApp = "*" + nome + "*";
 
         return [
-            "*" + nome + "*",
+            tituloWhatsApp,
             "Custo Produção Total: R$ " +
                 duoFormatarMoedaWhatsApp(custo),
             "Valor Unitário Sugerido: R$ " +
