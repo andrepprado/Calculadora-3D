@@ -739,6 +739,179 @@ function lerPeso(texto) {
         }
     }
 
+    function revisarLeitura(dados, reconhecidas, link) {
+        const area = $("duoIAResultado");
+        if (!area) throw new Error("Area de resultados nao encontrada.");
+
+        const lista = cadastro();
+        if (!lista.length) {
+            throw new Error("Nao existem filamentos cadastrados.");
+        }
+
+        area.hidden = false;
+        area.replaceChildren();
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = "CONFERIR FILAMENTOS";
+        area.appendChild(titulo);
+
+        const descricao = document.createElement("p");
+        descricao.textContent =
+            "Tempo e peso total reconhecidos. Confira os filamentos " +
+            "e seus pesos antes de aplicar o calculo.";
+        area.appendChild(descricao);
+
+        const resumo = document.createElement("p");
+        resumo.textContent =
+            "Tempo: " + dados.tempo + " h | Peso total: " +
+            dados.total + " g | Pratos: " + (dados.pratos ?? "-");
+        area.appendChild(resumo);
+
+        const linhasArea = document.createElement("div");
+        area.appendChild(linhasArea);
+
+        const linhas = [];
+
+        function adicionarLinha(sugestao = null) {
+            const linha = document.createElement("div");
+            linha.className = "input-row";
+
+            const grupoFilamento = document.createElement("div");
+            grupoFilamento.className = "input-group";
+
+            const labelFilamento = document.createElement("label");
+            labelFilamento.textContent = "FILAMENTO " + (linhas.length + 1);
+
+            const select = document.createElement("select");
+            select.className = "calc-trigger";
+
+            const vazio = document.createElement("option");
+            vazio.value = "";
+            vazio.textContent = "SELECIONE O FILAMENTO";
+            select.appendChild(vazio);
+
+            lista.forEach((f, indice) => {
+                const opcao = document.createElement("option");
+                opcao.value = String(indice);
+                opcao.textContent = f.nome;
+                select.appendChild(opcao);
+            });
+
+            if (sugestao?.material && sugestao?.cor) {
+                const encontrado = e.cadastro || localizarFilamento(
+                    sugestao.material,
+                    sugestao.cor
+                );
+
+                if (encontrado) {
+                    select.value = String(encontrado.indice);
+                }
+            }
+
+            grupoFilamento.append(labelFilamento, select);
+
+            const grupoPeso = document.createElement("div");
+            grupoPeso.className = "input-group";
+
+            const labelPeso = document.createElement("label");
+            labelPeso.textContent = "PESO (G)";
+
+            const peso = document.createElement("input");
+            peso.type = "number";
+            peso.min = "0.01";
+            peso.step = "0.01";
+            peso.placeholder = "Gramas";
+            peso.className = "calc-trigger";
+
+            if (sugestao?.peso > 0) {
+                peso.value = sugestao.peso;
+            }
+
+            grupoPeso.append(labelPeso, peso);
+            linha.append(grupoFilamento, grupoPeso);
+            linhasArea.appendChild(linha);
+
+            linhas.push({ select, peso });
+        }
+
+        if (reconhecidas.length) {
+            reconhecidas.forEach(adicionarLinha);
+        } else {
+            adicionarLinha();
+        }
+
+        const adicionar = document.createElement("button");
+        adicionar.type = "button";
+        adicionar.className = "btn-limpar-calculadora";
+        adicionar.textContent = "+ FILAMENTO";
+        adicionar.addEventListener("click", () => adicionarLinha());
+
+        const aplicar = document.createElement("button");
+        aplicar.type = "button";
+        aplicar.className = $("duoIAAnalisar").className;
+        aplicar.textContent = "APLICAR E CALCULAR";
+
+        aplicar.addEventListener("click", () => {
+            try {
+                const etiquetas = linhas.map(({ select, peso }) => {
+                    if (select.value === "") {
+                        throw new Error("Selecione todos os filamentos.");
+                    }
+
+                    const indice = Number(select.value);
+                    const gramas = Number(peso.value);
+                    const filamento = lista[indice];
+
+                    if (
+                        !filamento ||
+                        !Number.isFinite(gramas) ||
+                        gramas <= 0
+                    ) {
+                        throw new Error("Confira os pesos dos filamentos.");
+                    }
+
+                    return {
+                        material: filamento.nome.match(
+                            /\b(PLA|PETG|ABS|ASA|TPU)\b/i
+                        )?.[1]?.toUpperCase() || "OUTROS",
+                        cor: filamento.nome,
+                        peso: gramas,
+                        cadastro: { f: filamento, indice }
+                    };
+                });
+
+                const soma = etiquetas.reduce(
+                    (total, item) => total + item.peso,
+                    0
+                );
+
+                if (Math.abs(soma - dados.total) > 0.11) {
+                    throw new Error(
+                        "A soma dos filamentos deve ser " +
+                        dados.total + " g. Soma atual: " +
+                        soma.toFixed(2) + " g."
+                    );
+                }
+
+                const confirmados = {
+                    pratos: dados.pratos,
+                    tempo: dados.tempo,
+                    total: soma,
+                    etiquetas
+                };
+
+                const itens = preencher(confirmados);
+                resultado(confirmados, itens, link);
+                status("CALCULADORA ATUALIZADA.");
+            } catch (erro) {
+                status(erro.message, true);
+            }
+        });
+
+        area.append(adicionar, aplicar);
+        status("CONFIRA OS FILAMENTOS PARA CALCULAR.");
+    }
+
     async function analisar() {
         const arquivo = $("duoIAImagem")?.files?.[0];
         const link = $("duoIALink")?.value.trim() || "";
@@ -761,9 +934,9 @@ function lerPeso(texto) {
 
         if (link) {
             try {
-                const u = new URL(link);
-                if (!["http:", "https:"].includes(u.protocol)) {
-                    throw new Error("Protocolo");
+                const url = new URL(link);
+                if (!["http:", "https:"].includes(url.protocol)) {
+                    throw new Error("Link invalido");
                 }
             } catch {
                 status("LINK INVALIDO.", true);
@@ -772,14 +945,14 @@ function lerPeso(texto) {
         }
 
         botao.disabled = true;
-        let worker;
+        let worker = null;
 
         try {
             if (!window.Tesseract) {
                 throw new Error("OCR nao carregado.");
             }
 
-            status("LENDO IMAGEM E ETIQUETAS...");
+            status("ANALISANDO IMAGEM...");
 
             const imagem = await carregarImagem(arquivo);
             const canvas = imagemCanvas(imagem);
@@ -795,63 +968,136 @@ function lerPeso(texto) {
                 }
             );
 
-            const ampliada = recorte(
-                canvas,
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
-
-            const textoGeral = await lerOCR(
+            const geral = await lerOCR(
                 worker,
-                ampliada
+                recorte(
+                    canvas,
+                    0,
+                    0,
+                    canvas.width,
+                    canvas.height
+                )
             );
 
-            const tempo = lerTempo(textoGeral);
-            const pratos = lerPratos(textoGeral);
-            const total = lerPeso(textoGeral);
+            const tempo = lerTempo(geral);
+            const pratos = lerPratos(geral);
+            const total = lerPeso(geral);
 
             if (!tempo || total === null) {
                 throw new Error(
-                    "Tempo ou peso total nao identificado. " +
-                    "Texto reconhecido: " +
-                    textoGeral.replace(/\s+/g, " ").slice(0, 180)
+                    "Tempo ou peso total ilegivel. " +
+                    "Envie uma captura com maior resolucao."
                 );
             }
 
-            const leitura = await extrairEtiquetasOCR(
-                worker,
-                canvas,
-                total
-            );
+            const etiquetas = [];
+            const larg = canvas.width;
+            const alt = canvas.height;
+
+            // Leitura por regioes completas, sem recortar
+            // somente os pequenos quadrados coloridos.
+            await worker.setParameters({
+                tessedit_pageseg_mode: "6"
+            });
+
+            for (const partes of [1, 2, 3, 4]) {
+                for (let coluna = 0; coluna < partes; coluna++) {
+                    const x = Math.floor(larg * coluna / partes);
+                    const proximo = Math.ceil(
+                        larg * (coluna + 1) / partes
+                    );
+
+                    const y = Math.floor(alt * 0.35);
+                    const largura = Math.min(
+                        larg - x,
+                        proximo - x + Math.ceil(larg * 0.03)
+                    );
+
+                    const crop = recorte(
+                        canvas,
+                        x,
+                        y,
+                        largura,
+                        alt - y
+                    );
+
+                    const texto = await lerOCR(worker, crop);
+
+                    const regex =
+                        /\b(PLA|PETG|ABS|ASA|TPU)\b[\s\S]{0,25}?(\d+(?:[.,]\d+)?)\s*g\b/gi;
+
+                    let match;
+
+                    while ((match = regex.exec(texto)) !== null) {
+                        const peso = num(match[2]);
+
+                        if (
+                            !Number.isFinite(peso) ||
+                            peso <= 0 ||
+                            peso > total
+                        ) {
+                            continue;
+                        }
+
+                        const candidatos = identificarEtiquetas(
+                            canvas
+                        ).filter(grupo =>
+                            grupo.x >= x &&
+                            grupo.x <= x + largura &&
+                            grupo.yInicial >= y
+                        );
+
+                        const frequencia = new Map();
+
+                        candidatos.forEach(grupo => {
+                            if (grupo.cor === "preto") return;
+
+                            frequencia.set(
+                                grupo.cor,
+                                (frequencia.get(grupo.cor) || 0) +
+                                grupo.contagem
+                            );
+                        });
+
+                        const ordenadas = [...frequencia]
+                            .sort((a, b) => b[1] - a[1]);
+
+                        const cor = ordenadas.length === 1
+                            ? ordenadas[0][0]
+                            : null;
+
+                        if (!cor) continue;
+
+                        const item = {
+                            material: match[1].toUpperCase(),
+                            cor,
+                            peso
+                        };
+
+                        if (!etiquetas.some(e =>
+                            e.material === item.material &&
+                            e.cor === item.cor &&
+                            Math.abs(e.peso - item.peso) < 0.01
+                        )) {
+                            etiquetas.push(item);
+                        }
+                    }
+                }
+            }
 
             let validas = null;
 
             try {
-                validas = validarEtiquetas(
-                    leitura.etiquetas,
-                    total
-                );
-            } catch (erro) {
-                console.warn(
-                    "[DUOLAB IA] Leitura parcial:",
-                    erro.message
-                );
-
-                revisarEtiquetas(
-                    {
-                        pratos,
-                        tempo,
-                        total,
-                        etiquetas: leitura.etiquetas
-                    },
-                    leitura.etiquetas,
+                validas = validarEtiquetas(etiquetas, total);
+            } catch {
+                revisarLeitura(
+                    { pratos, tempo, total },
+                    etiquetas,
                     link
                 );
-
                 return;
             }
+
             const dados = {
                 pratos,
                 tempo,
@@ -859,13 +1105,13 @@ function lerPeso(texto) {
                 etiquetas: validas
             };
 
-            const itens = preencher(dados);
-
-            resultado(dados, itens, link);
-
-            status(
-                "ANALISE CONCLUIDA. CALCULADORA ATUALIZADA."
-            );
+            try {
+                const itens = preencher(dados);
+                resultado(dados, itens, link);
+                status("ANALISE CONCLUIDA. CALCULADORA ATUALIZADA.");
+            } catch {
+                revisarLeitura(dados, validas, link);
+            }
 
         } catch (erro) {
             console.error("[DUOLAB IA]", erro);
@@ -880,7 +1126,6 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
-
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
