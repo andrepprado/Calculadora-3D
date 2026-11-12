@@ -483,3 +483,50 @@
         );
     });
 })();
+/* DUOLAB PROTOCOLO MULTIFILAMENTO V2 */
+window.DuoLabProtocoloIA = Object.freeze({
+    versao: 2,
+
+    entradas: [
+        "imagem_do_fatiador",
+        "url_do_modelo"
+    ],
+
+    extrair: [
+        "placas",
+        "quantidade_por_placa",
+        "material",
+        "cor",
+        "nome_do_filamento",
+        "peso_em_gramas",
+        "tempo_em_horas"
+    ],
+
+    cruzamento: {
+        chaveFilamentos: "duolab_filamentos_v2",
+        chaveAdicionais: "duolab_adicionais_v2",
+        chaveCustos: "duolab_opcoes_fixos_v1",
+        chaveCanais: "duolab_canais_v1"
+    },
+
+    regras: [
+        "Nao inventar pesos ou tempos",
+        "Nao duplicar pesos totais e parciais",
+        "Nao assumir cor por nome sem evidencia",
+        "Nao calcular custo de filamento sem preco cadastrado",
+        "Nao apresentar custo parcial como preco final",
+        "Sinalizar dados nao identificados",
+        "Preservar os calculos existentes"
+    ],
+
+    saidaEsperada: [
+        "placas_identificadas",
+        "filamentos_identificados",
+        "pesos_por_filamento",
+        "tempo_de_impressao",
+        "custo_de_material",
+        "custo_operacional",
+        "preco_final_quando_validado",
+        "pendencias_de_leitura"
+    ]
+});

@@ -4774,3 +4774,234 @@ width:20px;height:20px;accent-color:#00a091
         font-size: 12px;
     }
 }
+/* DUOLAB RESPONSIVIDADE GLOBAL V2 */
+
+:root {
+    --duo-mobile-gap: 12px;
+}
+
+html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    margin-right: 0;
+    overflow-x: clip;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, video, canvas, svg {
+    max-width: 100%;
+}
+
+img, video {
+    height: auto;
+}
+
+main, section, article, form,
+.container, .card, .app-header-inner,
+.duo-ia-card, .duo-ia-form,
+.duo-opcoes-section {
+    min-width: 0;
+    max-width: 100%;
+}
+
+input, select, textarea, button {
+    max-width: 100%;
+    font: inherit;
+}
+
+input[type="file"] {
+    min-width: 0;
+    width: 100%;
+}
+
+table {
+    max-width: 100%;
+}
+
+.duo-opcoes-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+#duoIAResultado {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+}
+
+#duoIAResultado .duo-ia-tabela {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+#duoIAResultado pre {
+    max-width: 100%;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.duo-ia-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+}
+
+.duo-ia-form > * {
+    min-width: 0;
+}
+
+.duo-ia-protocolo {
+    margin: 14px 0;
+    padding: 14px;
+    border: 1px solid #cbded9;
+    border-radius: 10px;
+    background: #f5faf8;
+}
+
+.duo-ia-protocolo summary {
+    cursor: pointer;
+    font-weight: 700;
+    color: #003640;
+}
+
+.duo-ia-protocolo p {
+    margin: 10px 0 0;
+    line-height: 1.5;
+}
+
+.duo-ia-protocolo ul {
+    padding-left: 22px;
+    margin-bottom: 0;
+}
+
+@media (max-width: 1024px) {
+    .duo-ia-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .app-header-inner {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    main, .container {
+        max-width: 100%;
+    }
+
+    .duo-ia-card {
+        margin: 16px 0;
+        padding: 16px;
+    }
+
+    .duo-ia-heading {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .duo-ia-heading > * {
+        min-width: 0;
+    }
+
+    .duo-ia-form input,
+    .duo-ia-form select,
+    .duo-ia-form button {
+        width: 100%;
+        min-height: 44px;
+    }
+
+    .duo-opcoes-table {
+        min-width: 620px;
+    }
+
+    .duo-opcao-numero {
+        width: 100px;
+    }
+
+    .duo-opcao-salvar {
+        min-height: 40px;
+    }
+
+    .chk-grid {
+        display: grid;
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(min(100%, 150px), 1fr)
+        );
+        gap: 10px;
+    }
+
+    .chk-grid label {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+}
+
+@media (max-width: 480px) {
+    .duo-ia-card {
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .duo-ia-heading h2 {
+        font-size: 1.25rem;
+    }
+
+    .duo-ia-tag {
+        font-size: 11px;
+    }
+
+    .duo-ia-form {
+        gap: 12px;
+    }
+
+    .duo-ia-protocolo {
+        padding: 12px;
+    }
+
+    .chk-grid {
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(min(100%, 135px), 1fr)
+        );
+    }
+
+    #duoIAResultado .duo-ia-tabela {
+        font-size: 12px;
+    }
+
+    #duoIAResultado .duo-ia-tabela th,
+    #duoIAResultado .duo-ia-tabela td {
+        padding: 8px;
+    }
+}
+
+@media (max-width: 360px) {
+    .chk-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .duo-ia-card {
+        padding: 10px;
+    }
+}
+
+/* FIM DUOLAB RESPONSIVIDADE GLOBAL V2 */

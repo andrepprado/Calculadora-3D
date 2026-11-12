@@ -193,6 +193,28 @@
                 <button onclick="window.print()" class="btn-print no-print">GERAR PDF / IMPRIMIR</button>
             </section>
         <section id="duoIA" class="duo-ia-card no-print">
+<details class="duo-ia-protocolo" id="duoIAProtocolo">
+  <summary>Como a IA deve analisar o modelo</summary>
+  <p>
+    A análise utiliza a imagem do fatiador e o link informado
+    para organizar os dados de produção multifilamento.
+  </p>
+  <ul>
+    <li>Identificar as placas e suas quantidades.</li>
+    <li>Identificar os materiais, cores e filamentos exibidos.</li>
+    <li>Extrair o tempo de impressão por placa e o tempo total.</li>
+    <li>Extrair o consumo em gramas por material e por placa.</li>
+    <li>Relacionar os materiais aos filamentos cadastrados.</li>
+    <li>Aplicar os custos e configurações existentes.</li>
+    <li>Evitar somar pesos totais e parciais em duplicidade.</li>
+    <li>Sinalizar dados ausentes, ilegíveis ou inconsistentes.</li>
+  </ul>
+  <p>
+    O link serve como referência do modelo. A leitura automática
+    de seu conteúdo depende da disponibilidade pública dos dados
+    e das permissões do site de origem.
+  </p>
+</details>
   <div class="duo-ia-heading">
     <div>
       <h2>IA Multifilamento</h2>
