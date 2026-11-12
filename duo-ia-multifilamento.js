@@ -1,27 +1,31 @@
 "use strict";
 
-/*
- * DUOLAB IA MULTIFILAMENTO V4
- *
- * Entrada:
- *   - imagem do fatiador
- *   - link do modelo
- *
- * Saida:
- *   - pratos
- *   - tempo total
- *   - peso total
- *   - peso por cor
- *   - associacao com filamentos cadastrados
- *   - preenchimento da calculadora
- *
- * O calculo financeiro permanece no script.js.
- */
-
+/* DUOLAB IA MULTIFILAMENTO V5
+   Leitura independente das etiquetas de filamento.
+   Nao presume cores ou pesos sem evidencia na imagem.
+*/
 (() => {
     const $ = id => document.getElementById(id);
 
-    const CORES = {
+    const normal = s => String(s || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase();
+
+    const num = s => Number(
+        String(s || "").replace(",", ".")
+    );
+
+    const status = (s, erro = false) => {
+        const el = $("duoIAStatus");
+        if (!el) return;
+        el.textContent = s;
+        el.className = erro
+            ? "duo-ia-erro"
+            : "duo-ia-sucesso";
+    };
+
+    const cores = {
         branco: ["branco", "white"],
         vermelho: ["vermelho", "red"],
         preto: ["preto", "black"],
@@ -31,295 +35,152 @@
         rosa: ["rosa", "pink"],
         roxo: ["roxo", "purple"],
         laranja: ["laranja", "orange"],
-        marrom: ["marrom", "brown"],
         cinza: ["cinza", "gray", "grey"],
-        bege: ["bege", "beige"],
-        dourado: ["dourado", "gold"]
+        marrom: ["marrom", "brown"],
+        bege: ["bege", "beige"]
     };
 
-    function normalizar(texto) {
-        return String(texto || "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase()
-            .replace(/\s+/g, " ")
-            .trim();
-    }
-
-    function numero(valor) {
-        let texto = String(valor || "").trim();
-
-        if (texto.includes(",") && texto.includes(".")) {
-            if (texto.lastIndexOf(",") > texto.lastIndexOf(".")) {
-                texto = texto.replace(/\./g, "").replace(",", ".");
-            } else {
-                texto = texto.replace(/,/g, "");
-            }
-        } else {
-            texto = texto.replace(",", ".");
-        }
-
-        return Number(texto);
-    }
-
-    function informar(mensagem, erro = false) {
-        const area = $("duoIAStatus");
-
-        if (!area) return;
-
-        area.textContent = mensagem;
-        area.className = erro
-            ? "duo-ia-erro"
-            : "duo-ia-sucesso";
-    }
-
-    function extrairTempo(texto) {
-        const t = normalizar(texto);
-
-        // Prioridade para horas decimais.
-        // Exemplo: 2.8 h = 2 horas e 48 minutos.
-        const decimal = t.match(
-            /\b(\d{1,3}[.,]\d{1,2})\s*(?:h|horas?)\b/
-        );
-
-        if (decimal) {
-            const valor = numero(decimal[1]);
-
-            if (valor > 0 && valor < 1000) {
-                return valor;
-            }
-        }
-
-        // Exemplo: 2h 48min.
-        const horasMinutos = t.match(
-            /\b(\d{1,3})\s*h(?:oras?)?\s*(\d{1,2})\s*(?:m|min)\b/
-        );
-
-        if (horasMinutos) {
-            return Number(horasMinutos[1]) +
-                Number(horasMinutos[2]) / 60;
-        }
-
-        // Exemplo: 02:48 h.
-        const relogio = t.match(
-            /\b(\d{1,3}):(\d{2})\s*(?:h|horas?)\b/
-        );
-
-        if (relogio && Number(relogio[2]) < 60) {
-            return Number(relogio[1]) +
-                Number(relogio[2]) / 60;
-        }
-
-        const horas = t.match(
-            /\b(\d{1,3})\s*(?:h|horas?)\b/
-        );
-
-        return horas ? Number(horas[1]) : null;
-    }
-
-    function extrairPratos(texto) {
-        const t = normalizar(texto);
-
-        const match = t.match(
-            /\b(\d{1,3})\s*(?:pratos?|plates?|placas?)\b/
-        );
-
-        return match ? Number(match[1]) : null;
-    }
-
-    function extrairPesoTotal(texto) {
-        const t = normalizar(texto);
-
-        const match = t.match(
-            /\b(\d+(?:[.,]\d+)?)\s*(?:g|gr|gramas?)\b/
-        );
-
-        return match ? numero(match[1]) : null;
-    }
-
-    function detectarCor(texto) {
-        const t = normalizar(texto);
-
-        for (const [cor, aliases] of Object.entries(CORES)) {
-            if (aliases.some(alias =>
-                new RegExp(
-                    "(^|[^a-z])" + alias + "([^a-z]|$)"
-                ).test(t)
-            )) {
-                return cor;
-            }
-        }
-
-        return null;
-    }
-
-    function hexRGB(hex) {
-        const valor = String(hex || "").replace("#", "");
-
-        if (!/^[0-9a-f]{6}$/i.test(valor)) return null;
-
-        return [
-            parseInt(valor.slice(0, 2), 16),
-            parseInt(valor.slice(2, 4), 16),
-            parseInt(valor.slice(4, 6), 16)
-        ];
-    }
-
-    function distancia(a, b) {
-        return Math.sqrt(
-            (a[0] - b[0]) ** 2 +
-            (a[1] - b[1]) ** 2 +
-            (a[2] - b[2]) ** 2
-        );
-    }
-
-    function corPorRGB(rgb) {
-        if (!rgb) return null;
-
+    function nomeCor(rgb) {
         const [r, g, b] = rgb;
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
 
-        if (r > 210 && g > 210 && b > 210) {
-            return "branco";
-        }
+        if (min > 215 && max - min < 35) return "branco";
+        if (max < 65) return "preto";
 
-        if (r < 65 && g < 65 && b < 65) {
-            return "preto";
-        }
-
-        if (r > g * 1.45 && r > b * 1.45 && r > 100) {
+        if (r > 105 && r > g * 1.45 && r > b * 1.45)
             return "vermelho";
-        }
 
-        if (b > r * 1.35 && b > g * 1.15) {
+        if (b > 95 && b > r * 1.4 && b > g * 1.2)
             return "azul";
-        }
 
-        if (g > r * 1.25 && g > b * 1.10) {
+        if (g > 90 && g > r * 1.35 && g > b * 1.15)
             return "verde";
-        }
+
+        if (r > 140 && g > 110 && b < 110)
+            return "amarelo";
+
+        if (r > 130 && b > 85 && g < 140)
+            return "roxo";
 
         return null;
     }
 
-    function obterFilamentos() {
-        if (typeof filamentos !== "undefined" &&
-            Array.isArray(filamentos)) {
-            return filamentos;
-        }
-
-        try {
-            const dados = JSON.parse(
-                localStorage.getItem("duolab_filamentos_v2")
-            );
-
-            return Array.isArray(dados) ? dados : [];
-        } catch {
-            return [];
-        }
+    function imagemCanvas(imagem) {
+        const c = document.createElement("canvas");
+        c.width = imagem.naturalWidth;
+        c.height = imagem.naturalHeight;
+        c.getContext("2d").drawImage(imagem, 0, 0);
+        return c;
     }
 
-    function selecionarFilamento(cor, material) {
-        const lista = obterFilamentos();
-
-        const candidatos = lista
-            .map((filamento, indice) => {
-                const nome = normalizar(filamento.nome);
-                const aliases = CORES[cor] || [cor];
-
-                const corresponde = aliases.some(alias =>
-                    new RegExp(
-                        "(^|[^a-z])" + alias + "([^a-z]|$)"
-                    ).test(nome)
-                );
-
-                const materialCompativel = !material ||
-                    nome.includes(normalizar(material));
-
-                return {
-                    indice,
-                    filamento,
-                    corresponde,
-                    materialCompativel
-                };
-            })
-            .filter(item =>
-                item.corresponde && item.materialCompativel
-            );
-
-        if (!candidatos.length) return null;
-
-        // Escolhe a primeira correspondencia do cadastro,
-        // sem inventar marca ou material.
-        return candidatos[0];
-    }
-
-    function formatarTempo(horas) {
-        const minutos = Math.round(horas * 60);
-
-        const h = Math.floor(minutos / 60);
-        const m = minutos % 60;
-
-        return String(h).padStart(2, "0") +
-            ":" +
-            String(m).padStart(2, "0");
-    }
-
-    function prepararCanvas(imagem, modo = "normal") {
-        const canvas = document.createElement("canvas");
-        const escala = Math.max(
-            2,
-            Math.min(4, 1800 / imagem.width)
-        );
-
-        canvas.width = Math.round(imagem.width * escala);
-        canvas.height = Math.round(imagem.height * escala);
-
+    function identificarEtiquetas(canvas) {
         const ctx = canvas.getContext(
             "2d",
             { willReadFrequently: true }
         );
 
-        ctx.drawImage(
-            imagem,
-            0,
-            0,
-            canvas.width,
-            canvas.height
-        );
+        const w = canvas.width;
+        const h = canvas.height;
 
-        if (modo !== "normal") {
-            const pixels = ctx.getImageData(
-                0,
-                0,
-                canvas.width,
-                canvas.height
-            );
+        const dados = ctx.getImageData(0, 0, w, h).data;
+        const candidatas = [];
 
-            for (let i = 0; i < pixels.data.length; i += 4) {
-                const r = pixels.data[i];
-                const g = pixels.data[i + 1];
-                const b = pixels.data[i + 2];
+        // Procura faixas horizontais uniformes com largura
+        // suficiente para conter etiquetas de filamento.
+        for (
+            let y = Math.floor(h * 0.35);
+            y < h - 4;
+            y += Math.max(1, Math.floor(h / 180))
+        ) {
+            let inicio = 0;
+            let anterior = null;
 
-                let v = 0.299 * r +
-                    0.587 * g +
-                    0.114 * b;
+            for (let x = 0; x <= w; x++) {
+                let cor = null;
 
-                if (modo === "contraste") {
-                    v = v > 115 ? 255 : 0;
-                } else {
-                    v = 255 - v;
-                    v = v > 115 ? 255 : 0;
+                if (x < w) {
+                    const i = (y * w + x) * 4;
+                    cor = nomeCor([
+                        dados[i],
+                        dados[i + 1],
+                        dados[i + 2]
+                    ]);
                 }
 
-                pixels.data[i] = v;
-                pixels.data[i + 1] = v;
-                pixels.data[i + 2] = v;
-            }
+                if (cor !== anterior || x === w) {
+                    const largura = x - inicio;
 
-            ctx.putImageData(pixels, 0, 0);
+                    if (
+                        anterior &&
+                        largura >= Math.max(18, w * 0.045) &&
+                        largura <= w * 0.45
+                    ) {
+                        candidatas.push({
+                            x: inicio,
+                            y,
+                            largura,
+                            cor: anterior
+                        });
+                    }
+
+                    inicio = x;
+                    anterior = cor;
+                }
+            }
         }
 
-        return canvas;
+        // Agrupa deteccoes repetidas da mesma etiqueta.
+        const grupos = [];
+
+        for (const c of candidatas) {
+            const grupo = grupos.find(g =>
+                g.cor === c.cor &&
+                Math.abs(g.x - c.x) < 8 &&
+                Math.abs(g.largura - c.largura) < 12 &&
+                c.y - g.yFinal <= Math.max(5, h * 0.06)
+            );
+
+            if (grupo) {
+                grupo.yFinal = c.y;
+                grupo.contagem++;
+            } else {
+                grupos.push({
+                    ...c,
+                    yInicial: c.y,
+                    yFinal: c.y,
+                    contagem: 1
+                });
+            }
+        }
+
+        return grupos
+            .filter(g => g.contagem >= 2)
+            .sort((a, b) =>
+                b.contagem - a.contagem
+            );
+    }
+
+    function recorte(canvas, x, y, largura, altura) {
+        const c = document.createElement("canvas");
+
+        const fator = 5;
+        c.width = Math.max(1, Math.round(largura * fator));
+        c.height = Math.max(1, Math.round(altura * fator));
+
+        c.getContext("2d").drawImage(
+            canvas,
+            Math.max(0, x),
+            Math.max(0, y),
+            largura,
+            altura,
+            0,
+            0,
+            c.width,
+            c.height
+        );
+
+        return c;
     }
 
     async function carregarImagem(arquivo) {
@@ -331,367 +192,208 @@
             await imagem.decode();
             return imagem;
         } finally {
-            // O bitmap decodificado permanece disponivel.
             URL.revokeObjectURL(url);
         }
     }
 
-    async function executarOCR(arquivo) {
-        if (!window.Tesseract) {
+    async function lerOCR(worker, imagem) {
+        const resultado = await worker.recognize(imagem);
+        return resultado.data.text || "";
+    }
+
+    function lerTempo(texto) {
+        const match = texto.match(
+            /(\d{1,3}[.,]\d{1,2})\s*h\b/i
+        );
+
+        if (match) return num(match[1]);
+
+        const hm = texto.match(
+            /(\d{1,3})\s*h\s*(\d{1,2})\s*m/i
+        );
+
+        if (hm) {
+            return Number(hm[1]) + Number(hm[2]) / 60;
+        }
+
+        return null;
+    }
+
+    function lerPratos(texto) {
+        const m = texto.match(
+            /(\d{1,3})\s*(?:pratos?|plates?|placas?)/i
+        );
+        return m ? Number(m[1]) : null;
+    }
+
+    function lerPeso(texto) {
+        const m = texto.match(
+            /(\d+(?:[.,]\d+)?)\s*(?:g|gr|gramas?)\b/i
+        );
+        return m ? num(m[1]) : null;
+    }
+
+    function cadastro() {
+        if (typeof filamentos !== "undefined" &&
+            Array.isArray(filamentos)) {
+            return filamentos;
+        }
+
+        try {
+            return JSON.parse(
+                localStorage.getItem("duolab_filamentos_v2")
+            ) || [];
+        } catch {
+            return [];
+        }
+    }
+
+    function localizarFilamento(material, cor) {
+        const lista = cadastro();
+
+        const aliases = cores[cor] || [cor];
+
+        const encontrados = lista
+            .map((f, indice) => ({
+                f,
+                indice,
+                nome: normal(f.nome)
+            }))
+            .filter(item =>
+                item.nome.includes(normal(material)) &&
+                aliases.some(alias =>
+                    new RegExp(
+                        "(^|[^a-z])" + alias + "([^a-z]|$)"
+                    ).test(item.nome)
+                )
+            );
+
+        return encontrados.length === 1
+            ? encontrados[0]
+            : null;
+    }
+
+    function validarEtiquetas(etiquetas, total) {
+        if (!etiquetas.length) {
             throw new Error(
-                "O mecanismo de leitura OCR nao foi carregado."
+                "Nao foi possivel ler as etiquetas dos filamentos."
             );
         }
 
-        const imagem = await carregarImagem(arquivo);
+        const unicas = [];
 
-        informar("LENDO DADOS DO FATIADOR...");
-
-        const worker = await Tesseract.createWorker(
-            "por+eng",
-            1,
-            {
-                workerPath: "vendor/ocr/worker.min.js",
-                corePath: "vendor/ocr",
-                langPath: "vendor/ocr",
-                gzip: false
-            }
-        );
-
-        try {
-            const resultados = [];
-
-            for (const modo of [
-                "normal",
-                "contraste",
-                "invertido"
-            ]) {
-                informar(
-                    "IDENTIFICANDO PLACAS, TEMPO E FILAMENTOS..."
-                );
-
-                const canvas = prepararCanvas(imagem, modo);
-                const resultado = await worker.recognize(canvas);
-
-                resultados.push(resultado.data.text || "");
-            }
-
-            return {
-                imagem,
-                textos: resultados
-            };
-        } finally {
-            await worker.terminate();
-        }
-    }
-
-    function localizarFaixasColoridas(imagem) {
-        const canvas = document.createElement("canvas");
-        canvas.width = imagem.naturalWidth;
-        canvas.height = imagem.naturalHeight;
-
-        const ctx = canvas.getContext(
-            "2d",
-            { willReadFrequently: true }
-        );
-
-        ctx.drawImage(imagem, 0, 0);
-
-        const w = canvas.width;
-        const h = canvas.height;
-
-        const dados = ctx.getImageData(
-            0,
-            0,
-            w,
-            h
-        ).data;
-
-        const linhas = [];
-
-        // Examina o trecho inferior da imagem,
-        // onde o Bambu Studio costuma mostrar os filamentos.
-        for (
-            let y = Math.floor(h * 0.35);
-            y < h;
-            y += Math.max(1, Math.floor(h / 120))
-        ) {
-            const segmentos = [];
-            let inicio = -1;
-            let anterior = null;
-
-            for (let x = 0; x < w; x++) {
-                const i = (y * w + x) * 4;
-
-                const rgb = [
-                    dados[i],
-                    dados[i + 1],
-                    dados[i + 2]
-                ];
-
-                const cor = corPorRGB(rgb);
-
-                if (cor && cor === anterior) {
-                    continue;
-                }
-
-                if (anterior && inicio >= 0) {
-                    if (x - inicio >= 12) {
-                        segmentos.push({
-                            x: inicio,
-                            largura: x - inicio,
-                            cor: anterior
-                        });
-                    }
-                }
-
-                inicio = cor ? x : -1;
-                anterior = cor;
-            }
-
-            if (segmentos.length >= 2) {
-                linhas.push({
-                    y,
-                    segmentos
-                });
+        for (const item of etiquetas) {
+            if (!unicas.some(e =>
+                e.cor === item.cor &&
+                Math.abs(e.peso - item.peso) < 0.01
+            )) {
+                unicas.push(item);
             }
         }
 
-        return linhas;
-    }
-
-    function extrairFilamentos(textos, imagem) {
-        const encontrados = new Map();
-
-        // Prioridade para textos que informam explicitamente
-        // material + cor + peso.
-        const padrao = /\b(PLA|PETG|ABS|ASA|TPU)\s*([a-zà-ÿ]*)?\s*(\d+(?:[.,]\d+)?)\s*g\b/gi;
-
-        for (const texto of textos) {
-            for (const match of texto.matchAll(padrao)) {
-                const material = match[1].toUpperCase();
-                const peso = numero(match[3]);
-                const cor = detectarCor(match[2]);
-
-                if (
-                    cor &&
-                    peso > 0 &&
-                    peso < 100000
-                ) {
-                    encontrados.set(cor, {
-                        cor,
-                        material,
-                        peso
-                    });
-                }
-            }
-        }
-
-        // OCR pode reconhecer apenas "PLA 15 g".
-        // Neste caso, associa pela ordem das etiquetas
-        // somente se as tres quantidades forem legiveis
-        // e houver evidencia visual das cores.
-        if (encontrados.size === 0) {
-            const candidatos = [];
-
-            for (const texto of textos) {
-                const encontradosTexto = [
-                    ...texto.matchAll(padrao)
-                ];
-
-                if (encontradosTexto.length > candidatos.length) {
-                    candidatos.length = 0;
-
-                    encontradosTexto.forEach(match => {
-                        candidatos.push({
-                            material: match[1].toUpperCase(),
-                            peso: numero(match[3])
-                        });
-                    });
-                }
-            }
-
-            const faixas = localizarFaixasColoridas(imagem);
-
-            // Ordem esperada apenas quando o OCR encontra
-            // tres etiquetas e os pesos conferem com o total.
-            if (candidatos.length === 3 && faixas.length) {
-                const pesos = candidatos.map(c => c.peso);
-
-                if (pesos.every(p => p > 0)) {
-                    const cores = [
-                        "branco",
-                        "vermelho",
-                        "preto"
-                    ];
-
-                    const evidencias = faixas.some(linha => {
-                        const detectadas = linha.segmentos
-                            .map(s => s.cor);
-
-                        return cores.every(c =>
-                            detectadas.includes(c)
-                        );
-                    });
-
-                    if (evidencias) {
-                        candidatos.forEach((item, indice) => {
-                            encontrados.set(cores[indice], {
-                                ...item,
-                                cor: cores[indice]
-                            });
-                        });
-                    }
-                }
-            }
-        }
-
-        return [...encontrados.values()];
-    }
-
-    function consolidar(textos, imagem) {
-        const texto = textos.join("\n");
-
-        const tempos = textos
-            .map(extrairTempo)
-            .filter(v => v !== null && v > 0);
-
-        const pratos = textos
-            .map(extrairPratos)
-            .find(v => v !== null) ?? null;
-
-        const pesosTotais = textos
-            .map(extrairPesoTotal)
-            .filter(v => v !== null && v > 0);
-
-        const filamentos = extrairFilamentos(
-            textos,
-            imagem
-        );
-
-        const tempo = tempos.length
-            ? Math.min(...tempos)
-            : null;
-
-        const total = pesosTotais.length
-            ? Math.min(...pesosTotais)
-            : null;
-
-        const soma = filamentos.reduce(
-            (acc, item) => acc + item.peso,
+        const soma = unicas.reduce(
+            (s, item) => s + item.peso,
             0
         );
 
-        const pesoConfere = total !== null &&
-            Math.abs(soma - total) < 0.11;
+        if (
+            total === null ||
+            Math.abs(soma - total) > 0.11
+        ) {
+            throw new Error(
+                "Pesos identificados: " +
+                unicas.map(e =>
+                    e.cor + " " + e.peso + " g"
+                ).join(", ") +
+                ". Soma: " + soma + " g. " +
+                "Total da imagem: " +
+                (total === null ? "nao identificado" : total + " g") +
+                ". Nao foi possivel validar o consumo."
+            );
+        }
 
-        return {
-            pratos,
-            tempo,
-            total,
-            soma,
-            pesoConfere,
-            filamentos,
-            texto
-        };
+        return unicas;
     }
 
-    function preencherCalculadora(dados) {
-        if (!dados.pesoConfere) {
-            throw new Error(
-                "Os pesos por cor nao conferem com o total."
+    function tempoHTML(horas) {
+        const minutos = Math.round(horas * 60);
+        const h = Math.floor(minutos / 60);
+        const m = minutos % 60;
+
+        return String(h).padStart(2, "0") +
+            ":" +
+            String(m).padStart(2, "0");
+    }
+
+    function preencher(dados) {
+        const itens = dados.etiquetas.map(e => {
+            const encontrado = localizarFilamento(
+                e.material,
+                e.cor
             );
-        }
 
-        if (!dados.tempo || !dados.filamentos.length) {
-            throw new Error(
-                "Tempo ou filamentos nao identificados."
-            );
-        }
-
-        const associados = dados.filamentos.map(item => ({
-            ...item,
-            cadastro: selecionarFilamento(
-                item.cor,
-                item.material
-            )
-        }));
-
-        const ausentes = associados.filter(
-            item => !item.cadastro
-        );
-
-        if (ausentes.length) {
-            throw new Error(
-                "Filamento nao encontrado no cadastro: " +
-                ausentes.map(item =>
-                    item.material + " " + item.cor
-                ).join(", ")
-            );
-        }
-
-        const toggle = $("modoMultipartes");
-        const area = $("bandejasArea");
-
-        if (!toggle || !area) {
-            throw new Error(
-                "Calculadora multipartes indisponivel."
-            );
-        }
-
-        toggle.checked = true;
-        toggle.dispatchEvent(new Event(
-            "change",
-            { bubbles: true }
-        ));
-
-        const adicionar = $("duoAdicionarBandeja");
-
-        while (
-            area.querySelectorAll(".duo-bandeja").length <
-            associados.length
-        ) {
-            if (!adicionar) {
+            if (!encontrado) {
                 throw new Error(
-                    "Nao foi possivel adicionar bandejas."
+                    "Filamento nao identificado de forma unica " +
+                    "no cadastro: " + e.material + " " + e.cor
                 );
             }
 
-            adicionar.click();
+            return { ...e, cadastro: encontrado };
+        });
+
+        const toggle = $("modoMultipartes");
+        const area = $("bandejasArea");
+        const adicionar = $("duoAdicionarBandeja");
+
+        if (!toggle || !area || !adicionar) {
+            throw new Error(
+                "Campos multipartes nao encontrados."
+            );
         }
 
-        const linhas = [
+        if (!toggle.checked) {
+            toggle.checked = true;
+            toggle.dispatchEvent(
+                new Event("change", { bubbles: true })
+            );
+        }
+
+        let linhas = [
             ...area.querySelectorAll(".duo-bandeja")
         ];
 
-        // Cada cor representa um componente de custo.
-        // O tempo total entra uma unica vez para nao
-        // triplicar energia e outros custos.
-        associados.forEach((item, indice) => {
-            const linha = linhas[indice];
+        while (linhas.length < itens.length) {
+            adicionar.click();
+
+            linhas = [
+                ...area.querySelectorAll(".duo-bandeja")
+            ];
+        }
+
+        itens.forEach((item, i) => {
+            const linha = linhas[i];
 
             const select = linha.querySelector("select");
             const peso = linha.querySelector(".bandeja-peso");
             const tempo = linha.querySelector(".bandeja-tempo");
 
-            select.value = String(
-                item.cadastro.indice
-            );
+            if (!select || !peso || !tempo) {
+                throw new Error(
+                    "Campos de bandeja incompletos."
+                );
+            }
 
+            select.value = String(item.cadastro.indice);
             peso.value = String(item.peso);
 
-            tempo.value = indice === 0
-                ? formatarTempo(dados.tempo)
+            // Tempo total informado uma unica vez.
+            tempo.value = i === 0
+                ? tempoHTML(dados.tempo)
                 : "00:00";
-
-            select.dispatchEvent(new Event(
-                "change",
-                { bubbles: true }
-            ));
         });
 
-        // Zera as bandejas que nao participam do modelo.
-        linhas.slice(associados.length).forEach(linha => {
+        linhas.slice(itens.length).forEach(linha => {
             const peso = linha.querySelector(".bandeja-peso");
             const tempo = linha.querySelector(".bandeja-tempo");
 
@@ -699,33 +401,27 @@
             if (tempo) tempo.value = "00:00";
         });
 
-        // Tres pratos nao significam tres produtos.
-        // Mantem quantidade 1, ate que o modelo informe
-        // explicitamente a quantidade de unidades.
-        const quantidade = $("quantidade");
+        // Pratos nao sao unidades.
+        $("quantidade").value = "1";
 
-        if (quantidade) {
-            quantidade.value = "1";
+        const qtdMulti = $("duoRodapeMultipartes")
+            ?.querySelector('input[type="number"]');
+
+        if (qtdMulti) qtdMulti.value = "1";
+
+        if (typeof calcular !== "function") {
+            throw new Error(
+                "Motor financeiro nao encontrado."
+            );
         }
 
-        const quantidadeMulti = $(
-            "duoRodapeMultipartes"
-        )?.querySelector('input[type="number"]');
+        calcular();
 
-        if (quantidadeMulti) {
-            quantidadeMulti.value = "1";
-        }
-
-        if (typeof calcular === "function") {
-            calcular();
-        }
-
-        return associados;
+        return itens;
     }
 
-    function mostrarResultado(dados, associados, url) {
+    function resultado(dados, itens, link) {
         const area = $("duoIAResultado");
-
         if (!area) return;
 
         area.hidden = false;
@@ -733,74 +429,50 @@
 
         const titulo = document.createElement("h3");
         titulo.textContent = "ANALISE MULTIFILAMENTO";
-
         area.appendChild(titulo);
 
         const resumo = document.createElement("p");
-
         resumo.textContent =
-            "PRATOS: " + (dados.pratos ?? "NAO IDENTIFICADO") +
-            " | TEMPO: " + dados.tempo.toLocaleString("pt-BR") + " H" +
-            " | MATERIAL: " + dados.total.toLocaleString("pt-BR") + " G";
+            (dados.pratos ?? "?") + " PRATOS | " +
+            dados.tempo.toLocaleString("pt-BR") + " H | " +
+            dados.total.toLocaleString("pt-BR") + " G";
 
         area.appendChild(resumo);
 
         const tabela = document.createElement("table");
         tabela.className = "duo-ia-tabela";
 
-        const cabecalho = document.createElement("tr");
-
-        ["FILAMENTO", "PESO", "CUSTO/KG"].forEach(texto => {
-            const th = document.createElement("th");
-            th.textContent = texto;
-            cabecalho.appendChild(th);
-        });
-
-        tabela.appendChild(cabecalho);
-
-        associados.forEach(item => {
+        for (const item of itens) {
             const tr = document.createElement("tr");
 
-            const valores = [
-                item.cadastro.filamento.nome,
-                item.peso.toLocaleString("pt-BR") + " g",
-                Number(
-                    item.cadastro.filamento.custo
-                ).toLocaleString("pt-BR", {
-                    style: "currency",
-                    currency: "BRL"
-                })
-            ];
-
-            valores.forEach(valor => {
+            for (const texto of [
+                item.cadastro.f.nome,
+                item.peso.toLocaleString("pt-BR") + " g"
+            ]) {
                 const td = document.createElement("td");
-                td.textContent = valor;
+                td.textContent = texto;
                 tr.appendChild(td);
-            });
+            }
 
             tabela.appendChild(tr);
-        });
+        }
 
         area.appendChild(tabela);
 
-        const resultado = document.createElement("p");
+        const preco = document.createElement("p");
+        preco.textContent =
+            "ORCAMENTO ATUALIZADO: " +
+            ($("resVendaTotal")?.textContent || "-");
 
-        resultado.textContent =
-            "CALCULADORA MULTIPARTES PREENCHIDA. " +
-            "O ORCAMENTO FOI RECALCULADO COM OS " +
-            "CUSTOS CADASTRADOS.";
+        area.appendChild(preco);
 
-        area.appendChild(resultado);
-
-        if (url) {
-            const link = document.createElement("a");
-
-            link.href = url;
-            link.target = "_blank";
-            link.rel = "noopener noreferrer";
-            link.textContent = "ABRIR MODELO 3D";
-
-            area.appendChild(link);
+        if (link) {
+            const a = document.createElement("a");
+            a.href = link;
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+            a.textContent = "ABRIR MODELO 3D";
+            area.appendChild(a);
         }
     }
 
@@ -810,81 +482,162 @@
         const botao = $("duoIAAnalisar");
 
         if (!arquivo) {
-            informar("SELECIONE UMA IMAGEM.", true);
+            status("SELECIONE UMA IMAGEM.", true);
             return;
         }
 
         if (!arquivo.type.startsWith("image/")) {
-            informar("ARQUIVO INVALIDO.", true);
+            status("ARQUIVO INVALIDO.", true);
             return;
         }
 
         if (arquivo.size > 20 * 1024 * 1024) {
-            informar("LIMITE DE 20 MB.", true);
+            status("IMAGEM MAIOR QUE 20 MB.", true);
             return;
         }
 
         if (link) {
             try {
-                const url = new URL(link);
-
-                if (!["https:", "http:"].includes(url.protocol)) {
-                    throw new Error("URL invalida");
+                const u = new URL(link);
+                if (!["http:", "https:"].includes(u.protocol)) {
+                    throw new Error("Protocolo");
                 }
             } catch {
-                informar("LINK INVALIDO.", true);
+                status("LINK INVALIDO.", true);
                 return;
             }
         }
 
         botao.disabled = true;
+        let worker;
 
         try {
-            const leitura = await executarOCR(arquivo);
+            if (!window.Tesseract) {
+                throw new Error("OCR nao carregado.");
+            }
 
-            const dados = consolidar(
-                leitura.textos,
-                leitura.imagem
+            status("LENDO IMAGEM E ETIQUETAS...");
+
+            const imagem = await carregarImagem(arquivo);
+            const canvas = imagemCanvas(imagem);
+
+            worker = await Tesseract.createWorker(
+                "por+eng",
+                1,
+                {
+                    workerPath: "vendor/ocr/worker.min.js",
+                    corePath: "vendor/ocr",
+                    langPath: "vendor/ocr",
+                    gzip: false
+                }
             );
 
-            if (!dados.pesoConfere) {
+            const ampliada = recorte(
+                canvas,
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+            const textoGeral = await lerOCR(
+                worker,
+                ampliada
+            );
+
+            const tempo = lerTempo(textoGeral);
+            const pratos = lerPratos(textoGeral);
+            const total = lerPeso(textoGeral);
+
+            if (!tempo || total === null) {
                 throw new Error(
-                    "Leitura incompleta: pesos por cor " +
-                    "nao conferem com o total. " +
-                    "Nenhum custo foi preenchido automaticamente."
+                    "Tempo ou peso total nao identificado. " +
+                    "Texto reconhecido: " +
+                    textoGeral.replace(/\s+/g, " ").slice(0, 180)
                 );
             }
 
-            const associados = preencherCalculadora(dados);
+            const grupos = identificarEtiquetas(canvas);
+            const etiquetas = [];
 
-            mostrarResultado(
-                dados,
-                associados,
-                link
+            // Reconhece cada etiqueta individualmente.
+            for (const grupo of grupos) {
+                const altura = Math.max(
+                    18,
+                    grupo.yFinal - grupo.yInicial + 10
+                );
+
+                const y = Math.max(
+                    0,
+                    grupo.yInicial - 5
+                );
+
+                const crop = recorte(
+                    canvas,
+                    grupo.x,
+                    y,
+                    grupo.largura,
+                    Math.min(altura, canvas.height - y)
+                );
+
+                const texto = await lerOCR(worker, crop);
+                const peso = lerPeso(texto);
+
+                if (peso === null || peso <= 0) continue;
+
+                const material = texto.match(
+                    /\b(PLA|PETG|ABS|ASA|TPU)\b/i
+                )?.[1]?.toUpperCase() || null;
+
+                if (!material) continue;
+
+                etiquetas.push({
+                    material,
+                    cor: grupo.cor,
+                    peso
+                });
+            }
+
+            const validas = validarEtiquetas(
+                etiquetas,
+                total
             );
 
-            informar(
-                "ANALISE CONCLUIDA. ORCAMENTO ATUALIZADO."
+            const dados = {
+                pratos,
+                tempo,
+                total,
+                etiquetas: validas
+            };
+
+            const itens = preencher(dados);
+
+            resultado(dados, itens, link);
+
+            status(
+                "ANALISE CONCLUIDA. CALCULADORA ATUALIZADA."
             );
 
         } catch (erro) {
             console.error("[DUOLAB IA]", erro);
-
-            informar(erro.message, true);
+            status(erro.message, true);
         } finally {
+            if (worker) {
+                try {
+                    await worker.terminate();
+                } catch {}
+            }
+
             botao.disabled = false;
         }
     }
 
     function iniciar() {
-        const botao = $("duoIAAnalisar");
+        const antigo = $("duoIAAnalisar");
+        if (!antigo) return;
 
-        if (!botao) return;
-
-        // Substitui o botao para remover o listener antigo.
-        const novo = botao.cloneNode(true);
-
-        botao.replaceWith(novo);
+        const novo = antigo.cloneNode(true);
+        antigo.replaceWith(novo);
 
         novo.addEventListener("click", analisar);
     }
