@@ -75,92 +75,353 @@
     }
 
     function identificarEtiquetas(canvas) {
-        const ctx = canvas.getContext(
-            "2d",
-            { willReadFrequently: true }
-        );
-
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
         const w = canvas.width;
         const h = canvas.height;
+        const pixels = ctx.getImageData(0, 0, w, h).data;
+        const pontos = [];
 
-        const dados = ctx.getImageData(0, 0, w, h).data;
-        const candidatas = [];
+        for (let y = Math.floor(h * 0.25); y < h - 2; y += 2) {
+            for (let x = 2; x < w - 2; x += 2) {
+                const i = (y * w + x) * 4;
+                const r = pixels[i];
+                const g = pixels[i + 1];
+                const b = pixels[i + 2];
+                const cor = nomeCor([r, g, b]);
 
-        // Procura faixas horizontais uniformes com largura
-        // suficiente para conter etiquetas de filamento.
-        for (
-            let y = Math.floor(h * 0.35);
-            y < h - 4;
-            y += Math.max(1, Math.floor(h / 180))
-        ) {
-            let inicio = 0;
-            let anterior = null;
+                if (!cor || cor === "branco") continue;
 
-            for (let x = 0; x <= w; x++) {
-                let cor = null;
+                const anterior = pontos.find(p =>
+                    p.cor === cor &&
+                    Math.abs(p.x - x) < Math.max(12, w * 0.025) &&
+                    Math.abs(p.y - y) < Math.max(12, h * 0.12)
+                );
 
-                if (x < w) {
-                    const i = (y * w + x) * 4;
-                    cor = nomeCor([
-                        dados[i],
-                        dados[i + 1],
-                        dados[i + 2]
-                    ]);
-                }
-
-                if (cor !== anterior || x === w) {
-                    const largura = x - inicio;
-
-                    if (
-                        anterior &&
-                        largura >= Math.max(18, w * 0.045) &&
-                        largura <= w * 0.45
-                    ) {
-                        candidatas.push({
-                            x: inicio,
-                            y,
-                            largura,
-                            cor: anterior
-                        });
-                    }
-
-                    inicio = x;
-                    anterior = cor;
+                if (anterior) {
+                    anterior.x = (anterior.x * anterior.n + x) / (anterior.n + 1);
+                    anterior.y = (anterior.y * anterior.n + y) / (anterior.n + 1);
+                    anterior.n++;
+                } else {
+                    pontos.push({ x, y, cor, n: 1 });
                 }
             }
         }
 
-        // Agrupa deteccoes repetidas da mesma etiqueta.
-        const grupos = [];
+        return pontos
+            .filter(p => p.n >= 3)
+            .sort((a, b) => a.y - b.y || a.x - b.x)
+            .map(p => ({
+                x: Math.max(0, Math.round(p.x - 10)),
+                yInicial: Math.max(0, Math.round(p.y - 12)),
+                yFinal: Math.min(h - 1, Math.round(p.y + 12)),
+                largura: Math.min(w - Math.max(0, Math.round(p.x - 10)), Math.max(90, Math.round(w * 0.28))),
+                cor: p.cor,
+                contagem: p.n
+            }));
+    }
 
-        for (const c of candidatas) {
-            const grupo = grupos.find(g =>
-                g.cor === c.cor &&
-                Math.abs(g.x - c.x) < 8 &&
-                Math.abs(g.largura - c.largura) < 12 &&
-                c.y - g.yFinal <= Math.max(5, h * 0.06)
+    async function extrairEtiquetasOCR(worker, canvas, total) {
+        const etiquetas = [];
+        const candidatos = identificarEtiquetas(canvas);
+        const tentativas = [];
+
+        for (const grupo of candidatos) {
+            const esquerda = Math.max(0, grupo.x);
+            const topo = Math.max(0, grupo.yInicial - 8);
+            const largura = Math.min(
+                canvas.width - esquerda,
+                Math.max(grupo.largura, 110)
+            );
+            const altura = Math.min(
+                canvas.height - topo,
+                Math.max(30, grupo.yFinal - topo + 15)
             );
 
-            if (grupo) {
-                grupo.yFinal = c.y;
-                grupo.contagem++;
-            } else {
-                grupos.push({
-                    ...c,
-                    yInicial: c.y,
-                    yFinal: c.y,
-                    contagem: 1
+            tentativas.push({
+                cor: grupo.cor,
+                imagem: recorte(canvas, esquerda, topo, largura, altura)
+            });
+        }
+
+        const h = canvas.height;
+        const w = canvas.width;
+
+        for (const divisoes of [1, 2, 3, 4]) {
+            for (let indice = 0; indice < divisoes; indice++) {
+                const x = Math.floor(w * indice / divisoes);
+                const xFim = Math.ceil(w * (indice + 1) / divisoes);
+                const y = Math.floor(h * 0.30);
+
+                tentativas.push({
+                    cor: null,
+                    imagem: recorte(
+                        canvas,
+                        x,
+                        y,
+                        Math.min(w - x, xFim - x + Math.round(w * 0.04)),
+                        h - y
+                    )
                 });
             }
         }
 
-        return grupos
-            .filter(g => g.contagem >= 2)
-            .sort((a, b) =>
-                b.contagem - a.contagem
-            );
+        const textos = [];
+
+        await worker.setParameters({
+            tessedit_pageseg_mode: "11"
+        });
+
+        for (const tentativa of tentativas) {
+            const texto = await lerOCR(worker, tentativa.imagem);
+
+            if (!texto.trim()) continue;
+
+            textos.push(texto);
+
+            const padrao = /\b(PLA|PETG|ABS|ASA|TPU)\b[\s\S]{0,35}?(\d+(?:[.,]\d+)?)\s*g\b/gi;
+            let match;
+
+            while ((match = padrao.exec(texto)) !== null) {
+                const peso = num(match[2]);
+
+                if (!Number.isFinite(peso) || peso <= 0 || peso > total) {
+                    continue;
+                }
+
+                let cor = tentativa.cor;
+
+                if (!cor) {
+                    const trecho = normal(texto);
+
+                    const identificadas = Object.entries(cores)
+                        .filter(([, nomes]) =>
+                            nomes.some(nome =>
+                                new RegExp(
+                                    "(^|[^a-z])" + nome + "([^a-z]|$)"
+                                ).test(trecho)
+                            )
+                        )
+                        .map(([nome]) => nome);
+
+                    if (identificadas.length === 1) {
+                        cor = identificadas[0];
+                    }
+                }
+
+                if (!cor) continue;
+
+                if (!etiquetas.some(e =>
+                    e.material === match[1].toUpperCase() &&
+                    e.cor === cor &&
+                    Math.abs(e.peso - peso) < 0.01
+                )) {
+                    etiquetas.push({
+                        material: match[1].toUpperCase(),
+                        cor,
+                        peso
+                    });
+                }
+            }
+        }
+
+        await worker.setParameters({
+            tessedit_pageseg_mode: "3"
+        });
+
+        return { etiquetas, textos };
     }
 
+    function revisarEtiquetas(dados, reconhecidas, link) {
+        const area = $("duoIAResultado");
+
+        if (!area) {
+            throw new Error("Area de resultado nao encontrada.");
+        }
+
+        area.hidden = false;
+        area.replaceChildren();
+
+        const titulo = document.createElement("h3");
+        titulo.textContent = "CONFERIR FILAMENTOS DA IMAGEM";
+        area.appendChild(titulo);
+
+        const aviso = document.createElement("p");
+        aviso.textContent =
+            "A leitura automatica nao identificou todos os filamentos. " +
+            "Confira os dados abaixo para calcular sem inventar pesos ou cores.";
+        area.appendChild(aviso);
+
+        const lista = cadastro();
+
+        if (!lista.length) {
+            status("NENHUM FILAMENTO CADASTRADO.", true);
+            return;
+        }
+
+        const quantidade = Math.max(1, reconhecidas.length);
+        const linhas = [];
+
+        const tempoGrupo = document.createElement("div");
+        const tempoLabel = document.createElement("label");
+        tempoLabel.textContent = "TEMPO TOTAL (HORAS)";
+        const tempoInput = document.createElement("input");
+        tempoInput.type = "number";
+        tempoInput.min = "0.01";
+        tempoInput.step = "0.01";
+        tempoInput.value = dados.tempo || "";
+        tempoInput.className = "calc-trigger";
+        tempoGrupo.append(tempoLabel, tempoInput);
+        area.appendChild(tempoGrupo);
+
+        for (let i = 0; i < quantidade; i++) {
+            const item = reconhecidas[i] || {};
+            const linha = document.createElement("div");
+            linha.className = "input-row";
+
+            const grupoFilamento = document.createElement("div");
+            grupoFilamento.className = "input-group";
+
+            const labelFilamento = document.createElement("label");
+            labelFilamento.textContent = "FILAMENTO " + (i + 1);
+
+            const select = document.createElement("select");
+            select.className = "calc-trigger";
+
+            const vazio = document.createElement("option");
+            vazio.value = "";
+            vazio.textContent = "SELECIONE O FILAMENTO";
+            select.appendChild(vazio);
+
+            lista.forEach((filamento, indice) => {
+                const opcao = document.createElement("option");
+                opcao.value = String(indice);
+                opcao.textContent = filamento.nome;
+                select.appendChild(opcao);
+            });
+
+            if (item.material && item.cor) {
+                const encontrado = e.cadastro || localizarFilamento(
+                    item.material,
+                    item.cor
+                );
+
+                if (encontrado) {
+                    select.value = String(encontrado.indice);
+                }
+            }
+
+            grupoFilamento.append(labelFilamento, select);
+
+            const grupoPeso = document.createElement("div");
+            grupoPeso.className = "input-group";
+
+            const labelPeso = document.createElement("label");
+            labelPeso.textContent = "PESO (G)";
+
+            const peso = document.createElement("input");
+            peso.type = "number";
+            peso.min = "0.01";
+            peso.step = "0.01";
+            peso.className = "calc-trigger";
+            peso.value = item.peso || "";
+
+            grupoPeso.append(labelPeso, peso);
+            linha.append(grupoFilamento, grupoPeso);
+            area.appendChild(linha);
+
+            linhas.push({ select, peso });
+        }
+
+        const acoes = document.createElement("div");
+        const adicionar = document.createElement("button");
+        adicionar.type = "button";
+        adicionar.textContent = "+ FILAMENTO";
+        adicionar.className = "btn-limpar-calculadora";
+
+        const aplicar = document.createElement("button");
+        aplicar.type = "button";
+        aplicar.textContent = "APLICAR NA CALCULADORA";
+        aplicar.className = $("duoIAAnalisar").className;
+
+        adicionar.addEventListener("click", () => {
+            const origem = linhas[linhas.length - 1];
+            const nova = origem.select.parentElement.parentElement.cloneNode(true);
+            const select = nova.querySelector("select");
+            const peso = nova.querySelector('input[type="number"]');
+            select.value = "";
+            peso.value = "";
+            area.insertBefore(nova, acoes);
+            linhas.push({ select, peso });
+        });
+
+        aplicar.addEventListener("click", () => {
+            try {
+                const tempo = Number(tempoInput.value);
+
+                if (!Number.isFinite(tempo) || tempo <= 0) {
+                    throw new Error("Informe o tempo total de impressao.");
+                }
+
+                const etiquetas = linhas.map(({ select, peso }) => {
+                    if (select.value === "") {
+                        throw new Error("Selecione todos os filamentos.");
+                    }
+
+                    const indice = Number(select.value);
+                    const gramas = Number(peso.value);
+                    const f = lista[indice];
+
+                    if (!f || !Number.isFinite(gramas) || gramas <= 0) {
+                        throw new Error("Confira os pesos dos filamentos.");
+                    }
+
+                    const material = f.nome.match(
+                        /\b(PLA|PETG|ABS|ASA|TPU)\b/i
+                    )?.[1]?.toUpperCase() || "OUTROS";
+
+                    return {
+                        material,
+                        cor: "",
+                        peso: gramas,
+                        cadastro: { f, indice }
+                    };
+                });
+
+                const soma = etiquetas.reduce(
+                    (valor, item) => valor + item.peso,
+                    0
+                );
+
+                if (
+                    dados.total !== null &&
+                    Math.abs(soma - dados.total) > 0.11
+                ) {
+                    throw new Error(
+                        "Soma dos filamentos: " + soma + " g. " +
+                        "Total da imagem: " + dados.total + " g."
+                    );
+                }
+
+                const confirmados = {
+                    ...dados,
+                    tempo,
+                    total: soma,
+                    etiquetas
+                };
+
+                const itens = preencher(confirmados);
+                resultado(confirmados, itens, link);
+                status("CALCULADORA ATUALIZADA.");
+            } catch (erro) {
+                status(erro.message, true);
+            }
+        });
+
+        acoes.append(adicionar, aplicar);
+        area.appendChild(acoes);
+
+        status("CONFIRA OS FILAMENTOS IDENTIFICADOS.", true);
+    }
     function recorte(canvas, x, y, largura, altura) {
         const c = document.createElement("canvas");
 
@@ -329,7 +590,7 @@ function lerPeso(texto) {
 
     function preencher(dados) {
         const itens = dados.etiquetas.map(e => {
-            const encontrado = localizarFilamento(
+            const encontrado = e.cadastro || localizarFilamento(
                 e.material,
                 e.cor
             );
@@ -559,61 +820,38 @@ function lerPeso(texto) {
                 );
             }
 
-            const grupos = identificarEtiquetas(canvas);
-            console.table(grupos.map(g => ({
-                cor: g.cor,
-                x: g.x,
-                yInicial: g.yInicial,
-                yFinal: g.yFinal,
-                largura: g.largura,
-                contagem: g.contagem
-            })));
-            const etiquetas = [];
-
-            // Reconhece cada etiqueta individualmente.
-            for (const grupo of grupos) {
-                const altura = Math.max(
-                    18,
-                    grupo.yFinal - grupo.yInicial + 10
-                );
-
-                const y = Math.max(
-                    0,
-                    grupo.yInicial - 5
-                );
-
-                const crop = recorte(
-                    canvas,
-                    grupo.x,
-                    y,
-                    grupo.largura,
-                    Math.min(altura, canvas.height - y)
-                );
-
-                const texto = await lerOCR(worker, crop);
-                console.log("[DUOLAB IA] Etiqueta OCR:", grupo.cor, JSON.stringify(texto));
-                const peso = lerPeso(texto);
-
-                if (peso === null || peso <= 0) continue;
-
-                const material = texto.match(
-                    /\b(PLA|PETG|ABS|ASA|TPU)\b/i
-                )?.[1]?.toUpperCase() || null;
-
-                if (!material) continue;
-
-                etiquetas.push({
-                    material,
-                    cor: grupo.cor,
-                    peso
-                });
-            }
-
-            const validas = validarEtiquetas(
-                etiquetas,
+            const leitura = await extrairEtiquetasOCR(
+                worker,
+                canvas,
                 total
             );
 
+            let validas = null;
+
+            try {
+                validas = validarEtiquetas(
+                    leitura.etiquetas,
+                    total
+                );
+            } catch (erro) {
+                console.warn(
+                    "[DUOLAB IA] Leitura parcial:",
+                    erro.message
+                );
+
+                revisarEtiquetas(
+                    {
+                        pratos,
+                        tempo,
+                        total,
+                        etiquetas: leitura.etiquetas
+                    },
+                    leitura.etiquetas,
+                    link
+                );
+
+                return;
+            }
             const dados = {
                 pratos,
                 tempo,
