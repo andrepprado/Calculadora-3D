@@ -1581,13 +1581,70 @@ function lerPeso(texto) {
     }
 
     function duoV4Peso(texto) {
-        const m = String(texto || "").match(
-            /(\d+(?:[.,]\d+)?)\s*g\b/i
-        );
+        const original = String(texto || "");
 
-        return m
-            ? Number(m[1].replace(",", "."))
-            : null;
+        // Corrige erros comuns do Tesseract:
+        // 2¢g, 2¢ g, 2@ g, 2©g, 2¢g & 0.4mm.
+        const normalizado = original
+            .replace(/(\d)\s*[¢©®@]\s*(?=g\b)/gi, "$1")
+            .replace(/(\d)\s*[¢©®@]\s*(\d)\s*g\b/gi, "$1$2g")
+            .replace(/(\d)\s*[|!lI]\s*g\b/gi, "$1g")
+            .replace(/\s+/g, " ");
+
+        const candidatos = [];
+
+        const padrao = /(\d+(?:[.,]\d+)?)\s*g\b/gi;
+
+        for (const match of normalizado.matchAll(padrao)) {
+            const valor = Number(
+                match[1].replace(",", ".")
+            );
+
+            if (
+                Number.isFinite(valor) &&
+                valor > 0 &&
+                valor < 100000
+            ) {
+                candidatos.push(valor);
+            }
+        }
+
+        if (candidatos.length === 0) {
+            const aproximado = normalizado.match(
+                /(?:^|\s)(\d+(?:[.,]\d+)?)\s*[¢©®@]\s*g?\b/i
+            );
+
+            if (aproximado) {
+                const valor = Number(
+                    aproximado[1].replace(",", ".")
+                );
+
+                if (Number.isFinite(valor) && valor > 0) {
+                    return valor;
+                }
+            }
+
+            return null;
+        }
+
+        // Em uma placa, o peso costuma aparecer tanto
+        // na linha de informacoes quanto na etiqueta PLA.
+        // Valores repetidos confirmam a leitura.
+        const frequencias = new Map();
+
+        for (const valor of candidatos) {
+            frequencias.set(
+                valor,
+                (frequencias.get(valor) || 0) + 1
+            );
+        }
+
+        return [...frequencias.entries()]
+            .sort((a, b) =>
+                b[1] - a[1] ||
+                candidatos.indexOf(a[0]) -
+                candidatos.indexOf(b[0])
+            )[0][0];
     }
 
     function duoV4Recorte(canvas, x, y, w, h, escala = 4) {
