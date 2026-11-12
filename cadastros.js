@@ -27,80 +27,182 @@ const padraoF = [
 ].map(([nome,custo,cor]) => ({nome,custo,cor}));
 
 const padraoA = [
-{id:"vela-led-natal",nome:"Vela LED - Natal",custo:1.39,ativo:true}
+    {
+        id:"vela-led-natal",
+        nome:"Vela LED - Natal",
+        custo:1.39,
+        ativo:true
+    }
 ];
 
 function ler(chave,padrao) {
     try {
-        const v=JSON.parse(localStorage.getItem(chave));
-        return Array.isArray(v)?v:padrao;
-    } catch { return padrao; }
+        const valor = JSON.parse(localStorage.getItem(chave));
+        return Array.isArray(valor) ? valor : padrao;
+    } catch {
+        return padrao;
+    }
 }
 
-let fil=ler(FKEY,padraoF);
-let adi=ler(AKEY,padraoA);
-let editF=-1;
-let editA=null;
+let fil = ler(FKEY,padraoF);
+let adi = ler(AKEY,padraoA);
+let editF = -1;
+let editA = null;
+let exclusaoPendente = null;
 
-const moeda=n=>Number(n).toLocaleString("pt-BR",{
-    style:"currency",currency:"BRL"
+const moeda = valor => Number(valor).toLocaleString("pt-BR",{
+    style:"currency",
+    currency:"BRL"
 });
 
-function salvar() {
-    localStorage.setItem(FKEY,JSON.stringify(fil));
-    localStorage.setItem(AKEY,JSON.stringify(adi));
-    $("statusCadastro").textContent="Cadastros salvos com sucesso.";
-    render();
+function mensagem(texto,tipo="sucesso") {
+    const el = $("statusCadastro");
+    if (!el) return;
+    el.textContent = texto;
+    el.style.padding = "14px 18px";
+    el.style.margin = "16px 0";
+    el.style.borderRadius = "9px";
+    el.style.fontWeight = "600";
+    el.style.background = tipo==="erro" ? "#fff0f0" : "#e8f7f3";
+    el.style.color = tipo==="erro" ? "#a32020" : "#006b58";
+    el.style.border = tipo==="erro"
+        ? "1px solid #efb5b5"
+        : "1px solid #a6dccc";
 }
 
-function td(tr,valor) {
-    const c=document.createElement("td");
-    if(valor instanceof Node)c.appendChild(valor);
-    else c.textContent=String(valor);
-    tr.appendChild(c);
+function salvar(texto="Cadastros atualizados com sucesso.") {
+    try {
+        localStorage.setItem(FKEY,JSON.stringify(fil));
+        localStorage.setItem(AKEY,JSON.stringify(adi));
+        render();
+        mensagem(texto);
+    } catch(e) {
+        mensagem("Nao foi possivel salvar: "+e.message,"erro");
+    }
 }
 
-function btn(texto,acao) {
+function td(tr,conteudo) {
+    const celula=document.createElement("td");
+    if(conteudo instanceof Node) celula.appendChild(conteudo);
+    else celula.textContent=String(conteudo);
+    tr.appendChild(celula);
+    return celula;
+}
+
+function botao(texto,acao,classe="") {
     const b=document.createElement("button");
     b.type="button";
     b.textContent=texto;
+    if(classe) b.className=classe;
     b.addEventListener("click",acao);
     return b;
 }
 
+function confirmarExclusao(tipo,indice,nome,tr) {
+    if(exclusaoPendente) {
+        exclusaoPendente.remove();
+        exclusaoPendente=null;
+    }
+
+    const linha=document.createElement("tr");
+    linha.className="duo-confirmacao-inline";
+
+    const celula=document.createElement("td");
+    celula.colSpan=4;
+    celula.style.padding="18px";
+    celula.style.background="#fff5ed";
+    celula.style.border="1px solid #efcfb3";
+    celula.style.borderRadius="8px";
+
+    const texto=document.createElement("div");
+    texto.textContent="Deseja realmente excluir: "+nome+"?";
+    texto.style.fontWeight="600";
+    texto.style.marginBottom="12px";
+    texto.style.color="#633900";
+
+    const acoes=document.createElement("div");
+    acoes.style.display="flex";
+    acoes.style.gap="10px";
+    acoes.style.flexWrap="wrap";
+
+    const excluir=botao("Sim, excluir",()=>{
+        if(tipo==="filamento") {
+            fil.splice(indice,1);
+            editF=-1;
+            $("formFil").reset();
+        } else {
+            adi=adi.filter(a=>a.id!==indice);
+            editA=null;
+            $("formAdi").reset();
+        }
+        exclusaoPendente=null;
+        salvar("Item excluido com sucesso.");
+    });
+
+    excluir.style.background="#b42318";
+    excluir.style.color="#fff";
+
+    const cancelar=botao("Cancelar",()=>{
+        linha.remove();
+        exclusaoPendente=null;
+        mensagem("Exclusao cancelada.");
+    });
+
+    cancelar.style.background="#e5e7eb";
+    cancelar.style.color="#222";
+
+    acoes.append(excluir,cancelar);
+    celula.append(texto,acoes);
+    linha.appendChild(celula);
+    tr.insertAdjacentElement("afterend",linha);
+    exclusaoPendente=linha;
+    linha.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
 function render() {
-    $("tabelaFil").replaceChildren();
-    $("tabelaAdi").replaceChildren();
+    const tabelaF=$("tabelaFil");
+    const tabelaA=$("tabelaAdi");
+
+    tabelaF.replaceChildren();
+    tabelaA.replaceChildren();
+    exclusaoPendente=null;
 
     fil.forEach((f,i)=>{
         const tr=document.createElement("tr");
         td(tr,f.nome);
         td(tr,moeda(f.custo));
+
         const cor=document.createElement("input");
         cor.type="color";
-        cor.value=/^#[0-9a-f]{6}$/i.test(f.cor)?f.cor:"#888888";
+        cor.value=/^#[0-9a-f]{6}$/i.test(f.cor)
+            ? f.cor : "#888888";
         cor.disabled=true;
         td(tr,cor);
 
         const acoes=document.createElement("div");
+        acoes.style.display="flex";
+        acoes.style.gap="6px";
+
         acoes.append(
-            btn("Editar",()=>{
+            botao("Editar",()=>{
                 editF=i;
                 $("filNome").value=f.nome;
                 $("filCusto").value=f.custo;
                 $("filCor").value=cor.value;
                 $("filNome").focus();
+                $("formFil").scrollIntoView({
+                    behavior:"smooth",
+                    block:"center"
+                });
+                mensagem("Editando filamento: "+f.nome);
             }),
-            btn("Excluir",()=>{
-                if(!confirm("Excluir filamento?"))return;
-                fil.splice(i,1);
-                editF=-1;
-                $("formFil").reset();
-                salvar();
+            botao("Excluir",()=>{
+                confirmarExclusao("filamento",i,f.nome,tr);
             })
         );
+
         td(tr,acoes);
-        $("tabelaFil").appendChild(tr);
+        tabelaF.appendChild(tr);
     });
 
     adi.forEach(a=>{
@@ -110,51 +212,72 @@ function render() {
         td(tr,a.ativo?"Ativo":"Inativo");
 
         const acoes=document.createElement("div");
+        acoes.style.display="flex";
+        acoes.style.gap="6px";
+        acoes.style.flexWrap="wrap";
+
         acoes.append(
-            btn("Editar",()=>{
+            botao("Editar",()=>{
                 editA=a.id;
                 $("adiNome").value=a.nome;
                 $("adiCusto").value=a.custo;
                 $("adiAtivo").value=String(a.ativo);
                 $("adiNome").focus();
+                $("formAdi").scrollIntoView({
+                    behavior:"smooth",
+                    block:"center"
+                });
+                mensagem("Editando adicional: "+a.nome);
             }),
-            btn(a.ativo?"Desativar":"Ativar",()=>{
+            botao(a.ativo?"Desativar":"Ativar",()=>{
                 a.ativo=!a.ativo;
-                salvar();
+                salvar("Disponibilidade atualizada: "+a.nome);
             }),
-            btn("Excluir",()=>{
-                if(!confirm("Excluir adicional?"))return;
-                adi=adi.filter(x=>x.id!==a.id);
-                editA=null;
-                $("formAdi").reset();
-                salvar();
+            botao("Excluir",()=>{
+                confirmarExclusao("adicional",a.id,a.nome,tr);
             })
         );
+
         td(tr,acoes);
-        $("tabelaAdi").appendChild(tr);
+        tabelaA.appendChild(tr);
     });
 }
 
 $("formFil").addEventListener("submit",e=>{
     e.preventDefault();
+
     const nome=$("filNome").value.trim();
     const custo=Number($("filCusto").value);
-    if(!nome||!Number.isFinite(custo)||custo<0)return;
 
-    const item={nome,custo,cor:$("filCor").value};
-    if(editF>=0)fil[editF]=item;
+    if(!nome||!Number.isFinite(custo)||custo<0) {
+        mensagem("Preencha os dados do filamento corretamente.","erro");
+        return;
+    }
+
+    const item={
+        nome,
+        custo,
+        cor:$("filCor").value
+    };
+
+    if(editF>=0) fil[editF]=item;
     else fil.push(item);
 
     editF=-1;
     e.target.reset();
-    salvar();
+    salvar("Filamento salvo: "+nome);
 });
 
 $("formAdi").addEventListener("submit",e=>{
     e.preventDefault();
+
     const nome=$("adiNome").value.trim();
     const custo=Number($("adiCusto").value);
-    if(!nome||!Number.isFinite(custo)||custo<0)return;
+
+    if(!nome||!Number.isFinite(custo)||custo<0) {
+        mensagem("Preencha os dados do adicional corretamente.","erro");
+        return;
+    }
 
     const id=editA||(
         "adicional-"+Date.now().toString(36)+
@@ -162,28 +285,34 @@ $("formAdi").addEventListener("submit",e=>{
     );
 
     const item={
-        id,nome,custo,
+        id,
+        nome,
+        custo,
         ativo:$("adiAtivo").value==="true"
     };
 
     if(editA) {
-        const i=adi.findIndex(x=>x.id===editA);
-        if(i>=0)adi[i]=item;
-    } else adi.push(item);
+        const indice=adi.findIndex(a=>a.id===editA);
+        if(indice>=0) adi[indice]=item;
+    } else {
+        adi.push(item);
+    }
 
     editA=null;
     e.target.reset();
-    salvar();
+    salvar("Adicional salvo: "+nome);
 });
 
 $("cancelarFil").addEventListener("click",()=>{
     editF=-1;
     $("formFil").reset();
+    mensagem("Edicao de filamento cancelada.");
 });
 
 $("cancelarAdi").addEventListener("click",()=>{
     editA=null;
     $("formAdi").reset();
+    mensagem("Edicao de adicional cancelada.");
 });
 
 render();
