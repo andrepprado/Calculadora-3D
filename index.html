@@ -12,23 +12,24 @@
 <body>
 <header class="app-header no-print">
     <div class="app-header-inner">
-            <button
-                type="button"
-                class="app-menu-toggle"
-                aria-label="Abrir menu"
-                aria-expanded="false"
-            >
-                <span class="app-menu-toggle-line"></span>
-                <span class="app-menu-toggle-line"></span>
-                <span class="app-menu-toggle-line"></span>
-            </button>
+        <button
+            type="button"
+            class="app-menu-toggle"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="duo-menu-principal"
+        >
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+        </button>
 
         <a href="index.html" class="app-brand" aria-label="Duo.Lab">
             <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
         </a>
 
-        <nav class="app-nav" aria-label="Navegação principal">
-            <a href="index.html" class="active">Calculadora</a>
+        <nav id="duo-menu-principal" class="app-nav" aria-label="Navegação principal">
+            <a href="index.html" class="active" aria-current="page">Calculadora</a>
             <a href="planner.html">Planner de Pedidos</a>
             <a href="cadastros.html">Cadastros e Configurações</a>
         </nav>
@@ -390,7 +391,7 @@
   </div>
 </section>
 <script src="script.js?v=1794185768"></script>
-    <script src="mobile-menu.js"></script>
+
 
 
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -474,6 +475,7 @@
 </script>
 <!-- FIM DUOLAB INDICADOR DE COR V2 -->
 <script src="mascaras.js"></script>
+    <script src="mobile-menu.js"></script>
 </body>
 
 </html>

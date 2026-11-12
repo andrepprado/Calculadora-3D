@@ -8,16 +8,29 @@
 </head>
 <body>
 <header class="app-header no-print">
-<div class="app-header-inner">
-<a class="app-brand" href="index.html">
-<img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
-</a>
-<nav class="app-nav" aria-label="Navegação principal">
-<a href="index.html">Calculadora</a>
-<a href="planner.html">Planner de Pedidos</a>
-<a href="cadastros.html" class="active">Cadastros e Configurações</a>
-</nav>
-</div>
+    <div class="app-header-inner">
+        <button
+            type="button"
+            class="app-menu-toggle"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="duo-menu-principal"
+        >
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+        </button>
+
+        <a href="index.html" class="app-brand" aria-label="Duo.Lab">
+            <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+        </a>
+
+        <nav id="duo-menu-principal" class="app-nav" aria-label="Navegação principal">
+            <a href="index.html">Calculadora</a>
+            <a href="planner.html">Planner de Pedidos</a>
+            <a href="cadastros.html" class="active" aria-current="page">Cadastros e Configurações</a>
+        </nav>
+    </div>
 </header>
 <main class="duo-admin">
 <h1>Cadastros e Configurações</h1>
@@ -56,5 +69,6 @@
 <p>Os cadastros ficam armazenados neste navegador.</p>
 </main>
 <script src="cadastros.js"></script>
+    <script src="mobile-menu.js"></script>
 </body>
 </html>

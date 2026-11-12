@@ -71,28 +71,30 @@ body.duo-planner-embedded #pedidoModal form {
 <body class="planner-page">
 
     <header class="app-header no-print">
-        <div class="app-header-inner">
-            <button
-                type="button"
-                class="app-menu-toggle"
-                aria-label="Abrir menu"
-                aria-expanded="false"
-            >
-                <span class="app-menu-toggle-line"></span>
-                <span class="app-menu-toggle-line"></span>
-                <span class="app-menu-toggle-line"></span>
-            </button>
+    <div class="app-header-inner">
+        <button
+            type="button"
+            class="app-menu-toggle"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="duo-menu-principal"
+        >
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+            <span class="app-menu-toggle-line"></span>
+        </button>
 
-            <a href="index.html" class="app-brand" aria-label="Duo.Lab">
-                <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
-            </a>
+        <a href="index.html" class="app-brand" aria-label="Duo.Lab">
+            <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+        </a>
 
-            <nav class="app-nav" aria-label="Navegação principal">
-                <a href="index.html">Calculadora</a>
-                <a href="planner.html" class="active">Planner de Pedidos</a>
-            </nav>
-        </div>
-    </header>
+        <nav id="duo-menu-principal" class="app-nav" aria-label="Navegação principal">
+            <a href="index.html">Calculadora</a>
+            <a href="planner.html" class="active" aria-current="page">Planner de Pedidos</a>
+            <a href="cadastros.html">Cadastros e Configurações</a>
+        </nav>
+    </div>
+</header>
 
     <main class="planner-shell">
 
@@ -594,8 +596,9 @@ body.duo-planner-embedded #pedidoModal form {
     <!-- FIREBASE_PLANNER_END -->
 <script src="planner.js"></script>
 
-    <script src="mobile-menu.js"></script>
+
 <script src="mascaras.js"></script>
+    <script src="mobile-menu.js"></script>
 </body>
 
 </html>
