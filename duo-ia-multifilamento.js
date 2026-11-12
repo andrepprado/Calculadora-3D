@@ -912,6 +912,270 @@ function lerPeso(texto) {
         status("CONFIRA OS FILAMENTOS PARA CALCULAR.");
     }
 
+    // OCR independente por coluna, com melhoria de contraste,
+    // reconhecimento numerico e validacao pelo peso total.
+    async function duoLerPesosPorCor(worker, canvas, total) {
+        const largura = canvas.width;
+        const altura = canvas.height;
+        const grupos = identificarEtiquetas(canvas);
+
+        const candidatos = grupos.filter(g =>
+            g.contagem >= 2 &&
+            g.yInicial >= altura * 0.48 &&
+            g.yInicial <= altura * 0.90 &&
+            g.x >= 0 &&
+            g.x < largura * 0.85 &&
+            g.largura >= 12 &&
+            g.largura <= largura * 0.27
+        );
+
+        const representantes = [];
+
+        for (const cor of ["branco", "vermelho", "preto",
+                           "azul", "verde", "amarelo",
+                           "rosa", "roxo", "laranja"]) {
+            const encontrados = candidatos
+                .filter(g => g.cor === cor)
+                .sort((a, b) =>
+                    b.contagem - a.contagem ||
+                    a.x - b.x
+                );
+
+            if (!encontrados.length) continue;
+
+            let escolhido = encontrados[0];
+
+            // Evita classificar texto preto isolado como etiqueta.
+            if (cor === "preto") {
+                const alinhados = encontrados.filter(g =>
+                    g.largura <= largura * 0.20 &&
+                    g.yInicial >= altura * 0.55
+                );
+
+                if (alinhados.length) {
+                    escolhido = alinhados.sort((a, b) =>
+                        b.yInicial - a.yInicial ||
+                        b.contagem - a.contagem
+                    )[0];
+                }
+            }
+
+            representantes.push(escolhido);
+        }
+
+        representantes.sort((a, b) => a.x - b.x);
+
+        // Une somente deteccoes repetidas da mesma etiqueta.
+        const etiquetas = [];
+
+        for (const grupo of representantes) {
+            if (etiquetas.some(e =>
+                e.cor === grupo.cor &&
+                Math.abs(e.x - grupo.x) < largura * 0.025
+            )) continue;
+
+            etiquetas.push({
+                cor: grupo.cor,
+                x: grupo.x,
+                y: grupo.yInicial,
+                pesos: new Map()
+            });
+        }
+
+        function processarImagem(x, y, w, h, modo) {
+            const origem = document.createElement("canvas");
+            origem.width = Math.max(1, Math.round(w * 7));
+            origem.height = Math.max(1, Math.round(h * 7));
+
+            const ctx = origem.getContext("2d", {
+                willReadFrequently: true
+            });
+
+            ctx.imageSmoothingEnabled = false;
+            ctx.drawImage(
+                canvas,
+                x, y, w, h,
+                0, 0, origem.width, origem.height
+            );
+
+            const pixels = ctx.getImageData(
+                0, 0, origem.width, origem.height
+            );
+
+            for (let i = 0; i < pixels.data.length; i += 4) {
+                const r = pixels.data[i];
+                const g = pixels.data[i + 1];
+                const b = pixels.data[i + 2];
+
+                const brilho = (
+                    r * 0.299 +
+                    g * 0.587 +
+                    b * 0.114
+                );
+
+                let valor;
+
+                if (modo === 0) {
+                    valor = brilho < 155 ? 0 : 255;
+                } else if (modo === 1) {
+                    valor = brilho < 195 ? 0 : 255;
+                } else {
+                    valor = brilho < 115 ? 255 : 0;
+                }
+
+                pixels.data[i] = valor;
+                pixels.data[i + 1] = valor;
+                pixels.data[i + 2] = valor;
+                pixels.data[i + 3] = 255;
+            }
+
+            ctx.putImageData(pixels, 0, 0);
+            return origem;
+        }
+
+        function extrairNumeros(texto, destino, pontos) {
+            const limpo = String(texto || "")
+                .replace(/[Oo]/g, "0")
+                .replace(/[Il|]/g, "1")
+                .replace(/[,]/g, ".");
+
+            const comGramas = [...limpo.matchAll(
+                /(\d{1,4}(?:\.\d+)?)\s*[gG]\b/g
+            )];
+
+            const ocorrencias = comGramas.length
+                ? comGramas
+                : [...limpo.matchAll(/\b(\d{1,4})\b/g)];
+
+            for (const match of ocorrencias) {
+                const peso = Number(match[1]);
+
+                if (
+                    !Number.isFinite(peso) ||
+                    peso <= 0 ||
+                    peso > total
+                ) continue;
+
+                destino.set(
+                    peso,
+                    (destino.get(peso) || 0) + pontos
+                );
+            }
+        }
+
+        for (const etiqueta of etiquetas) {
+            const x = Math.max(0, etiqueta.x - 3);
+            const proxima = etiquetas
+                .filter(e => e.x > etiqueta.x + 12)
+                .sort((a, b) => a.x - b.x)[0];
+
+            const limite = proxima
+                ? proxima.x - 2
+                : Math.min(largura, etiqueta.x + largura * 0.22);
+
+            const w = Math.max(
+                20,
+                Math.min(largura - x, limite - x)
+            );
+
+            const y = Math.max(
+                0,
+                Math.floor(altura * 0.50)
+            );
+
+            const h = Math.max(
+                10,
+                Math.min(
+                    altura - y,
+                    Math.ceil(altura * 0.43)
+                )
+            );
+
+            for (const modo of [0, 1, 2]) {
+                const imagem = processarImagem(
+                    x, y, w, h, modo
+                );
+
+                for (const psm of ["6", "7", "11"]) {
+                    await worker.setParameters({
+                        tessedit_pageseg_mode: psm,
+                        tessedit_char_whitelist:
+                            "0123456789gG., "
+                    });
+
+                    const resultado = await worker.recognize(imagem);
+                    const texto = resultado.data.text || "";
+
+                    extrairNumeros(
+                        texto,
+                        etiqueta.pesos,
+                        /\d+\s*g/i.test(texto) ? 4 : 1
+                    );
+                }
+            }
+        }
+
+        await worker.setParameters({
+            tessedit_pageseg_mode: "3",
+            tessedit_char_whitelist: ""
+        });
+
+        // Escolhe somente uma combinacao que corresponda
+        // ao peso total, sem atribuir pesos arbitrarios.
+        const opcoes = etiquetas.map(e =>
+            [...e.pesos.entries()]
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 8)
+                .map(([peso, confianca]) => ({
+                    peso,
+                    confianca
+                }))
+        );
+
+        let melhor = null;
+
+        function combinar(indice, escolhidos, soma, confianca) {
+            if (indice === etiquetas.length) {
+                if (Math.abs(soma - total) > 0.11) return;
+
+                if (!melhor || confianca > melhor.confianca) {
+                    melhor = {
+                        pesos: [...escolhidos],
+                        confianca
+                    };
+                }
+
+                return;
+            }
+
+            for (const opcao of opcoes[indice]) {
+                if (soma + opcao.peso > total + 0.11) {
+                    continue;
+                }
+
+                combinar(
+                    indice + 1,
+                    [...escolhidos, opcao.peso],
+                    soma + opcao.peso,
+                    confianca + opcao.confianca
+                );
+            }
+        }
+
+        if (etiquetas.length && etiquetas.length <= 8) {
+            combinar(0, [], 0, 0);
+        }
+
+        if (!melhor) {
+            return [];
+        }
+
+        return etiquetas.map((etiqueta, i) => ({
+            material: "PLA",
+            cor: etiqueta.cor,
+            peso: melhor.pesos[i]
+        }));
+    }
     async function analisar() {
         const arquivo = $("duoIAImagem")?.files?.[0];
         const link = $("duoIALink")?.value.trim() || "";
@@ -990,101 +1254,11 @@ function lerPeso(texto) {
                 );
             }
 
-            const etiquetas = [];
-            const larg = canvas.width;
-            const alt = canvas.height;
-
-            // Leitura por regioes completas, sem recortar
-            // somente os pequenos quadrados coloridos.
-            await worker.setParameters({
-                tessedit_pageseg_mode: "6"
-            });
-
-            for (const partes of [1, 2, 3, 4]) {
-                for (let coluna = 0; coluna < partes; coluna++) {
-                    const x = Math.floor(larg * coluna / partes);
-                    const proximo = Math.ceil(
-                        larg * (coluna + 1) / partes
-                    );
-
-                    const y = Math.floor(alt * 0.35);
-                    const largura = Math.min(
-                        larg - x,
-                        proximo - x + Math.ceil(larg * 0.03)
-                    );
-
-                    const crop = recorte(
-                        canvas,
-                        x,
-                        y,
-                        largura,
-                        alt - y
-                    );
-
-                    const texto = await lerOCR(worker, crop);
-
-                    const regex =
-                        /\b(PLA|PETG|ABS|ASA|TPU)\b[\s\S]{0,25}?(\d+(?:[.,]\d+)?)\s*g\b/gi;
-
-                    let match;
-
-                    while ((match = regex.exec(texto)) !== null) {
-                        const peso = num(match[2]);
-
-                        if (
-                            !Number.isFinite(peso) ||
-                            peso <= 0 ||
-                            peso > total
-                        ) {
-                            continue;
-                        }
-
-                        const candidatos = identificarEtiquetas(
-                            canvas
-                        ).filter(grupo =>
-                            grupo.x >= x &&
-                            grupo.x <= x + largura &&
-                            grupo.yInicial >= y
-                        );
-
-                        const frequencia = new Map();
-
-                        candidatos.forEach(grupo => {
-                            if (grupo.cor === "preto") return;
-
-                            frequencia.set(
-                                grupo.cor,
-                                (frequencia.get(grupo.cor) || 0) +
-                                grupo.contagem
-                            );
-                        });
-
-                        const ordenadas = [...frequencia]
-                            .sort((a, b) => b[1] - a[1]);
-
-                        const cor = ordenadas.length === 1
-                            ? ordenadas[0][0]
-                            : null;
-
-                        if (!cor) continue;
-
-                        const item = {
-                            material: match[1].toUpperCase(),
-                            cor,
-                            peso
-                        };
-
-                        if (!etiquetas.some(e =>
-                            e.material === item.material &&
-                            e.cor === item.cor &&
-                            Math.abs(e.peso - item.peso) < 0.01
-                        )) {
-                            etiquetas.push(item);
-                        }
-                    }
-                }
-            }
-
+            const etiquetas = await duoLerPesosPorCor(
+                worker,
+                canvas,
+                total
+            );
             let validas = null;
 
             try {
