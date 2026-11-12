@@ -5005,3 +5005,60 @@ table {
 }
 
 /* FIM DUOLAB RESPONSIVIDADE GLOBAL V2 */
+/* DUOLAB IA VISUAL FLORENCE */
+.duo-ia-visual-bloco {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    margin: 18px 0;
+    padding: 18px;
+    border: 1px solid #d6e5df;
+    border-radius: 12px;
+    background: #f6faf8;
+    overflow-wrap: anywhere;
+}
+
+.duo-ia-visual-bloco h3 {
+    margin-top: 0;
+    color: #003640;
+}
+
+.duo-ia-visual-botao {
+    display: block;
+    width: 100%;
+    min-height: 46px;
+    padding: 12px 16px;
+    border: 0;
+    border-radius: 9px;
+    background: #00a091;
+    color: white;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.duo-ia-visual-botao:disabled {
+    opacity: .55;
+    cursor: wait;
+}
+
+#duoIAVisualStatus {
+    margin: 12px 0;
+    overflow-wrap: anywhere;
+}
+
+#duoIAVisualResultado {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.6;
+}
+
+@media(max-width:600px) {
+    .duo-ia-visual-bloco {
+        padding: 12px;
+    }
+
+    .duo-ia-visual-botao {
+        width: 100%;
+        font-size: 14px;
+    }
+}
