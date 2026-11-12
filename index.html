@@ -192,7 +192,43 @@
                 <button type="button" id="btnEnviarPlanner" class="btn-print no-print">TRANSFORMAR ORÇAMENTO EM PEDIDO</button>
                 <button onclick="window.print()" class="btn-print no-print">GERAR PDF / IMPRIMIR</button>
             </section>
-        </main>
+        <section id="duoIA" class="duo-ia-card no-print">
+  <div class="duo-ia-heading">
+    <div>
+      <h2>IA Multifilamento</h2>
+      <p>Envie a imagem do fatiador e o link do modelo 3D.</p>
+    </div>
+    <span class="duo-ia-tag">IA local</span>
+  </div>
+
+  <div class="duo-ia-form">
+    <label>
+      Imagem das placas e filamentos
+      <input
+        id="duoIAImagem"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+      >
+    </label>
+
+    <label>
+      Link do modelo 3D
+      <input
+        id="duoIALink"
+        type="url"
+        placeholder="https://makerworld.com/..."
+      >
+    </label>
+
+    <button id="duoIAAnalisar" type="button">
+      Analisar imagem e calcular
+    </button>
+  </div>
+
+  <div id="duoIAStatus" role="status" aria-live="polite"></div>
+  <div id="duoIAResultado" hidden></div>
+</section>
+</main>
     </div>
 
 
@@ -477,6 +513,8 @@
 <!-- FIM DUOLAB INDICADOR DE COR V2 -->
 <script src="mascaras.js"></script>
     <script src="mobile-menu.js"></script>
+<script src="vendor/ocr/tesseract.min.js"></script>
+<script src="duo-ia-multifilamento.js"></script>
 </body>
 
 </html>
