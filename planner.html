@@ -2,6 +2,33 @@
 <html lang="pt-BR">
 
 <head>
+<!-- DUOLAB_FAST_LOAD_V1_START -->
+<meta name="color-scheme" content="light">
+<style>
+html {
+    scroll-behavior: auto;
+}
+
+body {
+    visibility: visible !important;
+}
+
+.app-header,
+#duolab-desktop-header,
+.app-topbar,
+header.app-header {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transition: none !important;
+    animation: none !important;
+}
+
+img {
+    content-visibility: visible;
+}
+</style>
+<link rel="preload" as="image" href="img/LOGO_SFUNDO.svg">
+<!-- DUOLAB_FAST_LOAD_V1_END -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Planner de Pedidos | Duo.Lab</title>
@@ -88,7 +115,7 @@ body.duo-planner-embedded #pedidoModal form {
         </button>
 
         <a href="index.html" class="app-brand" aria-label="Duo.Lab">
-            <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+            <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab" loading="eager" decoding="async" fetchpriority="high">
         </a>
 
         <nav id="duo-menu-principal" class="app-nav" aria-label="Navegação principal">
