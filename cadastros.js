@@ -29,6 +29,7 @@ const padraoF = [
 ].map(([nome,custo,cor]) => ({nome,custo,cor}));
 
 
+
 const padraoA = [
     {
         id: "vela-led-natal",
