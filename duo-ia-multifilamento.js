@@ -666,9 +666,30 @@ function lerPeso(texto) {
             peso.value = String(item.peso);
 
             // Tempo total informado uma unica vez.
-            tempo.value = i === 0
-                ? tempoHTML(dados.tempo)
-                : "00:00";
+            const minutosIndividuais = Number(
+                item.minutos ??
+                item.tempoMinutos ??
+                (Number(item.tempo) * 60)
+            );
+
+            const minutosPlaca = Number.isFinite(minutosIndividuais)
+                ? Math.round(minutosIndividuais)
+                : (
+                    i === 0
+                        ? Math.round(Number(dados.tempo) * 60)
+                        : 0
+                );
+
+            if (tempo.type === "time") {
+                tempo.type = "text";
+                tempo.inputMode = "numeric";
+                tempo.placeholder = "HH:MM";
+            }
+
+            tempo.value =
+                String(Math.floor(minutosPlaca / 60)).padStart(2, "0") +
+                ":" +
+                String(minutosPlaca % 60).padStart(2, "0");
         });
 
         linhas.slice(itens.length).forEach(linha => {
@@ -1531,15 +1552,15 @@ function lerPeso(texto) {
         const botao = $("duoIAAnalisar");
 
         if (!arquivo || !arquivo.type.startsWith("image/")) {
-            status("SELECIONE UMA IMAGEM VALIDA.", true);
+            status("SELECIONE UM PRINT VALIDO.", true);
             return;
         }
 
         botao.disabled = true;
-        let worker;
+        let worker = null;
 
         try {
-            status("LENDO AS PLACAS INDIVIDUALMENTE...");
+            status("LENDO TODAS AS PLACAS DA IMAGEM...");
 
             const imagem = await carregarImagem(arquivo);
             const canvas = imagemCanvas(imagem);
@@ -1555,211 +1576,104 @@ function lerPeso(texto) {
                 }
             );
 
-            const largura = canvas.width;
-            const altura = canvas.height;
-
-            function recortar(x, y, w, h, escala = 4) {
-                const c = document.createElement("canvas");
-
-                x = Math.max(0, Math.floor(x));
-                y = Math.max(0, Math.floor(y));
-                w = Math.max(1, Math.min(largura - x, Math.ceil(w)));
-                h = Math.max(1, Math.min(altura - y, Math.ceil(h)));
-
-                c.width = w * escala;
-                c.height = h * escala;
-
-                c.getContext("2d").drawImage(
-                    canvas,
-                    x, y, w, h,
-                    0, 0, c.width, c.height
-                );
-
-                return c;
-            }
-
-            function minutos(texto) {
-                const t = String(texto)
-                    .replace(/(\d)\s*[.,]\s*(\d)\s*h/gi, "$1.$2h")
-                    .replace(/\s+/g, " ");
-
-                let m = t.match(
-                    /(\d+(?:\.\d+)?)\s*h\b/i
-                );
-
-                if (m) {
-                    return Math.round(Number(m[1]) * 60);
-                }
-
-                m = t.match(
-                    /(\d+)\s*min\b/i
-                );
-
-                return m ? Number(m[1]) : null;
-            }
-
-            function peso(texto) {
-                const m = String(texto).match(
-                    /(\d+(?:[.,]\d+)?)\s*g\b/i
-                );
-
-                return m
-                    ? Number(m[1].replace(",", "."))
-                    : null;
-            }
-
-            function corEtiqueta(ctx, x, y, w, h) {
-                const pixels = ctx.getImageData(
-                    Math.max(0, Math.floor(x)),
-                    Math.max(0, Math.floor(y)),
-                    Math.max(1, Math.floor(w)),
-                    Math.max(1, Math.floor(h))
-                ).data;
-
-                const cores = {
-                    branco: 0,
-                    vermelho: 0,
-                    preto: 0
-                };
-
-                for (let i = 0; i < pixels.length; i += 16) {
-                    const r = pixels[i];
-                    const g = pixels[i + 1];
-                    const b = pixels[i + 2];
-
-                    if (r > 210 && g > 210 && b > 210) {
-                        cores.branco++;
-                    } else if (
-                        r > 100 &&
-                        r > g * 1.5 &&
-                        r > b * 1.5
-                    ) {
-                        cores.vermelho++;
-                    } else if (
-                        r < 35 &&
-                        g < 35 &&
-                        b < 35
-                    ) {
-                        cores.preto++;
-                    }
-                }
-
-                return Object.entries(cores)
-                    .sort((a, b) => b[1] - a[1])[0][0];
-            }
-
-            const dadosOCR = await worker.recognize(
-                recortar(0, 0, largura, altura, 3)
+            const placas = await duoV4LerPlacas(
+                worker,
+                canvas
             );
-
-            const linhas = dadosOCR.data.lines || [];
-
-            const cabecalhos = linhas
-                .filter(l =>
-                    /\b(?:placa|mesa)\s*[- ]*\d+/i.test(l.text) ||
-                    /\b(?:body|hat|eyes|nose)\b/i.test(l.text)
-                )
-                .map(l => ({
-                    texto: l.text,
-                    y: l.bbox.y0 / 3
-                }))
-                .sort((a, b) => a.y - b.y);
-
-            const placas = [];
-
-            for (let i = 0; i < cabecalhos.length; i++) {
-                const atual = cabecalhos[i];
-
-                const y0 = atual.y;
-                const y1 = cabecalhos[i + 1]
-                    ? cabecalhos[i + 1].y
-                    : Math.min(
-                        altura,
-                        y0 + altura * 0.22
-                    );
-
-                const area = recortar(
-                    0,
-                    y0,
-                    largura,
-                    Math.max(30, y1 - y0),
-                    5
-                );
-
-                const leitura = await worker.recognize(area);
-                const texto = leitura.data.text || "";
-
-                const tempo = minutos(texto);
-                const gramas = peso(texto);
-
-                if (
-                    tempo === null ||
-                    gramas === null
-                ) {
-                    continue;
-                }
-
-                const ctx = canvas.getContext("2d");
-
-                const cor = corEtiqueta(
-                    ctx,
-                    largura * 0.12,
-                    y0 + (y1 - y0) * 0.45,
-                    largura * 0.13,
-                    Math.max(10, (y1 - y0) * 0.18)
-                );
-
-                placas.push({
-                    material: "PLA",
-                    cor,
-                    peso: gramas,
-                    minutos: tempo
-                });
-            }
-
-            if (placas.length < 1) {
-                throw new Error(
-                    "NAO FOI POSSIVEL IDENTIFICAR AS PLACAS. " +
-                    "UTILIZE O PRINT COM AS PLACAS EXPANDIDAS."
-                );
-            }
 
             const total = placas.reduce(
                 (s, p) => s + p.peso,
                 0
             );
 
-            const tempoMinutos = placas.reduce(
+            const minutos = placas.reduce(
                 (s, p) => s + p.minutos,
                 0
             );
 
+            const etiquetas = placas.map(p => ({
+                ...p,
+                cadastro: selecionarFilamentoMakerWorld(p)
+            }));
+
             const dados = {
                 pratos: placas.length,
-                tempo: tempoMinutos / 60,
+                tempo: minutos / 60,
                 total,
-                etiquetas: placas.map(p => ({
-                    material: p.material,
-                    cor: p.cor,
-                    peso: p.peso,
-                    cadastro: selecionarFilamentoMakerWorld(p)
-                }))
+                etiquetas
             };
 
             const itens = preencher(dados);
-            resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link); duoAtualizarPrecosWhatsApp(); duoCorrigirResumoWhatsApp();
+
+            // Garantir os tempos individuais mesmo quando
+            // a versao anterior de preencher() estiver ativa.
+            const linhas = [
+                ...document.querySelectorAll(
+                    "#bandejasArea .duo-bandeja"
+                )
+            ];
+
+            placas.forEach((placa, indice) => {
+                const campo = linhas[indice]?.querySelector(
+                    ".bandeja-tempo"
+                );
+
+                if (!campo) return;
+
+                if (campo.type === "time") {
+                    campo.type = "text";
+                    campo.inputMode = "numeric";
+                    campo.placeholder = "HH:MM";
+                }
+
+                campo.value =
+                    String(
+                        Math.floor(placa.minutos / 60)
+                    ).padStart(2, "0") +
+                    ":" +
+                    String(
+                        placa.minutos % 60
+                    ).padStart(2, "0");
+
+                campo.dispatchEvent(
+                    new Event("input", { bubbles: true })
+                );
+
+                campo.dispatchEvent(
+                    new Event("change", { bubbles: true })
+                );
+            });
+
+            if (typeof calcular === "function") {
+                calcular();
+            }
+
+            resultado(dados, itens, link);
+
+            if (
+                typeof duoMostrarResultadoWhatsApp ===
+                "function"
+            ) {
+                duoMostrarResultadoWhatsApp(
+                    dados,
+                    itens,
+                    link
+                );
+            }
+
+            duoV4AtualizarWhatsApp();
 
             status(
                 "ANALISE CONCLUIDA: " +
                 placas.length + " PLACAS | " +
                 total + " G | " +
-                Math.floor(tempoMinutos / 60) + "H" +
-                String(tempoMinutos % 60).padStart(2, "0") +
+                Math.floor(minutos / 60) + "H" +
+                String(minutos % 60).padStart(2, "0") +
                 "MIN."
             );
 
         } catch (erro) {
-            console.error("[DUOLAB OCR PLACAS]", erro);
+            console.error("[DUOLAB V4]", erro);
             status(erro.message, true);
         } finally {
             if (worker) {
@@ -1771,577 +1685,6 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
-    // DUOLAB_WHATSAPP_INICIO
-
-    function duoFormatarMoedaWhatsApp(valor) {
-        const numero = Number(valor);
-
-        return Number.isFinite(numero)
-            ? numero.toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            })
-            : "0,00";
-    }
-
-    function duoGerarMensagemWhatsApp(titulo, custo, sugerido, link) {
-        const nome = String(titulo || "Modelo 3D")
-            .trim()
-            .replace(/^\*+|\*+$/g, "");
-
-        const tituloWhatsApp = "*" + nome + "*";
-
-        return [
-            tituloWhatsApp,
-            "Custo Produção Total: R$ " +
-                (Number.isFinite(custo) && custo > 0 ? duoFormatarMoedaWhatsApp(custo) : "AGUARDANDO CALCULO"),
-            "Valor Unitário Sugerido: R$ " +
-                (Number.isFinite(sugerido) && sugerido > 0 ? duoFormatarMoedaWhatsApp(sugerido) : "AGUARDANDO CALCULO"),
-            String(link || "").trim()
-        ].filter(Boolean).join("\n");
-    }
-
-    function duoMostrarResultadoWhatsApp(dados, itens, link) {
-        const secao = $("duoIAResultado");
-
-        if (!secao) return;
-
-        const tituloInput = document.querySelector(
-            "#nomeProduto, #nomeModelo, #tituloProduto, " +
-            "#descricaoProduto, #nomePeca"
-        );
-
-        let titulo = tituloInput?.value?.trim() || "";
-
-        if (!titulo && link) {
-            try {
-                const url = new URL(link);
-
-                const trecho = url.pathname
-                    .split("/")
-                    .filter(Boolean)
-                    .pop() || "";
-
-                titulo = trecho
-                    .replace(/^\d+-/, "")
-                    .replace(/-/g, " ")
-                    .replace(/\b\w/g, letra => letra.toUpperCase());
-            } catch {}
-        }
-
-        if (!titulo) titulo = "Modelo 3D";
-
-        const custoElementos = [
-            "#custoProducaoTotal",
-            "#custoTotal",
-            "#custoProducao",
-            "[data-custo-producao]"
-        ];
-
-        const sugeridoElementos = [
-            "#valorUnitarioSugerido",
-            "#precoSugerido",
-            "#precoVenda",
-            "[data-preco-sugerido]"
-        ];
-
-        function lerValor(seletores) {
-            for (const seletor of seletores) {
-                const elemento = document.querySelector(seletor);
-
-                if (!elemento) continue;
-
-                const texto = String(
-                    elemento.value || elemento.textContent || ""
-                );
-
-                const encontrado = texto.match(
-                    /(?:R\$\s*)?([\d.]+,\d{2}|\d+(?:\.\d{1,2})?)/
-                );
-
-                if (!encontrado) continue;
-
-                const numero = Number(
-                    encontrado[1]
-                        .replace(/\./g, "")
-                        .replace(",", ".")
-                );
-
-                if (Number.isFinite(numero)) return numero;
-            }
-
-            return null;
-        }
-
-        const custo = lerValor(custoElementos);
-        const sugerido = lerValor(sugeridoElementos);
-
-        let linkFinal = String(link || "").trim();
-
-        try {
-            const url = new URL(linkFinal);
-            const id = url.pathname.match(/models\/(\d+)/)?.[1];
-
-            if (id && url.hostname.endsWith("makerworld.com")) {
-                linkFinal =
-                    "https://makerworld.com/models/" +
-                    id +
-                    "?appSharePlatform=copy";
-            }
-        } catch {}
-
-        const mensagem = duoGerarMensagemWhatsApp(
-            titulo,
-            custo,
-            sugerido,
-            linkFinal
-        );
-
-        let area = document.getElementById(
-            "duoIAWhatsAppResultado"
-        );
-
-        if (!area) {
-            area = document.createElement("div");
-            area.id = "duoIAWhatsAppResultado";
-
-            area.style.marginTop = "18px";
-            area.style.padding = "14px";
-            area.style.border = "1px solid #d6e0e8";
-            area.style.borderRadius = "10px";
-            area.style.background = "#f7fafc";
-
-            secao.appendChild(area);
-        }
-
-        area.replaceChildren();
-
-        const tituloArea = document.createElement("strong");
-        tituloArea.textContent = "MENSAGEM PARA WHATSAPP";
-        tituloArea.style.display = "block";
-        tituloArea.style.marginBottom = "10px";
-        tituloArea.style.color = "#003640";
-
-        const texto = document.createElement("textarea");
-        texto.id = "duoIAMensagemWhatsApp";
-        texto.value = mensagem;
-        texto.readOnly = true;
-        texto.rows = 5;
-
-        texto.style.width = "100%";
-        texto.style.boxSizing = "border-box";
-        texto.style.padding = "12px";
-        texto.style.border = "1px solid #cbd5e1";
-        texto.style.borderRadius = "8px";
-        texto.style.resize = "vertical";
-        texto.style.fontFamily = "inherit";
-        texto.style.fontSize = "14px";
-
-        const copiar = document.createElement("button");
-        copiar.type = "button";
-        copiar.textContent = "COPIAR PARA WHATSAPP";
-        copiar.className = $("duoIAAnalisar")?.className || "";
-        copiar.style.width = "100%";
-        copiar.style.marginTop = "10px";
-
-        copiar.addEventListener("click", async () => {
-            try {
-                await navigator.clipboard.writeText(texto.value);
-                copiar.textContent = "MENSAGEM COPIADA!";
-            } catch {
-                texto.focus();
-                texto.select();
-                document.execCommand("copy");
-                copiar.textContent = "MENSAGEM COPIADA!";
-            }
-
-            setTimeout(() => {
-                copiar.textContent = "COPIAR PARA WHATSAPP";
-            }, 2000);
-        });
-
-        area.append(
-            tituloArea,
-            texto,
-            copiar
-        );
-    }
-
-    // DUOLAB_WHATSAPP_FIM
-    // DUOLAB_WHATSAPP_PRECOS_V2_INICIO
-
-    function duoLerMoedaCalculadora(elemento) {
-        if (!elemento) return null;
-
-        const texto = String(
-            elemento.value ??
-            elemento.textContent ??
-            ""
-        ).trim();
-
-        const valores = [...texto.matchAll(
-            /(?:R\$\s*)?(-?\d{1,3}(?:\.\d{3})*,\d{2}|-?\d+,\d{2}|-?\d+(?:\.\d+)?)/g
-        )];
-
-        if (!valores.length) return null;
-
-        const ultimo = valores[valores.length - 1][1];
-
-        const numero = Number(
-            ultimo.replace(/\./g, "").replace(",", ".")
-        );
-
-        return Number.isFinite(numero) ? numero : null;
-    }
-
-    function duoEncontrarPrecoCalculadora(expressoes) {
-        const elementos = [
-            ...document.querySelectorAll(
-                "input, output, span, strong, b, div, p, td"
-            )
-        ];
-
-        for (const expressao of expressoes) {
-            const encontrados = elementos.filter(elemento => {
-                if (elemento.children.length > 0) return false;
-
-                const texto = String(
-                    elemento.textContent || ""
-                ).trim();
-
-                return expressao.test(texto);
-            });
-
-            for (const elemento of encontrados) {
-                const valorDireto = duoLerMoedaCalculadora(
-                    elemento
-                );
-
-                if (
-                    valorDireto !== null &&
-                    /R\$/.test(elemento.textContent || "")
-                ) {
-                    return valorDireto;
-                }
-
-                const pai = elemento.parentElement;
-
-                if (!pai) continue;
-
-                const candidatos = [
-                    ...pai.querySelectorAll(
-                        "input, output, strong, span, b"
-                    )
-                ];
-
-                for (const candidato of candidatos) {
-                    if (candidato === elemento) continue;
-
-                    const valor = duoLerMoedaCalculadora(
-                        candidato
-                    );
-
-                    if (valor !== null) {
-                        return valor;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
-    function duoObterValoresReaisWhatsApp() {
-        const custoSeletores = [
-            "#custoProducaoTotal",
-            "#custoTotal",
-            "#custoProducao",
-            "#custoTotalProducao",
-            "[data-custo-producao]"
-        ];
-
-        const precoSeletores = [
-            "#valorUnitarioSugerido",
-            "#precoSugerido",
-            "#precoVenda",
-            "#valorVenda",
-            "#precoFinal",
-            "[data-preco-sugerido]"
-        ];
-
-        function buscar(seletores) {
-            for (const seletor of seletores) {
-                const elemento = document.querySelector(
-                    seletor
-                );
-
-                const valor = duoLerMoedaCalculadora(
-                    elemento
-                );
-
-                if (valor !== null && valor > 0) {
-                    return valor;
-                }
-            }
-
-            return null;
-        }
-
-        let custo = buscar(custoSeletores);
-        let sugerido = buscar(precoSeletores);
-
-        if (custo === null) {
-            custo = duoEncontrarPrecoCalculadora([
-                /custo\s*(?:de\s*)?produ[cç][aã]o/i,
-                /custo\s*total/i
-            ]);
-        }
-
-        if (sugerido === null) {
-            sugerido = duoEncontrarPrecoCalculadora([
-                /valor\s*unit[aá]rio\s*sugerido/i,
-                /pre[cç]o\s*sugerido/i,
-                /pre[cç]o\s*(?:de\s*)?venda/i
-            ]);
-        }
-
-        return { custo, sugerido };
-    }
-
-    function duoAtualizarPrecosWhatsApp() {
-        const area = document.getElementById(
-            "duoIAWhatsAppResultado"
-        );
-
-        if (!area) return;
-
-        const textarea = area.querySelector(
-            "#duoIAMensagemWhatsApp"
-        );
-
-        if (!textarea) return;
-
-        const valores = duoObterValoresReaisWhatsApp();
-
-        const linhas = textarea.value.split("\n");
-
-        const moeda = valor => Number(valor).toLocaleString(
-            "pt-BR",
-            {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }
-        );
-
-        const custoValido =
-            Number.isFinite(valores.custo) &&
-            valores.custo > 0;
-
-        const sugeridoValido =
-            Number.isFinite(valores.sugerido) &&
-            valores.sugerido > 0;
-
-        textarea.value = linhas.map(linha => {
-            if (
-                /^Custo Produção Total:/i.test(linha)
-            ) {
-                return "Custo Produção Total: " +
-                    (custoValido
-                        ? "R$ " + moeda(valores.custo)
-                        : "AGUARDANDO CALCULO");
-            }
-
-            if (
-                /^Valor Unitário Sugerido:/i.test(linha)
-            ) {
-                return "Valor Unitário Sugerido: " +
-                    (sugeridoValido
-                        ? "R$ " + moeda(valores.sugerido)
-                        : "AGUARDANDO CALCULO");
-            }
-
-            return linha;
-        }).join("\n");
-
-        const botao = area.querySelector("button");
-
-        if (botao) {
-            botao.disabled = !(
-                custoValido && sugeridoValido
-            );
-
-            botao.title = botao.disabled
-                ? "Calcule os valores antes de copiar."
-                : "";
-        }
-    }
-
-    // DUOLAB_WHATSAPP_PRECOS_V2_FIM
-    // DUOLAB_WHATSAPP_PRECO_FINAL_INICIO
-
-    function duoCorrigirResumoWhatsApp() {
-        const textarea = document.getElementById(
-            "duoIAMensagemWhatsApp"
-        );
-
-        if (!textarea) return;
-
-        const area = document.getElementById(
-            "duoIAWhatsAppResultado"
-        );
-
-        if (!area) return;
-
-        const botao = area.querySelector("button");
-
-        function moeda(valor) {
-            return Number(valor).toLocaleString("pt-BR", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
-
-        function extrairMoeda(texto) {
-            const m = String(texto || "").match(
-                /R\$\s*([\d.]+,\d{2})/
-            );
-
-            if (!m) return null;
-
-            const valor = Number(
-                m[1].replace(/\./g, "").replace(",", ".")
-            );
-
-            return Number.isFinite(valor) ? valor : null;
-        }
-
-        function encontrarTotalOrcamento() {
-            const elementos = [
-                ...document.querySelectorAll(
-                    "span, strong, b, output, div, p"
-                )
-            ];
-
-            const candidatos = [];
-
-            for (const elemento of elementos) {
-                if (elemento.children.length > 0) continue;
-
-                const texto = String(
-                    elemento.textContent || ""
-                ).trim();
-
-                if (!texto || texto.length > 120) continue;
-
-                const valor = extrairMoeda(texto);
-
-                if (valor === null || valor <= 0) continue;
-
-                const contexto = String(
-                    elemento.parentElement?.textContent || ""
-                ).slice(0, 250);
-
-                let pontos = 0;
-
-                if (/total\s+do\s+or[cç]amento/i.test(contexto)) {
-                    pontos += 100;
-                }
-
-                if (/valor\s+total/i.test(contexto)) {
-                    pontos += 80;
-                }
-
-                if (/pre[cç]o\s+de\s+venda/i.test(contexto)) {
-                    pontos += 70;
-                }
-
-                if (/total/i.test(contexto)) {
-                    pontos += 20;
-                }
-
-                if (
-                    elemento.closest(
-                        "#duoIAWhatsAppResultado"
-                    )
-                ) {
-                    continue;
-                }
-
-                if (pontos > 0) {
-                    candidatos.push({
-                        valor,
-                        pontos
-                    });
-                }
-            }
-
-            candidatos.sort(
-                (a, b) => b.pontos - a.pontos
-            );
-
-            return candidatos[0]?.valor ?? null;
-        }
-
-        const linhas = textarea.value.split("\n");
-
-        const linhaCusto = linhas.find(linha =>
-            /^Custo Produção Total:/i.test(linha)
-        );
-
-        const custo = extrairMoeda(linhaCusto);
-
-        const precoOrcamento = encontrarTotalOrcamento();
-
-        const valores = typeof duoObterValoresReaisWhatsApp ===
-            "function"
-            ? duoObterValoresReaisWhatsApp()
-            : {};
-
-        const preco = (
-            Number.isFinite(precoOrcamento) &&
-            precoOrcamento > 0
-        )
-            ? precoOrcamento
-            : (
-                Number.isFinite(valores.sugerido) &&
-                valores.sugerido > 0
-                    ? valores.sugerido
-                    : null
-            );
-
-        textarea.value = linhas.map(linha => {
-            if (/^Valor Unitário Sugerido:/i.test(linha)) {
-                return "Valor Unitário Sugerido: " +
-                    (
-                        preco !== null
-                            ? "R$ " + moeda(preco)
-                            : "R$ --"
-                    );
-            }
-
-            if (/^Custo Produção Total:/i.test(linha)) {
-                return "Custo Produção Total: " +
-                    (
-                        custo !== null && custo > 0
-                            ? "R$ " + moeda(custo)
-                            : "R$ --"
-                    );
-            }
-
-            return linha;
-        }).join("\n");
-
-        if (botao) {
-            botao.disabled = !(
-                custo !== null &&
-                custo > 0 &&
-                preco !== null &&
-                preco > 0
-            );
-        }
-    }
-
-    // DUOLAB_WHATSAPP_PRECO_FINAL_FIM
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
