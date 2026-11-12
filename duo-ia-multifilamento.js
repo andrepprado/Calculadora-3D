@@ -1386,7 +1386,19 @@ function lerPeso(texto) {
                 body: JSON.stringify({ url: link })
             });
 
-            const dados = await resposta.json();
+            const conteudo = await resposta.text();
+            let dados;
+
+            try {
+                dados = JSON.parse(conteudo);
+            } catch {
+                throw new Error(
+                    "A API do MakerWorld retornou HTTP " +
+                    resposta.status +
+                    " sem JSON. Verifique o deploy da funcao na Vercel."
+                );
+            }
+
 
             if (!resposta.ok) {
                 throw new Error(

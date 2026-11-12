@@ -1,49 +1,155 @@
 "use strict";
 
-const { chromium } = require("playwright-core");
-const chromiumBinary = require("@sparticuz/chromium").default;
+function corDoRGB(css) {
+    const match = String(css || "").match(
+        /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i
+    );
 
-function identificarCor(css) {
-    const valores = String(css || "").match(/[\d.]+/g);
-    if (!valores || valores.length < 3) return null;
+    if (!match) return null;
 
-    const [r, g, b] = valores.slice(0, 3).map(Number);
+    const r = Number(match[1]);
+    const g = Number(match[2]);
+    const b = Number(match[3]);
+
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
 
-    if (min >= 225 && max - min < 35) return "branco";
-    if (max <= 65) return "preto";
-    if (r > 110 && r > g * 1.4 && r > b * 1.4) return "vermelho";
-    if (b > 90 && b > r * 1.3 && b > g * 1.15) return "azul";
-    if (g > 90 && g > r * 1.25 && g > b * 1.10) return "verde";
-    if (r > 145 && g > 110 && b < 120) return "amarelo";
-    if (r > 140 && b > 100 && g < 145) return "roxo";
-    if (r > 160 && g > 65 && g < 175 && b < 95) return "laranja";
-    if (r > 145 && b > 135 && g > 65) return "rosa";
-    if (min > 65 && max - min < 35) return "cinza";
+    if (min >= 220 && max - min <= 35) return "branco";
+    if (max <= 70) return "preto";
+
+    if (r > 105 && r > g * 1.4 && r > b * 1.4)
+        return "vermelho";
+
+    if (b > 90 && b > r * 1.3 && b > g * 1.15)
+        return "azul";
+
+    if (g > 85 && g > r * 1.25 && g > b * 1.1)
+        return "verde";
+
+    if (r > 140 && g > 105 && b < 125)
+        return "amarelo";
+
+    if (r > 135 && b > 100 && g < 145)
+        return "roxo";
+
+    if (r > 155 && g > 60 && g < 175 && b < 110)
+        return "laranja";
+
+    if (r > 140 && b > 125 && g > 65)
+        return "rosa";
+
+    if (min > 65 && max - min < 40)
+        return "cinza";
 
     return null;
 }
 
-function numero(texto) {
-    return Number(String(texto).replace(",", "."));
+function numero(valor) {
+    return Number(String(valor).replace(",", "."));
+}
+
+function lerPainel(texto, etiquetas) {
+    const conteudo = String(texto || "")
+        .replace(/\s+/g, " ")
+        .trim();
+
+    const placas = conteudo.match(
+        /(\d+)\s*(?:pratos?|plates?|placas?)\b/i
+    );
+
+    const tempo = conteudo.match(
+        /(\d+(?:[.,]\d+)?)\s*h\b/i
+    );
+
+    const total = conteudo.match(
+        /(\d+(?:[.,]\d+)?)\s*g\b/i
+    );
+
+    const filamentos = etiquetas.map(item => {
+        const dados = String(item.texto || "").match(
+            /\b(PLA|PETG|ABS|ASA|TPU)\b\s*[|:]?\s*(\d+(?:[.,]\d+)?)\s*g\b/i
+        );
+
+        if (!dados) return null;
+
+        return {
+            material: dados[1].toUpperCase(),
+            peso: numero(dados[2]),
+            cor: corDoRGB(item.fundo)
+        };
+    }).filter(Boolean);
+
+    if (!filamentos.length) {
+        throw new Error(
+            "The print profile did not expose readable filament labels."
+        );
+    }
+
+    if (filamentos.some(f => !f.cor)) {
+        throw new Error(
+            "One or more filament colors could not be identified."
+        );
+    }
+
+    const soma = filamentos.reduce(
+        (acc, item) => acc + item.peso,
+        0
+    );
+
+    const pesoTotal = total ? numero(total[1]) : soma;
+
+    if (Math.abs(soma - pesoTotal) > 0.11) {
+        throw new Error(
+            "Filament weights do not match the profile total: " +
+            soma + " g versus " + pesoTotal + " g."
+        );
+    }
+
+    if (!tempo) {
+        throw new Error(
+            "Print time was not available in the selected profile."
+        );
+    }
+
+    return {
+        pratos: placas ? Number(placas[1]) : null,
+        tempo: numero(tempo[1]),
+        total: pesoTotal,
+        etiquetas: filamentos
+    };
 }
 
 module.exports = async function handler(req, res) {
     res.setHeader("Cache-Control", "no-store");
-    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    res.setHeader(
+        "Content-Type",
+        "application/json; charset=utf-8"
+    );
+
+    if (req.method === "GET") {
+        return res.status(200).json({
+            status: "ok",
+            service: "duolab-makerworld",
+            runtime: process.version
+        });
+    }
 
     if (req.method !== "POST") {
-        return res.status(405).json({ erro: "Metodo nao permitido." });
+        return res.status(405).json({
+            erro: "Method not allowed."
+        });
     }
 
     let browser = null;
+    let etapa = "validation";
 
     try {
         const link = String(req.body?.url || "").trim();
 
-        if (link.length > 1000) {
-            return res.status(400).json({ erro: "Link muito longo." });
+        if (!link || link.length > 1200) {
+            return res.status(400).json({
+                erro: "Invalid MakerWorld URL."
+            });
         }
 
         const url = new URL(link);
@@ -53,200 +159,183 @@ module.exports = async function handler(req, res) {
             !["makerworld.com", "www.makerworld.com"].includes(
                 url.hostname.toLowerCase()
             ) ||
-            !/^\/(?:pt\/)?models\/\d+(?:[-/]|$)/.test(url.pathname)
+            !/^\/(?:[a-z]{2}\/)?models\/\d+(?:[-/]|$)/i.test(
+                url.pathname
+            )
         ) {
             return res.status(400).json({
-                erro: "Informe um link de modelo do MakerWorld."
+                erro: "Only MakerWorld model URLs are accepted."
             });
         }
 
-        const profileId = url.hash.match(/profileId-(\d+)/i)?.[1];
+        const profileId = url.hash.match(
+            /profileId-(\d+)/i
+        )?.[1] || null;
 
-        browser = await chromium.launch({
-            args: chromiumBinary.args,
-            executablePath: await chromiumBinary.executablePath(),
-            headless: true
+        etapa = "loading browser dependencies";
+
+        // Lazy loading keeps dependency errors inside try/catch.
+        const playwright = require("playwright-core");
+        const pacote = require("@sparticuz/chromium");
+        const chromium = pacote.default || pacote;
+
+        etapa = "launching Chromium";
+
+        browser = await playwright.chromium.launch({
+            args: chromium.args,
+            executablePath: await chromium.executablePath(),
+            headless: true,
+            timeout: 20000
         });
+
+        etapa = "opening MakerWorld";
 
         const page = await browser.newPage({
-            viewport: { width: 1440, height: 1000 },
-            locale: "pt-BR",
-            userAgent:
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                "Chrome/131.0.0.0 Safari/537.36"
+            viewport: {
+                width: 1440,
+                height: 1000
+            },
+            locale: "pt-BR"
         });
 
-        await page.goto(url.href, {
-            waitUntil: "domcontentloaded",
-            timeout: 25000
-        });
+        page.setDefaultTimeout(8000);
 
-        await page.waitForTimeout(2000);
-
-        const perfis = page.getByText(
-            /Partes separadas|separate parts|separated parts/i
+        await page.goto(
+            url.origin + url.pathname + url.search + url.hash,
+            {
+                waitUntil: "domcontentloaded",
+                timeout: 20000
+            }
         );
 
-        const quantidade = await perfis.count();
+        etapa = "locating separate-plate profiles";
+
+        await page.waitForTimeout(1200);
+
+        const candidatos = page.locator(
+            "text=/Partes separadas|separate parts|separated parts/i"
+        );
+
+        const quantidade = await candidatos.count();
 
         if (!quantidade) {
             throw new Error(
-                "Perfil com partes separadas nao encontrado no MakerWorld."
+                "No separate-plate print profile was found."
             );
         }
 
-        let capturado = null;
+        etapa = "hovering print profiles";
 
-        for (let i = 0; i < Math.min(quantidade, 8); i++) {
-            const perfil = perfis.nth(i);
+        let selecionado = null;
+
+        for (let i = 0; i < Math.min(quantidade, 12); i++) {
+            const candidato = candidatos.nth(i);
 
             try {
-                if (!(await perfil.isVisible())) continue;
+                if (!(await candidato.isVisible())) continue;
 
-                await perfil.hover({ timeout: 5000 });
-                await page.waitForTimeout(1000);
+                await candidato.scrollIntoViewIfNeeded();
+                await candidato.hover();
+
+                await page.waitForTimeout(650);
 
                 const painel = await page.evaluate(() => {
-                    const elementos = [
-                        ...document.querySelectorAll(".filaments-block")
-                    ].filter(el => {
-                        const box = el.getBoundingClientRect();
-                        const estilo = getComputedStyle(el);
+                    const visivel = el => {
+                        const rect = el.getBoundingClientRect();
+                        const style = getComputedStyle(el);
 
-                        return (
-                            box.width > 0 &&
-                            box.height > 0 &&
-                            estilo.visibility !== "hidden"
-                        );
-                    });
+                        return rect.width > 0 &&
+                            rect.height > 0 &&
+                            style.visibility !== "hidden" &&
+                            style.display !== "none";
+                    };
 
-                    if (!elementos.length) return null;
+                    const tooltips = [
+                        ...document.querySelectorAll(
+                            '[role="tooltip"], [id*="mouse-over-popover"]'
+                        )
+                    ].filter(visivel);
 
-                    const etiquetas = elementos.map(el => ({
-                        texto: el.innerText.trim(),
-                        fundo:
-                            getComputedStyle(el).backgroundColor ||
-                            el.style.background
-                    }));
+                    for (const tooltip of tooltips) {
+                        const etiquetas = [
+                            ...tooltip.querySelectorAll(
+                                ".filaments-block"
+                            )
+                        ].filter(visivel);
 
-                    const primeiro = elementos[0];
+                        if (!etiquetas.length) continue;
 
-                    let painel = primeiro.closest(
-                        '[role="tooltip"], [class*="popover"], [class*="Popper"]'
-                    );
-
-                    if (!painel) {
-                        painel = primeiro.parentElement?.parentElement
-                            ?.parentElement?.parentElement;
+                        return {
+                            texto: tooltip.innerText,
+                            etiquetas: etiquetas.map(el => ({
+                                texto: el.innerText.trim(),
+                                fundo: getComputedStyle(el)
+                                    .backgroundColor
+                            }))
+                        };
                     }
 
-                    return {
-                        texto: painel?.innerText || "",
-                        etiquetas
-                    };
+                    return null;
                 });
 
-                if (
-                    painel &&
-                    painel.etiquetas.length &&
-                    /A1\s*mini/i.test(painel.texto)
-                ) {
-                    capturado = painel;
+                if (!painel) continue;
+
+                // Never use a profile that does not support A1 mini.
+                if (!/A1\s*mini/i.test(painel.texto)) {
+                    continue;
+                }
+
+                try {
+                    selecionado = lerPainel(
+                        painel.texto,
+                        painel.etiquetas
+                    );
                     break;
+                } catch {
+                    continue;
                 }
             } catch {
                 continue;
             }
         }
 
-        if (!capturado) {
+        if (!selecionado) {
             throw new Error(
-                "Nao foi encontrado um perfil de placas separadas " +
-                "compativel com A1 mini com etiquetas acessiveis."
-            );
-        }
-
-        const texto = capturado.texto.replace(/\s+/g, " ");
-
-        const pratosMatch = texto.match(
-            /(\d+)\s*(?:Pratos?|Plates?|Placas?)/i
-        );
-
-        const tempoMatch = texto.match(
-            /(\d+(?:[.,]\d+)?)\s*h\b/i
-        );
-
-        const pesoMatch = texto.match(
-            /(\d+(?:[.,]\d+)?)\s*g\b/i
-        );
-
-        const etiquetas = capturado.etiquetas.map(item => {
-            const dados = item.texto.match(
-                /\b(PLA|PETG|ABS|ASA|TPU)\b\s*[|:]?\s*(\d+(?:[.,]\d+)?)\s*g\b/i
-            );
-
-            if (!dados) return null;
-
-            return {
-                material: dados[1].toUpperCase(),
-                peso: numero(dados[2]),
-                cor: identificarCor(item.fundo),
-                fundo: item.fundo
-            };
-        }).filter(Boolean);
-
-        if (!etiquetas.length) {
-            throw new Error(
-                "As etiquetas apareceram, mas os pesos nao puderam ser lidos."
-            );
-        }
-
-        if (etiquetas.some(e => !e.cor)) {
-            throw new Error(
-                "Nao foi possivel identificar todas as cores das etiquetas."
-            );
-        }
-
-        const soma = etiquetas.reduce(
-            (total, item) => total + item.peso,
-            0
-        );
-
-        const total = pesoMatch
-            ? numero(pesoMatch[1])
-            : soma;
-
-        if (Math.abs(soma - total) > 0.11) {
-            throw new Error(
-                "Pesos inconsistentes: etiquetas " +
-                soma + " g; total " + total + " g."
-            );
-        }
-
-        if (!tempoMatch) {
-            throw new Error(
-                "Tempo total nao identificado no perfil."
+                "No readable separate-plate profile compatible " +
+                "with the A1 mini was found. MakerWorld may also " +
+                "be blocking automated browser access."
             );
         }
 
         return res.status(200).json({
             origem: "MakerWorld",
-            profileId: profileId || null,
+            profileId,
             impressora: "A1 mini",
-            pratos: pratosMatch ? Number(pratosMatch[1]) : null,
-            tempo: numero(tempoMatch[1]),
-            total,
-            etiquetas
+            ...selecionado
         });
 
     } catch (erro) {
+        console.error(
+            "[DUOLAB MAKERWORLD]",
+            etapa,
+            erro?.stack || erro
+        );
+
         return res.status(422).json({
-            erro: erro.message || "Falha na leitura do MakerWorld."
+            erro: erro?.message || "MakerWorld request failed.",
+            etapa
         });
+
     } finally {
         if (browser) {
-            await browser.close().catch(() => {});
+            try {
+                await browser.close();
+            } catch (erro) {
+                console.warn(
+                    "[DUOLAB MAKERWORLD] Browser cleanup:",
+                    erro?.message
+                );
+            }
         }
     }
 };
