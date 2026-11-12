@@ -208,112 +208,213 @@ module.exports = async function handler(req, res) {
             }
         );
 
-        etapa = "locating separate-plate profiles";
+        etapa = "loading print profiles";
 
-        await page.waitForTimeout(1200);
+        // The "All" tab must remain available even when
+        // no A1 mini-specific profile exists.
+        for (const nome of [/^Todos$/i, /^All$/i]) {
+            try {
+                const aba = page.getByText(nome, { exact: true }).first();
 
-        const candidatos = page.locator(
-            "text=/Partes separadas|separate parts|separated parts/i"
-        );
+                if (await aba.isVisible({ timeout: 1500 })) {
+                    await aba.click({ timeout: 2000 });
+                    break;
+                }
+            } catch {}
+        }
 
-        const quantidade = await candidatos.count();
+        await page.waitForTimeout(1800);
+
+        etapa = "finding available profile cards";
+
+        const tituloSeparado =
+            /Partes separadas|Pe[cç]as separadas|separate parts|separated parts/i;
+
+        let candidatos = page.getByText(tituloSeparado);
+
+        // MakerWorld can render the selected profile with
+        // a dynamic class. Its stable selection class is "active".
+        let quantidade = await candidatos.count();
 
         if (!quantidade) {
+            candidatos = page.locator(".active");
+            quantidade = await candidatos.count();
+        }
+
+        // Wait for client-side rendering before giving up.
+        if (!quantidade) {
+            for (let tentativa = 0; tentativa < 8; tentativa++) {
+                await page.waitForTimeout(1000);
+
+                candidatos = page.getByText(tituloSeparado);
+                quantidade = await candidatos.count();
+
+                if (quantidade) break;
+
+                candidatos = page.locator(".active");
+                quantidade = await candidatos.count();
+
+                if (quantidade) break;
+            }
+        }
+
+        if (!quantidade) {
+            const textoPagina = (
+                await page.locator("body").innerText().catch(() => "")
+            ).slice(0, 600);
+
             throw new Error(
-                "No separate-plate print profile was found."
+                "MakerWorld did not expose print profile cards. " +
+                "Page content: " + textoPagina
             );
         }
 
-        etapa = "hovering print profiles";
+        etapa = "hovering profile cards";
 
-        let selecionado = null;
+        const perfis = [];
 
-        for (let i = 0; i < Math.min(quantidade, 12); i++) {
+        for (let i = 0; i < Math.min(quantidade, 24); i++) {
             const candidato = candidatos.nth(i);
 
             try {
                 if (!(await candidato.isVisible())) continue;
 
-                await candidato.scrollIntoViewIfNeeded();
-                await candidato.hover();
+                await candidato.scrollIntoViewIfNeeded({
+                    timeout: 3000
+                });
 
-                await page.waitForTimeout(650);
+                await candidato.hover({ timeout: 4000 });
+
+                await page.waitForTimeout(750);
 
                 const painel = await page.evaluate(() => {
                     const visivel = el => {
+                        if (!el) return false;
+
                         const rect = el.getBoundingClientRect();
                         const style = getComputedStyle(el);
 
-                        return rect.width > 0 &&
+                        return (
+                            rect.width > 0 &&
                             rect.height > 0 &&
-                            style.visibility !== "hidden" &&
-                            style.display !== "none";
+                            style.display !== "none" &&
+                            style.visibility !== "hidden"
+                        );
                     };
 
-                    const tooltips = [
+                    const etiquetas = [
                         ...document.querySelectorAll(
-                            '[role="tooltip"], [id*="mouse-over-popover"]'
+                            ".filaments-block"
                         )
                     ].filter(visivel);
 
-                    for (const tooltip of tooltips) {
-                        const etiquetas = [
-                            ...tooltip.querySelectorAll(
-                                ".filaments-block"
-                            )
-                        ].filter(visivel);
-
-                        if (!etiquetas.length) continue;
-
-                        return {
-                            texto: tooltip.innerText,
-                            etiquetas: etiquetas.map(el => ({
-                                texto: el.innerText.trim(),
-                                fundo: getComputedStyle(el)
-                                    .backgroundColor
-                            }))
-                        };
+                    if (!etiquetas.length) {
+                        return null;
                     }
 
-                    return null;
+                    const primeiro = etiquetas[0];
+
+                    const painel =
+                        primeiro.closest('[role="tooltip"]') ||
+                        primeiro.closest(
+                            '[id*="mouse-over-popover"]'
+                        ) ||
+                        primeiro.closest('[class*="MuiPopper"]') ||
+                        primeiro.closest('[class*="Popper"]') ||
+                        primeiro.closest(".filaments_detail")
+                            ?.parentElement?.parentElement ||
+                        primeiro.parentElement?.parentElement
+                            ?.parentElement?.parentElement;
+
+                    if (!painel || !visivel(painel)) {
+                        return null;
+                    }
+
+                    return {
+                        texto: painel.innerText || "",
+                        etiquetas: etiquetas.map(el => ({
+                            texto: el.innerText.trim(),
+                            fundo: getComputedStyle(el)
+                                .backgroundColor
+                        }))
+                    };
                 });
 
-                if (!painel) continue;
-
-                // Never use a profile that does not support A1 mini.
-                if (!/A1\s*mini/i.test(painel.texto)) {
+                if (!painel || !painel.etiquetas.length) {
                     continue;
                 }
 
                 try {
-                    selecionado = lerPainel(
+                    const dados = lerPainel(
                         painel.texto,
                         painel.etiquetas
                     );
-                    break;
-                } catch {
-                    continue;
+
+                    const compativelA1Mini =
+                        /A1\s*mini/i.test(painel.texto);
+
+                    const placasSeparadas =
+                        tituloSeparado.test(painel.texto) ||
+                        (dados.pratos !== null && dados.pratos > 1);
+
+                    const score =
+                        (placasSeparadas ? 100 : 0) +
+                        (compativelA1Mini ? 50 : 0) +
+                        (dados.pratos > 1 ? 20 : 0) +
+                        dados.etiquetas.length;
+
+                    perfis.push({
+                        ...dados,
+                        compativelA1Mini,
+                        placasSeparadas,
+                        score
+                    });
+
+                } catch (erro) {
+                    console.warn(
+                        "[DUOLAB MAKERWORLD] Profile skipped:",
+                        erro.message
+                    );
                 }
-            } catch {
-                continue;
+
+            } catch (erro) {
+                console.warn(
+                    "[DUOLAB MAKERWORLD] Hover failed:",
+                    erro.message
+                );
             }
         }
 
-        if (!selecionado) {
+        if (!perfis.length) {
             throw new Error(
-                "No readable separate-plate profile compatible " +
-                "with the A1 mini was found. MakerWorld may also " +
-                "be blocking automated browser access."
+                "No readable print profile was found after hovering. " +
+                "MakerWorld may be restricting automated access."
             );
         }
+
+        // Prefer separate plates and A1 mini compatibility.
+        // If unavailable, accept a general separate-plate profile.
+        perfis.sort((a, b) => b.score - a.score);
+
+        const selecionado = perfis[0];
 
         return res.status(200).json({
             origem: "MakerWorld",
             profileId,
-            impressora: "A1 mini",
-            ...selecionado
+            impressora: selecionado.compativelA1Mini
+                ? "A1 mini"
+                : "General profile",
+            compativelA1Mini:
+                selecionado.compativelA1Mini,
+            perfilGeral:
+                !selecionado.compativelA1Mini,
+            placasSeparadas:
+                selecionado.placasSeparadas,
+            pratos: selecionado.pratos,
+            tempo: selecionado.tempo,
+            total: selecionado.total,
+            etiquetas: selecionado.etiquetas
         });
-
     } catch (erro) {
         console.error(
             "[DUOLAB MAKERWORLD]",
