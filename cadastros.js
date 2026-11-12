@@ -94,71 +94,97 @@ function botao(texto,acao,classe="") {
     b.type="button";
     b.textContent=texto;
     if(classe) b.className=classe;
-    b.addEventListener("click",acao);
+    b.addEventListener("click",function(evento) {
+        evento.preventDefault();
+        evento.stopPropagation();
+        acao();
+    });
     return b;
 }
 
-function confirmarExclusao(tipo,indice,nome,tr) {
-    if(exclusaoPendente) {
+function confirmarExclusao(tipo, identificador, nome, tr) {
+    if (exclusaoPendente) {
         exclusaoPendente.remove();
-        exclusaoPendente=null;
+        exclusaoPendente = null;
     }
 
-    const linha=document.createElement("tr");
-    linha.className="duo-confirmacao-inline";
+    const linha = document.createElement("tr");
+    linha.className = "duo-confirmacao-inline";
 
-    const celula=document.createElement("td");
-    celula.colSpan=4;
-    celula.style.padding="18px";
-    celula.style.background="#fff5ed";
-    celula.style.border="1px solid #efcfb3";
-    celula.style.borderRadius="8px";
+    const celula = document.createElement("td");
+    celula.colSpan = 4;
+    celula.style.cssText =
+        "padding:18px;background:#fff5ed;border:1px solid #efcfb3;";
 
-    const texto=document.createElement("div");
-    texto.textContent="Deseja realmente excluir: "+nome+"?";
-    texto.style.fontWeight="600";
-    texto.style.marginBottom="12px";
-    texto.style.color="#633900";
+    const titulo = document.createElement("strong");
+    titulo.textContent = "Confirmar exclusão: " + nome;
 
-    const acoes=document.createElement("div");
-    acoes.style.display="flex";
-    acoes.style.gap="10px";
-    acoes.style.flexWrap="wrap";
+    const acoes = document.createElement("div");
+    acoes.style.cssText =
+        "display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;";
 
-    const excluir=botao("Sim, excluir",()=>{
-        if(tipo==="filamento") {
+    const confirmar = document.createElement("button");
+    confirmar.type = "button";
+    confirmar.textContent = "Sim, excluir";
+    confirmar.style.cssText =
+        "background:#b42318;color:white;padding:10px 16px;";
+
+    const cancelar = document.createElement("button");
+    cancelar.type = "button";
+    cancelar.textContent = "Cancelar";
+
+    confirmar.addEventListener("click", function(evento) {
+        evento.preventDefault();
+        evento.stopPropagation();
+
+        if (tipo === "filamento") {
+            const indice = fil.findIndex(f => f.nome === identificador);
+
+            if (indice < 0) {
+                mensagem("Filamento nao encontrado.","erro");
+                return;
+            }
+
             fil.splice(indice,1);
-            editF=-1;
+            editF = -1;
             $("formFil").reset();
         } else {
-            adi=adi.filter(a=>a.id!==indice);
-            editA=null;
+            const indice = adi.findIndex(a => a.id === identificador);
+
+            if (indice < 0) {
+                mensagem("Adicional nao encontrado.","erro");
+                return;
+            }
+
+            adi.splice(indice,1);
+            editA = null;
             $("formAdi").reset();
         }
-        exclusaoPendente=null;
-        salvar("Item excluido com sucesso.");
+
+        exclusaoPendente = null;
+        salvar("Item excluido com sucesso: " + nome);
     });
 
-    excluir.style.background="#b42318";
-    excluir.style.color="#fff";
-
-    const cancelar=botao("Cancelar",()=>{
+    cancelar.addEventListener("click", function(evento) {
+        evento.preventDefault();
+        evento.stopPropagation();
         linha.remove();
-        exclusaoPendente=null;
+        exclusaoPendente = null;
         mensagem("Exclusao cancelada.");
     });
 
-    cancelar.style.background="#e5e7eb";
-    cancelar.style.color="#222";
-
-    acoes.append(excluir,cancelar);
-    celula.append(texto,acoes);
+    acoes.append(confirmar,cancelar);
+    celula.append(titulo,acoes);
     linha.appendChild(celula);
-    tr.insertAdjacentElement("afterend",linha);
-    exclusaoPendente=linha;
-    linha.scrollIntoView({behavior:"smooth",block:"nearest"});
-}
 
+    tr.insertAdjacentElement("afterend",linha);
+    exclusaoPendente = linha;
+
+    linha.scrollIntoView({
+        behavior:"smooth",
+        block:"nearest"
+    });
+}
 function render() {
     const tabelaF=$("tabelaFil");
     const tabelaA=$("tabelaAdi");
@@ -197,7 +223,7 @@ function render() {
                 mensagem("Editando filamento: "+f.nome);
             }),
             botao("Excluir",()=>{
-                confirmarExclusao("filamento",i,f.nome,tr);
+                confirmarExclusao("filamento",f.nome,f.nome,tr);
             })
         );
 
