@@ -560,6 +560,14 @@ function lerPeso(texto) {
             }
 
             const grupos = identificarEtiquetas(canvas);
+            console.table(grupos.map(g => ({
+                cor: g.cor,
+                x: g.x,
+                yInicial: g.yInicial,
+                yFinal: g.yFinal,
+                largura: g.largura,
+                contagem: g.contagem
+            })));
             const etiquetas = [];
 
             // Reconhece cada etiqueta individualmente.
@@ -583,6 +591,7 @@ function lerPeso(texto) {
                 );
 
                 const texto = await lerOCR(worker, crop);
+                console.log("[DUOLAB IA] Etiqueta OCR:", grupo.cor, JSON.stringify(texto));
                 const peso = lerPeso(texto);
 
                 if (peso === null || peso <= 0) continue;
