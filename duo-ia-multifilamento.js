@@ -1546,6 +1546,404 @@ function lerPeso(texto) {
         }
     }
     // DUOLAB_OCR_PLACAS_V2
+    // DUOLAB_V4_HELPERS_RESTORED_INICIO
+
+    function duoV4Minutos(texto) {
+        const t = String(texto || "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        let m = t.match(
+            /(\d{1,3})\s*[.,]\s*(\d{1,2})\s*h\b/i
+        );
+
+        if (m) {
+            return Math.round(
+                Number(m[1] + "." + m[2]) * 60
+            );
+        }
+
+        m = t.match(
+            /(\d{1,3})\s*h\s*(\d{1,2})\s*(?:min|m)\b/i
+        );
+
+        if (m) {
+            return Number(m[1]) * 60 + Number(m[2]);
+        }
+
+        m = t.match(/(\d{1,3})\s*h\b/i);
+
+        if (m) return Number(m[1]) * 60;
+
+        m = t.match(/(\d{1,3})\s*min\b/i);
+
+        return m ? Number(m[1]) : null;
+    }
+
+    function duoV4Peso(texto) {
+        const m = String(texto || "").match(
+            /(\d+(?:[.,]\d+)?)\s*g\b/i
+        );
+
+        return m
+            ? Number(m[1].replace(",", "."))
+            : null;
+    }
+
+    function duoV4Recorte(canvas, x, y, w, h, escala = 4) {
+        x = Math.max(0, Math.floor(x));
+        y = Math.max(0, Math.floor(y));
+
+        w = Math.min(
+            canvas.width - x,
+            Math.ceil(w)
+        );
+
+        h = Math.min(
+            canvas.height - y,
+            Math.ceil(h)
+        );
+
+        if (w <= 0 || h <= 0) return null;
+
+        const destino = document.createElement("canvas");
+
+        destino.width = w * escala;
+        destino.height = h * escala;
+
+        destino.getContext("2d").drawImage(
+            canvas,
+            x, y, w, h,
+            0, 0,
+            destino.width,
+            destino.height
+        );
+
+        return destino;
+    }
+
+    function duoV4CorEtiqueta(canvas, x, y, w, h) {
+        const ctx = canvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+        x = Math.max(0, Math.floor(x));
+        y = Math.max(0, Math.floor(y));
+
+        w = Math.min(
+            canvas.width - x,
+            Math.ceil(w)
+        );
+
+        h = Math.min(
+            canvas.height - y,
+            Math.ceil(h)
+        );
+
+        if (w < 2 || h < 2) return null;
+
+        const pixels = ctx.getImageData(
+            x, y, w, h
+        ).data;
+
+        const contagem = new Map();
+
+        for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i];
+            const g = pixels[i + 1];
+            const b = pixels[i + 2];
+
+            let cor = null;
+
+            if (r > 225 && g > 225 && b > 225) {
+                cor = "branco";
+            } else if (
+                r < 35 &&
+                g < 35 &&
+                b < 35
+            ) {
+                cor = "preto";
+            } else if (
+                r > 110 &&
+                r > g * 1.6 &&
+                r > b * 1.6
+            ) {
+                cor = "vermelho";
+            } else if (
+                r > 95 &&
+                g > 45 &&
+                r > g * 1.25 &&
+                g > b * 1.15
+            ) {
+                cor = "marrom";
+            } else if (
+                r > 140 &&
+                g > 100 &&
+                b > 55 &&
+                r > g &&
+                g > b
+            ) {
+                cor = "bege";
+            } else if (
+                b > r * 1.4 &&
+                b > g * 1.2
+            ) {
+                cor = "azul";
+            } else if (
+                g > r * 1.3 &&
+                g > b * 1.15
+            ) {
+                cor = "verde";
+            }
+
+            if (cor) {
+                contagem.set(
+                    cor,
+                    (contagem.get(cor) || 0) + 1
+                );
+            }
+        }
+
+        return [...contagem.entries()]
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    }
+
+    async function duoV4LerPlacas(worker, canvas) {
+        const largura = canvas.width;
+        const altura = canvas.height;
+
+        await worker.setParameters({
+            tessedit_pageseg_mode: "11"
+        });
+
+        const geral = await worker.recognize(
+            duoV4Recorte(
+                canvas,
+                0,
+                0,
+                largura,
+                altura
+            )
+        );
+
+        const textoGeral = geral.data?.text || "";
+
+        const cabecalhos = (geral.data?.lines || [])
+            .filter(linha =>
+                /\b(?:placa|mesa)\s*[- ]*\d+/i.test(
+                    linha.text
+                ) ||
+                /\b(?:body|antlers|eyes|nose|hat)\b/i.test(
+                    linha.text
+                )
+            )
+            .map(linha => ({
+                texto: linha.text,
+                y: linha.bbox.y0 / 4
+            }))
+            .sort((a, b) => a.y - b.y)
+            .filter((item, indice, lista) =>
+                indice === 0 ||
+                item.y - lista[indice - 1].y > 18
+            );
+
+        const quantidadeEsperada = Number(
+            textoGeral.match(
+                /placas?\s*de\s*impress[aã]o\s*\((\d+)\)/i
+            )?.[1] ||
+            textoGeral.match(
+                /(\d+)\s*placas?/i
+            )?.[1] ||
+            0
+        );
+
+        if (!cabecalhos.length) {
+            throw new Error(
+                "NAO FOI POSSIVEL IDENTIFICAR OS CABECALHOS " +
+                "DAS PLACAS. ENVIE O PRINT COM TODAS AS PLACAS."
+            );
+        }
+
+        const placas = [];
+
+        for (let i = 0; i < cabecalhos.length; i++) {
+            const y0 = cabecalhos[i].y;
+
+            const y1 = cabecalhos[i + 1]
+                ? cabecalhos[i + 1].y
+                : Math.min(
+                    altura,
+                    y0 + (
+                        i > 0
+                            ? y0 - cabecalhos[i - 1].y
+                            : altura * 0.20
+                    )
+                );
+
+            const recorte = duoV4Recorte(
+                canvas,
+                0,
+                y0,
+                largura,
+                Math.max(25, y1 - y0)
+            );
+
+            if (!recorte) continue;
+
+            await worker.setParameters({
+                tessedit_pageseg_mode: "6"
+            });
+
+            const leitura = await worker.recognize(recorte);
+            const texto = leitura.data?.text || "";
+
+            const minutos = duoV4Minutos(texto);
+            const peso = duoV4Peso(texto);
+
+            if (
+                !Number.isFinite(minutos) ||
+                minutos <= 0 ||
+                !Number.isFinite(peso) ||
+                peso <= 0
+            ) {
+                console.warn(
+                    "[DUOLAB OCR] Placa incompleta:",
+                    i + 1,
+                    texto
+                );
+
+                continue;
+            }
+
+            const palavras = leitura.data?.words || [];
+
+            const palavraMaterial = palavras.find(p =>
+                /\b(?:PLA|PETG|ABS|ASA|TPU)\b/i.test(
+                    p.text || ""
+                )
+            );
+
+            let cor = null;
+
+            if (palavraMaterial?.bbox) {
+                const box = palavraMaterial.bbox;
+
+                const x = box.x0 / 4;
+                const y = y0 + box.y0 / 4;
+                const h = Math.max(
+                    10,
+                    (box.y1 - box.y0) / 4
+                );
+
+                cor = duoV4CorEtiqueta(
+                    canvas,
+                    x + 2,
+                    y + 2,
+                    Math.max(12, h * 1.5),
+                    Math.max(8, h - 4)
+                );
+            }
+
+            if (!cor) {
+                cor = duoV4CorEtiqueta(
+                    canvas,
+                    largura * 0.15,
+                    y0 + (y1 - y0) * 0.55,
+                    largura * 0.10,
+                    Math.max(10, (y1 - y0) * 0.14)
+                );
+            }
+
+            if (!cor) {
+                throw new Error(
+                    "COR DA PLACA " + (i + 1) +
+                    " NAO IDENTIFICADA."
+                );
+            }
+
+            placas.push({
+                material: texto.match(
+                    /\b(PLA|PETG|ABS|ASA|TPU)\b/i
+                )?.[1]?.toUpperCase() || "PLA",
+                cor,
+                peso,
+                minutos
+            });
+        }
+
+        if (
+            quantidadeEsperada > 0 &&
+            placas.length !== quantidadeEsperada
+        ) {
+            throw new Error(
+                "LEITURA INCOMPLETA: " +
+                placas.length +
+                " DE " +
+                quantidadeEsperada +
+                " PLACAS IDENTIFICADAS."
+            );
+        }
+
+        if (!placas.length) {
+            throw new Error(
+                "NENHUMA PLACA FOI LIDA COMPLETAMENTE."
+            );
+        }
+
+        return placas;
+    }
+
+    function duoV4AtualizarWhatsApp() {
+        const textarea = document.getElementById(
+            "duoIAMensagemWhatsApp"
+        );
+
+        if (!textarea) return;
+
+        function extrairValor(texto) {
+            const m = String(texto || "").match(
+                /R\$\s*([\d.]+,\d{2})/
+            );
+
+            return m ? m[1] : null;
+        }
+
+        const custo = extrairValor(
+            document.getElementById(
+                "resCustoTotal"
+            )?.textContent
+        );
+
+        const sugerido = extrairValor(
+            document.getElementById(
+                "resVendaUnid"
+            )?.textContent
+        );
+
+        textarea.value = textarea.value
+            .split("\n")
+            .map(linha => {
+                if (/^Custo Produção Total:/i.test(linha)) {
+                    return (
+                        "Custo Produção Total: " +
+                        (custo ? "R$ " + custo : "R$ --")
+                    );
+                }
+
+                if (/^Valor Unitário Sugerido:/i.test(linha)) {
+                    return (
+                        "Valor Unitário Sugerido: " +
+                        (sugerido ? "R$ " + sugerido : "R$ --")
+                    );
+                }
+
+                return linha;
+            })
+            .join("\n");
+    }
+
+    // DUOLAB_V4_HELPERS_RESTORED_FIM
+
     async function analisarImagemDuolab() {
         const arquivo = $("duoIAImagem")?.files?.[0];
         const link = $("duoIALink")?.value.trim() || "";
