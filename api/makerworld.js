@@ -1,21 +1,77 @@
 "use strict";
 
-function corDoRGB(css) {
-    const match = String(css || "").match(
-        /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i
-    );
+const CORES = {
+    branco: ["white", "branco"],
+    preto: ["black", "preto"],
+    vermelho: ["red", "vermelho"],
+    azul: ["blue", "azul"],
+    verde: ["green", "verde"],
+    amarelo: ["yellow", "amarelo"],
+    laranja: ["orange", "laranja"],
+    rosa: ["pink", "rosa"],
+    roxo: ["purple", "roxo"],
+    cinza: ["gray", "grey", "cinza"],
+    marrom: ["brown", "marrom"],
+    bege: ["beige", "bege"]
+};
 
-    if (!match) return null;
+function valor(obj, nomes) {
+    for (const nome of nomes) {
+        const v = obj?.[nome];
 
-    const r = Number(match[1]);
-    const g = Number(match[2]);
-    const b = Number(match[3]);
+        if (v !== undefined && v !== null && v !== "") {
+            return v;
+        }
+    }
+
+    return null;
+}
+
+function numero(v) {
+    if (typeof v === "number") return v;
+
+    if (typeof v !== "string") return NaN;
+
+    const match = v.replace(",", ".").match(/-?\d+(?:\.\d+)?/);
+
+    return match ? Number(match[0]) : NaN;
+}
+
+function corRGB(v) {
+    if (!v) return null;
+
+    const texto = String(v).trim().toLowerCase();
+
+    for (const [cor, aliases] of Object.entries(CORES)) {
+        if (aliases.some(alias => texto === alias)) return cor;
+    }
+
+    let r, g, b;
+
+    const hex = texto.match(/^#?([0-9a-f]{6})$/i);
+
+    if (hex) {
+        const n = parseInt(hex[1], 16);
+        r = (n >> 16) & 255;
+        g = (n >> 8) & 255;
+        b = n & 255;
+    } else {
+        const rgb = texto.match(
+            /rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i
+        );
+
+        if (!rgb) return null;
+
+        r = Number(rgb[1]);
+        g = Number(rgb[2]);
+        b = Number(rgb[3]);
+    }
 
     const max = Math.max(r, g, b);
     const min = Math.min(r, g, b);
 
-    if (min >= 220 && max - min <= 35) return "branco";
-    if (max <= 70) return "preto";
+    if (min >= 215 && max - min < 40) return "branco";
+    if (max <= 75) return "preto";
 
     if (r > 105 && r > g * 1.4 && r > b * 1.4)
         return "vermelho";
@@ -29,14 +85,14 @@ function corDoRGB(css) {
     if (r > 140 && g > 105 && b < 125)
         return "amarelo";
 
-    if (r > 135 && b > 100 && g < 145)
-        return "roxo";
-
-    if (r > 155 && g > 60 && g < 175 && b < 110)
+    if (r > 150 && g > 55 && g < 180 && b < 110)
         return "laranja";
 
-    if (r > 140 && b > 125 && g > 65)
+    if (r > 140 && b > 130 && g > 65)
         return "rosa";
+
+    if (r > 115 && b > 100 && g < 145)
+        return "roxo";
 
     if (min > 65 && max - min < 40)
         return "cinza";
@@ -44,78 +100,233 @@ function corDoRGB(css) {
     return null;
 }
 
-function numero(valor) {
-    return Number(String(valor).replace(",", "."));
+function lerFilamentos(perfil) {
+    const fontes = [
+        perfil.instanceFilaments,
+        perfil.filaments,
+        perfil.materials,
+        perfil.filamentList
+    ];
+
+    const lista = fontes.find(Array.isArray) || [];
+    const encontrados = [];
+
+    for (const item of lista) {
+        if (!item || typeof item !== "object") continue;
+
+        const materialOriginal = valor(item, [
+            "type",
+            "material",
+            "filamentType",
+            "filament_type",
+            "materialType"
+        ]);
+
+        const corOriginal = valor(item, [
+            "color",
+            "colour",
+            "hex",
+            "colorHex",
+            "filamentColor",
+            "filament_color",
+            "colorValue"
+        ]);
+
+        const pesoOriginal = valor(item, [
+            "grams",
+            "weight_grams",
+            "weightGrams",
+            "weight",
+            "filamentWeight",
+            "filament_weight",
+            "usedWeight",
+            "usedGrams"
+        ]);
+
+        const material = String(
+            materialOriginal || ""
+        ).toUpperCase().match(
+            /\b(PLA|PETG|ABS|ASA|TPU)\b/
+        )?.[1] || null;
+
+        const cor = corRGB(corOriginal);
+        const peso = numero(pesoOriginal);
+
+        if (
+            material &&
+            cor &&
+            Number.isFinite(peso) &&
+            peso > 0
+        ) {
+            encontrados.push({
+                material,
+                cor,
+                peso
+            });
+        }
+    }
+
+    return encontrados;
 }
 
-function lerPainel(texto, etiquetas) {
-    const conteudo = String(texto || "")
-        .replace(/\s+/g, " ")
-        .trim();
+function lerTempo(perfil) {
+    const segundos = valor(perfil, [
+        "printSeconds",
+        "print_seconds",
+        "predictionSeconds",
+        "estimatedSeconds",
+        "timeSeconds",
+        "time_seconds"
+    ]);
 
-    const placas = conteudo.match(
-        /(\d+)\s*(?:pratos?|plates?|placas?)\b/i
-    );
-
-    const tempo = conteudo.match(
-        /(\d+(?:[.,]\d+)?)\s*h\b/i
-    );
-
-    const total = conteudo.match(
-        /(\d+(?:[.,]\d+)?)\s*g\b/i
-    );
-
-    const filamentos = etiquetas.map(item => {
-        const dados = String(item.texto || "").match(
-            /\b(PLA|PETG|ABS|ASA|TPU)\b\s*[|:]?\s*(\d+(?:[.,]\d+)?)\s*g\b/i
-        );
-
-        if (!dados) return null;
-
-        return {
-            material: dados[1].toUpperCase(),
-            peso: numero(dados[2]),
-            cor: corDoRGB(item.fundo)
-        };
-    }).filter(Boolean);
-
-    if (!filamentos.length) {
-        throw new Error(
-            "The print profile did not expose readable filament labels."
-        );
+    if (segundos !== null) {
+        const n = numero(segundos);
+        return Number.isFinite(n) && n > 0
+            ? n / 3600
+            : null;
     }
 
-    if (filamentos.some(f => !f.cor)) {
-        throw new Error(
-            "One or more filament colors could not be identified."
-        );
+    const horas = valor(perfil, [
+        "printHours",
+        "print_hours",
+        "timeHours"
+    ]);
+
+    if (horas !== null) {
+        const n = numero(horas);
+        return Number.isFinite(n) && n > 0
+            ? n
+            : null;
     }
 
-    const soma = filamentos.reduce(
-        (acc, item) => acc + item.peso,
+    const texto = String(valor(perfil, [
+        "printTime",
+        "print_time",
+        "prediction",
+        "estimatedTime"
+    ]) || "");
+
+    const decimal = texto.match(
+        /(\d+(?:[.,]\d+)?)\s*(?:h|hours?|horas?)\b/i
+    );
+
+    if (decimal) return numero(decimal[1]);
+
+    const relogio = texto.match(
+        /^(\d{1,3}):(\d{2}):(\d{2})$/
+    );
+
+    if (relogio) {
+        return Number(relogio[1]) +
+            Number(relogio[2]) / 60 +
+            Number(relogio[3]) / 3600;
+    }
+
+    return null;
+}
+
+function lerPlacas(perfil) {
+    const placas = valor(perfil, [
+        "plates",
+        "plateList",
+        "plate_list"
+    ]);
+
+    if (Array.isArray(placas)) return placas.length;
+
+    const quantidade = valor(perfil, [
+        "plateCount",
+        "plate_count",
+        "platesCount"
+    ]);
+
+    const n = numero(quantidade);
+
+    return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function compatibilidade(perfil) {
+    const campos = [
+        perfil.printer,
+        perfil.printerName,
+        perfil.printerModels,
+        perfil.compatiblePrinters,
+        perfil.compatiblePrinterModels,
+        perfil.printerModel
+    ];
+
+    const texto = JSON.stringify(campos).toLowerCase();
+
+    return /a1\s*mini/.test(texto);
+}
+
+function prepararPerfil(perfil) {
+    const etiquetas = lerFilamentos(perfil);
+
+    if (!etiquetas.length) return null;
+
+    const tempo = lerTempo(perfil);
+    const pratos = lerPlacas(perfil);
+
+    if (!Number.isFinite(tempo) || tempo <= 0) return null;
+
+    const soma = etiquetas.reduce(
+        (s, item) => s + item.peso,
         0
     );
 
-    const pesoTotal = total ? numero(total[1]) : soma;
+    const pesoInformado = valor(perfil, [
+        "weightGrams",
+        "weight_grams",
+        "totalWeight",
+        "total_weight",
+        "totalGrams"
+    ]);
 
-    if (Math.abs(soma - pesoTotal) > 0.11) {
-        throw new Error(
-            "Filament weights do not match the profile total: " +
-            soma + " g versus " + pesoTotal + " g."
-        );
+    const total = pesoInformado === null
+        ? soma
+        : numero(pesoInformado);
+
+    if (
+        !Number.isFinite(total) ||
+        Math.abs(soma - total) > 0.11
+    ) {
+        return null;
     }
 
-    if (!tempo) {
-        throw new Error(
-            "Print time was not available in the selected profile."
-        );
-    }
+    const titulo = String(
+        valor(perfil, ["title", "name"]) || ""
+    );
+
+    const separado = (
+        /partes separadas|pe[cç]as separadas|separated parts|separate parts/i.test(
+            titulo
+        ) ||
+        (pratos !== null && pratos > 1)
+    );
+
+    const a1mini = compatibilidade(perfil);
 
     return {
-        pratos: placas ? Number(placas[1]) : null,
-        tempo: numero(tempo[1]),
-        total: pesoTotal,
-        etiquetas: filamentos
+        id: String(
+            valor(perfil, [
+                "profileId",
+                "profile_id",
+                "id"
+            ]) || ""
+        ),
+        titulo,
+        impressora: a1mini ? "A1 mini" : "General profile",
+        compativelA1Mini: a1mini,
+        placasSeparadas: separado,
+        pratos,
+        tempo,
+        total,
+        etiquetas,
+        prioridade:
+            (separado ? 100 : 0) +
+            (a1mini ? 50 : 0) +
+            etiquetas.length
     };
 }
 
@@ -130,7 +341,7 @@ module.exports = async function handler(req, res) {
         return res.status(200).json({
             status: "ok",
             service: "duolab-makerworld",
-            runtime: process.version
+            mode: "metadata-api"
         });
     }
 
@@ -140,31 +351,35 @@ module.exports = async function handler(req, res) {
         });
     }
 
-    let browser = null;
-    let etapa = "validation";
-
     try {
-        const link = String(req.body?.url || "").trim();
+        const entrada = String(req.body?.url || "").trim();
 
-        if (!link || link.length > 1200) {
+        if (!entrada || entrada.length > 1200) {
             return res.status(400).json({
-                erro: "Invalid MakerWorld URL."
+                erro: "Invalid model URL."
             });
         }
 
-        const url = new URL(link);
+        const url = new URL(entrada);
 
         if (
             url.protocol !== "https:" ||
             !["makerworld.com", "www.makerworld.com"].includes(
                 url.hostname.toLowerCase()
-            ) ||
-            !/^\/(?:[a-z]{2}\/)?models\/\d+(?:[-/]|$)/i.test(
-                url.pathname
             )
         ) {
             return res.status(400).json({
-                erro: "Only MakerWorld model URLs are accepted."
+                erro: "Only MakerWorld URLs are supported."
+            });
+        }
+
+        const modelo = url.pathname.match(
+            /\/models\/(\d+)/i
+        )?.[1];
+
+        if (!modelo) {
+            return res.status(400).json({
+                erro: "Model ID not found in URL."
             });
         }
 
@@ -172,275 +387,103 @@ module.exports = async function handler(req, res) {
             /profileId-(\d+)/i
         )?.[1] || null;
 
-        etapa = "loading browser dependencies";
+        const endpoint =
+            "https://api.bambulab.com/v1/design-service/design/" +
+            modelo;
 
-        // Lazy loading keeps dependency errors inside try/catch.
-        const playwright = require("playwright-core");
-        const pacote = await import("@sparticuz/chromium");
-        const chromium = pacote.default || pacote;
+        const controller = new AbortController();
 
-        etapa = "launching Chromium";
-
-        browser = await playwright.chromium.launch({
-            args: chromium.args,
-            executablePath: await chromium.executablePath(),
-            headless: true,
-            timeout: 20000
-        });
-
-        etapa = "opening MakerWorld";
-
-        const page = await browser.newPage({
-            viewport: {
-                width: 1440,
-                height: 1000
-            },
-            locale: "pt-BR"
-        });
-
-        page.setDefaultTimeout(8000);
-
-        await page.goto(
-            url.origin + url.pathname + url.search + url.hash,
-            {
-                waitUntil: "domcontentloaded",
-                timeout: 20000
-            }
+        const timeout = setTimeout(
+            () => controller.abort(),
+            18000
         );
 
-        etapa = "loading print profiles";
+        let resposta;
 
-        // The "All" tab must remain available even when
-        // no A1 mini-specific profile exists.
-        for (const nome of [/^Todos$/i, /^All$/i]) {
-            try {
-                const aba = page.getByText(nome, { exact: true }).first();
-
-                if (await aba.isVisible({ timeout: 1500 })) {
-                    await aba.click({ timeout: 2000 });
-                    break;
-                }
-            } catch {}
+        try {
+            resposta = await fetch(endpoint, {
+                headers: {
+                    "Accept": "application/json"
+                },
+                signal: controller.signal
+            });
+        } finally {
+            clearTimeout(timeout);
         }
 
-        await page.waitForTimeout(1800);
-
-        etapa = "finding available profile cards";
-
-        const tituloSeparado =
-            /Partes separadas|Pe[cç]as separadas|separate parts|separated parts/i;
-
-        let candidatos = page.getByText(tituloSeparado);
-
-        // MakerWorld can render the selected profile with
-        // a dynamic class. Its stable selection class is "active".
-        let quantidade = await candidatos.count();
-
-        if (!quantidade) {
-            candidatos = page.locator(".active");
-            quantidade = await candidatos.count();
-        }
-
-        // Wait for client-side rendering before giving up.
-        if (!quantidade) {
-            for (let tentativa = 0; tentativa < 8; tentativa++) {
-                await page.waitForTimeout(1000);
-
-                candidatos = page.getByText(tituloSeparado);
-                quantidade = await candidatos.count();
-
-                if (quantidade) break;
-
-                candidatos = page.locator(".active");
-                quantidade = await candidatos.count();
-
-                if (quantidade) break;
-            }
-        }
-
-        if (!quantidade) {
-            const textoPagina = (
-                await page.locator("body").innerText().catch(() => "")
-            ).slice(0, 600);
-
+        if (!resposta.ok) {
             throw new Error(
-                "MakerWorld did not expose print profile cards. " +
-                "Page content: " + textoPagina
+                "Bambu metadata API returned HTTP " +
+                resposta.status
             );
         }
 
-        etapa = "hovering profile cards";
+        const dados = await resposta.json();
 
-        const perfis = [];
+        const raiz = dados?.data?.design ||
+            dados?.data ||
+            dados;
 
-        for (let i = 0; i < Math.min(quantidade, 24); i++) {
-            const candidato = candidatos.nth(i);
+        const instancias = valor(raiz, [
+            "instances",
+            "printProfiles",
+            "profiles"
+        ]);
 
-            try {
-                if (!(await candidato.isVisible())) continue;
-
-                await candidato.scrollIntoViewIfNeeded({
-                    timeout: 3000
-                });
-
-                await candidato.hover({ timeout: 4000 });
-
-                await page.waitForTimeout(750);
-
-                const painel = await page.evaluate(() => {
-                    const visivel = el => {
-                        if (!el) return false;
-
-                        const rect = el.getBoundingClientRect();
-                        const style = getComputedStyle(el);
-
-                        return (
-                            rect.width > 0 &&
-                            rect.height > 0 &&
-                            style.display !== "none" &&
-                            style.visibility !== "hidden"
-                        );
-                    };
-
-                    const etiquetas = [
-                        ...document.querySelectorAll(
-                            ".filaments-block"
-                        )
-                    ].filter(visivel);
-
-                    if (!etiquetas.length) {
-                        return null;
-                    }
-
-                    const primeiro = etiquetas[0];
-
-                    const painel =
-                        primeiro.closest('[role="tooltip"]') ||
-                        primeiro.closest(
-                            '[id*="mouse-over-popover"]'
-                        ) ||
-                        primeiro.closest('[class*="MuiPopper"]') ||
-                        primeiro.closest('[class*="Popper"]') ||
-                        primeiro.closest(".filaments_detail")
-                            ?.parentElement?.parentElement ||
-                        primeiro.parentElement?.parentElement
-                            ?.parentElement?.parentElement;
-
-                    if (!painel || !visivel(painel)) {
-                        return null;
-                    }
-
-                    return {
-                        texto: painel.innerText || "",
-                        etiquetas: etiquetas.map(el => ({
-                            texto: el.innerText.trim(),
-                            fundo: getComputedStyle(el)
-                                .backgroundColor
-                        }))
-                    };
-                });
-
-                if (!painel || !painel.etiquetas.length) {
-                    continue;
-                }
-
-                try {
-                    const dados = lerPainel(
-                        painel.texto,
-                        painel.etiquetas
-                    );
-
-                    const compativelA1Mini =
-                        /A1\s*mini/i.test(painel.texto);
-
-                    const placasSeparadas =
-                        tituloSeparado.test(painel.texto) ||
-                        (dados.pratos !== null && dados.pratos > 1);
-
-                    const score =
-                        (placasSeparadas ? 100 : 0) +
-                        (compativelA1Mini ? 50 : 0) +
-                        (dados.pratos > 1 ? 20 : 0) +
-                        dados.etiquetas.length;
-
-                    perfis.push({
-                        ...dados,
-                        compativelA1Mini,
-                        placasSeparadas,
-                        score
-                    });
-
-                } catch (erro) {
-                    console.warn(
-                        "[DUOLAB MAKERWORLD] Profile skipped:",
-                        erro.message
-                    );
-                }
-
-            } catch (erro) {
-                console.warn(
-                    "[DUOLAB MAKERWORLD] Hover failed:",
-                    erro.message
-                );
-            }
+        if (!Array.isArray(instancias)) {
+            throw new Error(
+                "The metadata API did not return a print profile list."
+            );
         }
+
+        const perfis = instancias
+            .map(prepararPerfil)
+            .filter(Boolean);
 
         if (!perfis.length) {
-            throw new Error(
-                "No readable print profile was found after hovering. " +
-                "MakerWorld may be restricting automated access."
-            );
+            return res.status(422).json({
+                erro:
+                    "Model metadata loaded, but filament colors, " +
+                    "weights or print times were incomplete. " +
+                    "Use the slicer screenshot for this profile.",
+                modelId: modelo,
+                profilesFound: instancias.length
+            });
         }
 
-        // Prefer separate plates and A1 mini compatibility.
-        // If unavailable, accept a general separate-plate profile.
-        perfis.sort((a, b) => b.score - a.score);
+        perfis.sort((a, b) => {
+            const aSelecionado = a.id === profileId ? 1 : 0;
+            const bSelecionado = b.id === profileId ? 1 : 0;
 
-        const selecionado = perfis[0];
+            return (
+                (bSelecionado - aSelecionado) * 1000 +
+                b.prioridade - a.prioridade
+            );
+        });
+
+        const escolhido = perfis[0];
 
         return res.status(200).json({
-            origem: "MakerWorld",
-            profileId,
-            impressora: selecionado.compativelA1Mini
-                ? "A1 mini"
-                : "General profile",
-            compativelA1Mini:
-                selecionado.compativelA1Mini,
-            perfilGeral:
-                !selecionado.compativelA1Mini,
-            placasSeparadas:
-                selecionado.placasSeparadas,
-            pratos: selecionado.pratos,
-            tempo: selecionado.tempo,
-            total: selecionado.total,
-            etiquetas: selecionado.etiquetas
+            origem: "Bambu metadata API",
+            profileId: escolhido.id || profileId,
+            impressora: escolhido.impressora,
+            compativelA1Mini: escolhido.compativelA1Mini,
+            perfilGeral: !escolhido.compativelA1Mini,
+            placasSeparadas: escolhido.placasSeparadas,
+            pratos: escolhido.pratos,
+            tempo: escolhido.tempo,
+            total: escolhido.total,
+            etiquetas: escolhido.etiquetas
         });
+
     } catch (erro) {
         console.error(
             "[DUOLAB MAKERWORLD]",
-            etapa,
             erro?.stack || erro
         );
 
         return res.status(422).json({
-            erro: erro?.message || "MakerWorld request failed.",
-            etapa
+            erro: erro.message || "Metadata request failed."
         });
-
-    } finally {
-        if (browser) {
-            try {
-                await browser.close();
-            } catch (erro) {
-                console.warn(
-                    "[DUOLAB MAKERWORLD] Browser cleanup:",
-                    erro?.message
-                );
-            }
-        }
     }
-};
-
-module.exports.config = {
-    maxDuration: 60
 };
