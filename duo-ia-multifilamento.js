@@ -1300,6 +1300,181 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
+    function selecionarFilamentoMakerWorld(item) {
+        const lista = filamentos;
+
+        const material = normal(item.material);
+        const cor = normal(item.cor);
+
+        const aliases = cores[cor] || [cor];
+
+        function corresponde(f) {
+            return aliases.some(alias =>
+                new RegExp(
+                    "(^|[^a-z])" + normal(alias) + "([^a-z]|$)"
+                ).test(normal(f.nome))
+            );
+        }
+
+        const mesmaCor = lista
+            .map((f, indice) => ({ f, indice }))
+            .filter(({ f }) => corresponde(f));
+
+        let encontrado = mesmaCor.find(({ f }) =>
+            normal(f.nome).includes(material)
+        );
+
+        // Se o PLA nao estiver cadastrado, aceita PETG da mesma cor.
+        if (!encontrado) {
+            encontrado = mesmaCor.find(({ f }) =>
+                normal(f.nome).includes("petg")
+            );
+        }
+
+        if (!encontrado) {
+            encontrado = mesmaCor[0];
+        }
+
+        if (encontrado) {
+            return {
+                ...encontrado,
+                estimado: false
+            };
+        }
+
+        // Cor inexistente: preco medio de R$ 103,00/kg.
+        const sintetico = {
+            nome:
+                "ESTIMADO - " +
+                item.material + " " +
+                item.cor.toUpperCase() +
+                " - R$ 103,00/KG",
+            custo: 103,
+            cor: /^#[0-9a-f]{6}$/i.test(item.hex || "")
+                ? item.hex
+                : "#888888"
+        };
+
+        lista.push(sintetico);
+
+        return {
+            f: sintetico,
+            indice: lista.length - 1,
+            estimado: true
+        };
+    }
+
+    async function analisarMakerWorld() {
+        const link = $("duoIALink")?.value.trim() || "";
+        const botao = $("duoIAAnalisar");
+
+        if (!link) {
+            status("INFORME O LINK DO MAKERWORLD.", true);
+            return;
+        }
+
+        botao.disabled = true;
+
+        try {
+            status("CONSULTANDO PERFIL DA A1 MINI NO MAKERWORLD...");
+
+            const resposta = await fetch("/api/makerworld", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ url: link })
+            });
+
+            const dados = await resposta.json();
+
+            if (!resposta.ok) {
+                throw new Error(
+                    dados.erro || "Falha na consulta do MakerWorld."
+                );
+            }
+
+            if (
+                !Array.isArray(dados.etiquetas) ||
+                !dados.etiquetas.length ||
+                !Number.isFinite(dados.tempo) ||
+                !Number.isFinite(dados.total)
+            ) {
+                throw new Error(
+                    "Perfil retornou dados incompletos."
+                );
+            }
+
+            const soma = dados.etiquetas.reduce(
+                (s, item) => s + Number(item.peso),
+                0
+            );
+
+            if (Math.abs(soma - dados.total) > 0.11) {
+                throw new Error(
+                    "A soma dos filamentos nao confere com o total."
+                );
+            }
+
+            const etiquetas = dados.etiquetas.map(item => ({
+                ...item,
+                cadastro: selecionarFilamentoMakerWorld(item)
+            }));
+
+            // Atualiza os selects para aceitar filamentos estimados.
+            const principal = $("filamentoSelect");
+
+            if (
+                principal &&
+                typeof duoPopularSelectFilamentos === "function"
+            ) {
+                duoPopularSelectFilamentos(principal);
+            }
+
+            const area = $("bandejasArea");
+
+            if (
+                area &&
+                typeof duoPopularSelectFilamentos === "function"
+            ) {
+                area.querySelectorAll("select").forEach(select => {
+                    duoPopularSelectFilamentos(select);
+                });
+            }
+
+            const calculo = {
+                pratos: dados.pratos,
+                tempo: dados.tempo,
+                total: dados.total,
+                etiquetas
+            };
+
+            const itens = preencher(calculo);
+
+            resultado(calculo, itens, link);
+
+            const estimados = etiquetas.filter(
+                item => item.cadastro.estimado
+            );
+
+            if (estimados.length) {
+                status(
+                    "CALCULO CONCLUIDO. " +
+                    "CORES SEM CADASTRO: CUSTO ESTIMADO DE R$ 103,00/KG."
+                );
+            } else {
+                status(
+                    "CALCULO CONCLUIDO COM DADOS DO MAKERWORLD."
+                );
+            }
+
+        } catch (erro) {
+            console.error("[DUOLAB MAKERWORLD]", erro);
+            status(erro.message, true);
+        } finally {
+            botao.disabled = false;
+        }
+    }
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
@@ -1307,7 +1482,7 @@ function lerPeso(texto) {
         const novo = antigo.cloneNode(true);
         antigo.replaceWith(novo);
 
-        novo.addEventListener("click", analisar);
+        novo.addEventListener("click", analisarMakerWorld);
     }
 
     if (document.readyState === "loading") {
