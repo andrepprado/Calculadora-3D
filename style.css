@@ -4692,16 +4692,7 @@ width:20px;height:20px;accent-color:#00a091
     border-radius: 9px;
 }
 
-#duoIAAnalisar,
-#duoIAResultado button {
-    padding: 13px 18px;
-    border: 0;
-    border-radius: 9px;
-    background: #00a091;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
+
 
 #duoIAAnalisar:disabled {
     opacity: .55;
@@ -5003,18 +4994,7 @@ table {
     color: #003640;
 }
 
-.duo-ia-visual-botao {
-    display: block;
-    width: 100%;
-    min-height: 46px;
-    padding: 12px 16px;
-    border: 0;
-    border-radius: 9px;
-    background: #00a091;
-    color: white;
-    font-weight: 700;
-    cursor: pointer;
-}
+
 
 .duo-ia-visual-botao:disabled {
     opacity: .55;
@@ -5037,10 +5017,7 @@ table {
         padding: 12px;
     }
 
-    .duo-ia-visual-botao {
-        width: 100%;
-        font-size: 14px;
-    }
+    
 }
 /* DUOLAB IA CARD PADRAO V1 */
 #duoIA {
@@ -5065,3 +5042,10 @@ table {
     max-width: 100%;
     overflow-x: auto;
 }
+/* DUOLAB BOTOES IA PADRAO PLANNER */
+#duoIAAnalisar,
+#duoIAVisualBotao {
+    width: 100%;
+    max-width: 100%;
+}
+/* FIM BOTOES IA PADRAO PLANNER */
