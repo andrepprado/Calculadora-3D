@@ -37,6 +37,83 @@ const filamentos = [
     { nome: "VOOLT - PLA DOURADO V-SILK HIGH SPEED", custo: 96.18, cor: "#C8A44B" }
 ];
 
+/* DUOLAB_CADASTROS_V2 */
+const DUO_FIL_KEY = "duolab_filamentos_v2";
+const DUO_ADI_KEY = "duolab_adicionais_v2";
+
+function duoLer(chave, padrao) {
+    try {
+        const valor = JSON.parse(localStorage.getItem(chave));
+        return Array.isArray(valor) ? valor : padrao;
+    } catch {
+        return padrao;
+    }
+}
+
+const duoFilamentosOriginais = filamentos.map(f => ({...f}));
+const duoFilamentos = duoLer(DUO_FIL_KEY, duoFilamentosOriginais);
+
+filamentos.splice(0, filamentos.length,
+    ...duoFilamentos.filter(f =>
+        f && typeof f.nome === "string" &&
+        f.nome.trim() &&
+        Number.isFinite(Number(f.custo)) &&
+        Number(f.custo) >= 0
+    ).map(f => ({
+        nome: f.nome,
+        custo: Number(f.custo),
+        cor: /^#[0-9a-f]{6}$/i.test(f.cor) ? f.cor : "#888888"
+    }))
+);
+
+function duoAdicionais() {
+    return duoLer(DUO_ADI_KEY, [
+        {
+            id: "vela-led-natal",
+            nome: "Vela LED - Natal",
+            custo: 1.39,
+            ativo: true
+        }
+    ]);
+}
+
+function duoRenderizarAdicionais() {
+    const area = document.getElementById("duoAdicionaisDinamicos");
+    if (!area) return;
+
+    const selecionados = new Set(
+        [...area.querySelectorAll("input:checked")].map(i => i.dataset.id)
+    );
+
+    area.replaceChildren();
+
+    duoAdicionais().filter(a => a.ativo !== false).forEach(a => {
+        const label = document.createElement("label");
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.className = "calc-trigger duo-adicional";
+        input.dataset.id = String(a.id);
+        input.checked = selecionados.has(String(a.id));
+        input.addEventListener("change", calcular);
+        label.append(input, document.createTextNode(" " + a.nome));
+        area.appendChild(label);
+    });
+}
+
+function duoCustoAdicionais(qtd) {
+    const ids = new Set(
+        [...document.querySelectorAll(".duo-adicional:checked")]
+            .map(i => i.dataset.id)
+    );
+
+    return duoAdicionais()
+        .filter(a => a.ativo !== false && ids.has(String(a.id)))
+        .reduce((total, a) =>
+            total + Number(a.custo || 0) * qtd, 0);
+}
+
+document.addEventListener("DOMContentLoaded", duoRenderizarAdicionais);
+if (document.readyState !== "loading") duoRenderizarAdicionais();
 /* DUOLAB AGRUPAMENTO DEFINITIVO PLA PETG */
 
 function duoTipoFilamento(filamento) {
@@ -287,7 +364,7 @@ function calcular() {
         valAcabamento +
         valLuminaria +
         valAdesivo +
-        totalEmbalagens;
+        totalEmbalagens + duoCustoAdicionais(qtd);
 
     /*
      * CANAL DE VENDA

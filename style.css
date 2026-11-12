@@ -4605,3 +4605,16 @@ table { max-width: 100%; }
     input, select, textarea { width: 100%; }
     body { overflow-wrap: break-word; }
 }
+/* DUOLAB CADASTROS V2 */
+.duo-adicionais-grid{display:contents}
+.duo-adicionais-grid label{cursor:pointer}
+.duo-admin{max-width:1100px;margin:35px auto;padding:20px}
+.duo-admin section{margin:25px 0;padding:24px;border-radius:12px;background:var(--card-bg,#fff);color:var(--text-color,#222)}
+.duo-admin form{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:12px;align-items:end;margin:20px 0}
+.duo-admin form label{display:block;margin-bottom:6px}
+.duo-admin input,.duo-admin select{width:100%;padding:10px;border:1px solid #aaa;border-radius:7px}
+.duo-admin button{padding:10px 14px;border:0;border-radius:7px;cursor:pointer;margin:2px}
+.duo-admin button[type=submit]{background:#00a091;color:white}
+.duo-admin table{width:100%;border-collapse:collapse;margin-top:20px}
+.duo-admin th,.duo-admin td{padding:12px;border-bottom:1px solid #bbb;text-align:left}
+@media(max-width:700px){.duo-admin form{grid-template-columns:1fr}.duo-admin table{display:block;overflow-x:auto}}

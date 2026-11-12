@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cadastros e Configurações - Duo.Lab</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header no-print">
+<div class="app-header-inner">
+<a class="app-brand" href="index.html">
+<img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+</a>
+<nav class="app-nav" aria-label="Navegação principal">
+<a href="index.html">Calculadora</a>
+<a href="planner.html">Planner de Pedidos</a>
+<a href="cadastros.html" class="active">Cadastros e Configurações</a>
+</nav>
+</div>
+</header>
+<main class="duo-admin">
+<h1>Cadastros e Configurações</h1>
+<section>
+<h2>Filamentos</h2>
+<p>Adicione, altere ou exclua filamentos e seus custos por kg.</p>
+<form id="formFil">
+<div><label for="filNome">Filamento</label><input id="filNome" required maxlength="180"></div>
+<div><label for="filCusto">Custo por kg (R$)</label><input id="filCusto" type="number" min="0" step="0.01" required></div>
+<div><label for="filCor">Cor</label><input id="filCor" type="color" value="#888888"></div>
+<button type="submit">Salvar</button>
+</form>
+<button type="button" id="cancelarFil">Cancelar edição</button>
+<table>
+<thead><tr><th>Filamento</th><th>Custo/kg</th><th>Cor</th><th>Ações</th></tr></thead>
+<tbody id="tabelaFil"></tbody>
+</table>
+</section>
+<section>
+<h2>Adicionais e acessórios</h2>
+<p>Itens ativos aparecem automaticamente na calculadora.</p>
+<form id="formAdi">
+<div><label for="adiNome">Adicional</label><input id="adiNome" required maxlength="120"></div>
+<div><label for="adiCusto">Custo unitário (R$)</label><input id="adiCusto" type="number" min="0" step="0.01" required></div>
+<div><label for="adiAtivo">Disponibilidade</label>
+<select id="adiAtivo"><option value="true">Ativo</option><option value="false">Inativo</option></select></div>
+<button type="submit">Salvar</button>
+</form>
+<button type="button" id="cancelarAdi">Cancelar edição</button>
+<table>
+<thead><tr><th>Adicional</th><th>Custo</th><th>Status</th><th>Ações</th></tr></thead>
+<tbody id="tabelaAdi"></tbody>
+</table>
+</section>
+<p id="statusCadastro" role="status"></p>
+<p>Os cadastros ficam armazenados neste navegador.</p>
+</main>
+<script src="cadastros.js"></script>
+</body>
+</html>
