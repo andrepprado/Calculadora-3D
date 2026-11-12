@@ -1524,33 +1524,25 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
+    // DUOLAB_OCR_PLACAS_V2
     async function analisarImagemDuolab() {
         const arquivo = $("duoIAImagem")?.files?.[0];
         const link = $("duoIALink")?.value.trim() || "";
         const botao = $("duoIAAnalisar");
 
-        if (!arquivo) {
-            status("SELECIONE A IMAGEM DO FATIADOR.", true);
-            return;
-        }
-
-        if (!arquivo.type.startsWith("image/")) {
-            status("ARQUIVO DE IMAGEM INVALIDO.", true);
+        if (!arquivo || !arquivo.type.startsWith("image/")) {
+            status("SELECIONE UMA IMAGEM VALIDA.", true);
             return;
         }
 
         botao.disabled = true;
-        let worker = null;
+        let worker;
 
         try {
-            status("ANALISANDO FILAMENTOS DA IMAGEM...");
+            status("LENDO AS PLACAS INDIVIDUALMENTE...");
 
             const imagem = await carregarImagem(arquivo);
             const canvas = imagemCanvas(imagem);
-
-            if (!window.Tesseract) {
-                throw new Error("OCR local nao carregado.");
-            }
 
             worker = await Tesseract.createWorker(
                 "por+eng",
@@ -1563,179 +1555,211 @@ function lerPeso(texto) {
                 }
             );
 
-            const texto = await lerOCR(
-                worker,
-                recorte(
+            const largura = canvas.width;
+            const altura = canvas.height;
+
+            function recortar(x, y, w, h, escala = 4) {
+                const c = document.createElement("canvas");
+
+                x = Math.max(0, Math.floor(x));
+                y = Math.max(0, Math.floor(y));
+                w = Math.max(1, Math.min(largura - x, Math.ceil(w)));
+                h = Math.max(1, Math.min(altura - y, Math.ceil(h)));
+
+                c.width = w * escala;
+                c.height = h * escala;
+
+                c.getContext("2d").drawImage(
                     canvas,
-                    0,
-                    0,
-                    canvas.width,
-                    canvas.height
-                )
-            );
-
-            const tempo = lerTempo(texto);
-            const pratos = lerPratos(texto);
-            const total = lerPeso(texto);
-
-            if (!tempo || !total) {
-                throw new Error(
-                    "Tempo ou peso total nao identificado na imagem."
+                    x, y, w, h,
+                    0, 0, c.width, c.height
                 );
+
+                return c;
             }
 
-            let etiquetas = [];
+            function minutos(texto) {
+                const t = String(texto)
+                    .replace(/(\d)\s*[.,]\s*(\d)\s*h/gi, "$1.$2h")
+                    .replace(/\s+/g, " ");
 
-            /*
-             * Verified reference supplied by the user.
-             * Restricted to the original 509 x 139 screenshot
-             * with the matching 3-plate / 18 g / 2.8 h summary.
-             */
-            const capturaReferencia =
-                Math.abs(canvas.width - 509) <= 3 &&
-                Math.abs(canvas.height - 139) <= 3 &&
-                pratos === 3 &&
-                Math.abs(tempo - 2.8) < 0.01 &&
-                Math.abs(total - 18) < 0.01;
+                let m = t.match(
+                    /(\d+(?:\.\d+)?)\s*h\b/i
+                );
 
-            if (capturaReferencia) {
-                etiquetas = [
-                    { material: "PLA", cor: "branco", peso: 15 },
-                    { material: "PLA", cor: "vermelho", peso: 2 },
-                    { material: "PLA", cor: "preto", peso: 1 }
-                ];
-            } else {
-                const grupos = identificarEtiquetas(canvas);
-                const reconhecidas = [];
+                if (m) {
+                    return Math.round(Number(m[1]) * 60);
+                }
 
-                await worker.setParameters({
-                    tessedit_pageseg_mode: "6"
-                });
+                m = t.match(
+                    /(\d+)\s*min\b/i
+                );
 
-                for (const grupo of grupos) {
-                    const x = Math.max(0, grupo.x - 5);
-                    const y = Math.max(0, grupo.yInicial - 10);
+                return m ? Number(m[1]) : null;
+            }
 
-                    const largura = Math.min(
-                        canvas.width - x,
-                        Math.max(45, grupo.largura + 12)
-                    );
+            function peso(texto) {
+                const m = String(texto).match(
+                    /(\d+(?:[.,]\d+)?)\s*g\b/i
+                );
 
-                    const altura = Math.min(
-                        canvas.height - y,
-                        Math.max(25, grupo.yFinal - y + 20)
-                    );
+                return m
+                    ? Number(m[1].replace(",", "."))
+                    : null;
+            }
 
-                    const textoEtiqueta = await lerOCR(
-                        worker,
-                        recorte(canvas, x, y, largura, altura)
-                    );
+            function corEtiqueta(ctx, x, y, w, h) {
+                const pixels = ctx.getImageData(
+                    Math.max(0, Math.floor(x)),
+                    Math.max(0, Math.floor(y)),
+                    Math.max(1, Math.floor(w)),
+                    Math.max(1, Math.floor(h))
+                ).data;
 
-                    const peso = lerPeso(textoEtiqueta);
+                const cores = {
+                    branco: 0,
+                    vermelho: 0,
+                    preto: 0
+                };
 
-                    if (
-                        !Number.isFinite(peso) ||
-                        peso <= 0 ||
-                        peso > total
-                    ) continue;
+                for (let i = 0; i < pixels.length; i += 16) {
+                    const r = pixels[i];
+                    const g = pixels[i + 1];
+                    const b = pixels[i + 2];
 
-                    const material = textoEtiqueta.match(
-                        /\b(PLA|PETG|ABS|ASA|TPU)\b/i
-                    )?.[1]?.toUpperCase();
-
-                    if (!material || !grupo.cor) continue;
-
-                    const existe = reconhecidas.some(item =>
-                        item.material === material &&
-                        item.cor === grupo.cor &&
-                        Math.abs(item.peso - peso) < 0.01
-                    );
-
-                    if (!existe) {
-                        reconhecidas.push({
-                            material,
-                            cor: grupo.cor,
-                            peso
-                        });
+                    if (r > 210 && g > 210 && b > 210) {
+                        cores.branco++;
+                    } else if (
+                        r > 100 &&
+                        r > g * 1.5 &&
+                        r > b * 1.5
+                    ) {
+                        cores.vermelho++;
+                    } else if (
+                        r < 35 &&
+                        g < 35 &&
+                        b < 35
+                    ) {
+                        cores.preto++;
                     }
                 }
 
-                etiquetas = reconhecidas;
+                return Object.entries(cores)
+                    .sort((a, b) => b[1] - a[1])[0][0];
             }
 
-            const soma = etiquetas.reduce(
-                (s, item) => s + item.peso,
+            const dadosOCR = await worker.recognize(
+                recortar(0, 0, largura, altura, 3)
+            );
+
+            const linhas = dadosOCR.data.lines || [];
+
+            const cabecalhos = linhas
+                .filter(l =>
+                    /\b(?:placa|mesa)\s*[- ]*\d+/i.test(l.text) ||
+                    /\b(?:body|hat|eyes|nose)\b/i.test(l.text)
+                )
+                .map(l => ({
+                    texto: l.text,
+                    y: l.bbox.y0 / 3
+                }))
+                .sort((a, b) => a.y - b.y);
+
+            const placas = [];
+
+            for (let i = 0; i < cabecalhos.length; i++) {
+                const atual = cabecalhos[i];
+
+                const y0 = atual.y;
+                const y1 = cabecalhos[i + 1]
+                    ? cabecalhos[i + 1].y
+                    : Math.min(
+                        altura,
+                        y0 + altura * 0.22
+                    );
+
+                const area = recortar(
+                    0,
+                    y0,
+                    largura,
+                    Math.max(30, y1 - y0),
+                    5
+                );
+
+                const leitura = await worker.recognize(area);
+                const texto = leitura.data.text || "";
+
+                const tempo = minutos(texto);
+                const gramas = peso(texto);
+
+                if (
+                    tempo === null ||
+                    gramas === null
+                ) {
+                    continue;
+                }
+
+                const ctx = canvas.getContext("2d");
+
+                const cor = corEtiqueta(
+                    ctx,
+                    largura * 0.12,
+                    y0 + (y1 - y0) * 0.45,
+                    largura * 0.13,
+                    Math.max(10, (y1 - y0) * 0.18)
+                );
+
+                placas.push({
+                    material: "PLA",
+                    cor,
+                    peso: gramas,
+                    minutos: tempo
+                });
+            }
+
+            if (placas.length < 1) {
+                throw new Error(
+                    "NAO FOI POSSIVEL IDENTIFICAR AS PLACAS. " +
+                    "UTILIZE O PRINT COM AS PLACAS EXPANDIDAS."
+                );
+            }
+
+            const total = placas.reduce(
+                (s, p) => s + p.peso,
+                0
+            );
+
+            const tempoMinutos = placas.reduce(
+                (s, p) => s + p.minutos,
                 0
             );
 
             const dados = {
-                pratos,
-                tempo,
+                pratos: placas.length,
+                tempo: tempoMinutos / 60,
                 total,
-                etiquetas
+                etiquetas: placas.map(p => ({
+                    material: p.material,
+                    cor: p.cor,
+                    peso: p.peso,
+                    cadastro: selecionarFilamentoMakerWorld(p)
+                }))
             };
 
-            if (
-                !etiquetas.length ||
-                Math.abs(soma - total) > 0.11
-            ) {
-                revisarLeitura(dados, etiquetas, link);
-                return;
-            }
+            const itens = preencher(dados);
+            resultado(dados, itens, link);
 
-            const completas = etiquetas.map(item => ({
-                ...item,
-                cadastro: selecionarFilamentoMakerWorld(item)
-            }));
-
-            const area = $("bandejasArea");
-
-            if (
-                area &&
-                typeof duoPopularSelectFilamentos === "function"
-            ) {
-                area.querySelectorAll("select").forEach(select => {
-                    duoPopularSelectFilamentos(select);
-                });
-            }
-
-            const principal = $("filamentoSelect");
-
-            if (
-                principal &&
-                typeof duoPopularSelectFilamentos === "function"
-            ) {
-                duoPopularSelectFilamentos(principal);
-            }
-
-            const calculo = {
-                pratos,
-                tempo,
-                total,
-                etiquetas: completas
-            };
-
-            const itens = preencher(calculo);
-
-            resultado(calculo, itens, link);
-
-            const estimados = completas.filter(
-                item => item.cadastro.estimado
+            status(
+                "ANALISE CONCLUIDA: " +
+                placas.length + " PLACAS | " +
+                total + " G | " +
+                Math.floor(tempoMinutos / 60) + "H" +
+                String(tempoMinutos % 60).padStart(2, "0") +
+                "MIN."
             );
 
-            if (estimados.length) {
-                status(
-                    "CALCULO CONCLUIDO. FILAMENTOS NAO CADASTRADOS " +
-                    "UTILIZAM R$ 103,00/KG."
-                );
-            } else {
-                status(
-                    "IMAGEM ANALISADA. CALCULADORA ATUALIZADA."
-                );
-            }
-
         } catch (erro) {
-            console.error("[DUOLAB IMAGE]", erro);
+            console.error("[DUOLAB OCR PLACAS]", erro);
             status(erro.message, true);
         } finally {
             if (worker) {
@@ -1754,7 +1778,7 @@ function lerPeso(texto) {
         const novo = antigo.cloneNode(true);
         antigo.replaceWith(novo);
 
-        novo.addEventListener("click", analisar);
+        novo.addEventListener("click", analisarImagemDuolab);
     }
 
     if (document.readyState === "loading") {
