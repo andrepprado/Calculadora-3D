@@ -2,8 +2,8 @@
 
 :root {
     --duolab-header-height: 70px;
-    --duolab-header-bg: #003640;
-    --duolab-header-accent: #00a091;
+    --duolab-header-bg: var(--primary-dark, var(--color-primary-dark, #1e293b));
+    --duolab-header-accent: var(--primary, var(--color-primary, #2563eb));
 }
 
 *,
@@ -47,8 +47,21 @@ button {
 }
 
 #duolab-desktop-header {
-    display: none;
-}
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 2147483000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        width: 100%;
+        height: var(--duolab-header-height);
+        padding: 0 28px;
+        background: var(--duolab-header-bg);
+        color: #fff;
+        border-bottom: 2px solid rgba(255,255,255,.08);
+        box-shadow: 0 4px 18px rgba(15,23,42,.14);
+    }
 
 @media (min-width: 992px) {
     html {
@@ -72,8 +85,8 @@ button {
         padding: 0 28px;
         background: var(--duolab-header-bg);
         color: #fff;
-        border-bottom: 3px solid var(--duolab-header-accent);
-        box-shadow: 0 3px 14px rgba(0,0,0,.16);
+        border-bottom: 2px solid rgba(255,255,255,.08);
+        box-shadow: 0 4px 18px rgba(15,23,42,.14);
     }
 
     #duolab-desktop-header .duolab-header-brand {
@@ -127,6 +140,7 @@ button {
     #duolab-desktop-header .duolab-header-nav button:hover,
     #duolab-desktop-header .duolab-header-nav .active {
         background: var(--duolab-header-accent);
+        color: #fff;
     }
 
     .app-menu-toggle {
@@ -140,7 +154,20 @@ button {
     }
 
     #duolab-desktop-header {
-        display: none !important;
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 2147483000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        width: 100%;
+        height: var(--duolab-header-height);
+        padding: 0 28px;
+        background: var(--duolab-header-bg);
+        color: #fff;
+        border-bottom: 2px solid rgba(255,255,255,.08);
+        box-shadow: 0 4px 18px rgba(15,23,42,.14);
     }
 
     .app-menu-toggle {
@@ -176,7 +203,20 @@ button {
 
 @media (max-width: 575.98px) {
     #duolab-desktop-header {
-        display: none !important;
+        position: fixed;
+        inset: 0 0 auto 0;
+        z-index: 2147483000;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        width: 100%;
+        height: var(--duolab-header-height);
+        padding: 0 28px;
+        background: var(--duolab-header-bg);
+        color: #fff;
+        border-bottom: 2px solid rgba(255,255,255,.08);
+        box-shadow: 0 4px 18px rgba(15,23,42,.14);
     }
 
     body {
