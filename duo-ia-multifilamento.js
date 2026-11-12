@@ -1549,9 +1549,10 @@ function lerPeso(texto) {
     // DUOLAB_V4_HELPERS_RESTORED_INICIO
 
     function duoV4Minutos(texto) {
-        const t = String(texto || "")
-            .replace(/\s+/g, " ")
-            .trim();
+        const original = String(texto || "");
+        const t = original
+            .replace(/[©®@]/g, " ")
+            .replace(/\s+/g, " ");
 
         let m = t.match(
             /(\d{1,3})\s*[.,]\s*(\d{1,2})\s*h\b/i
@@ -1573,7 +1574,30 @@ function lerPeso(texto) {
 
         m = t.match(/(\d{1,3})\s*h\b/i);
 
-        if (m) return Number(m[1]) * 60;
+        if (m) {
+            const horas = Number(m[1]);
+
+            // OCR de tempo decimal de placa:
+            // "26 h" frequentemente representa "2.6 h".
+            // Aplicado apenas a valores entre 20 e 99.
+            if (
+                horas >= 20 &&
+                horas <= 99 &&
+                /^\d{2}$/.test(m[1])
+            ) {
+                console.warn(
+                    "[DUOLAB OCR] Tempo decimal provavel:",
+                    m[1] + "h -> " +
+                    (horas / 10) + "h"
+                );
+
+                return Math.round(
+                    (horas / 10) * 60
+                );
+            }
+
+            return horas * 60;
+        }
 
         m = t.match(/(\d{1,3})\s*min\b/i);
 
@@ -2104,6 +2128,7 @@ function lerPeso(texto) {
             }
 
             resultado(dados, itens, link);
+            duoV6Ativar(link);
 
             if (
                 typeof duoMostrarResultadoWhatsApp ===
@@ -2140,6 +2165,402 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
+    // DUOLAB_WHATSAPP_SYNC_V6
+    let duoV6Modelo = null;
+    let duoV6Atualizando = false;
+
+    function duoV6Moeda(valor) {
+        const texto = String(valor || "").trim();
+
+        if (!texto) return "R$ 0,00";
+
+        const encontrado = texto.match(
+            /R\$\s*[\d.,]+/
+        );
+
+        if (encontrado) return encontrado[0];
+
+        const numero = Number(
+            texto.replace(/[^\d,.-]/g, "")
+                .replace(/\./g, "")
+                .replace(",", ".")
+        );
+
+        return Number.isFinite(numero)
+            ? numero.toLocaleString("pt-BR", {
+                style: "currency",
+                currency: "BRL"
+            })
+            : "R$ 0,00";
+    }
+
+    function duoV6Titulo(link) {
+        if (!link) return "Modelo 3D";
+
+        try {
+            const url = new URL(link);
+            const partes = url.pathname.split("/").filter(Boolean);
+
+            const modelo = partes.find(p =>
+                /^\d{4,}-/.test(p)
+            );
+
+            if (modelo) {
+                return modelo
+                    .replace(/^\d+-/, "")
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, c => c.toUpperCase());
+            }
+
+            return "Modelo 3D";
+        } catch {
+            return "Modelo 3D";
+        }
+    }
+
+    function duoV6Link(link) {
+        if (!link) return "";
+
+        try {
+            const url = new URL(link);
+            const id = url.pathname.match(
+                /\/models\/(\d+)/
+            )?.[1];
+
+            if (
+                id &&
+                /(^|\.)makerworld\.com$/i.test(url.hostname)
+            ) {
+                return (
+                    "https://makerworld.com/models/" +
+                    id +
+                    "?appSharePlatform=copy"
+                );
+            }
+
+            return link;
+        } catch {
+            return link;
+        }
+    }
+
+    function duoV6LerBandejas() {
+        return [
+            ...document.querySelectorAll(
+                "#bandejasArea .duo-bandeja"
+            )
+        ].map(linha => {
+            const select = linha.querySelector("select");
+            const peso = linha.querySelector(".bandeja-peso");
+            const tempo = linha.querySelector(".bandeja-tempo");
+
+            return {
+                nome: select?.selectedOptions?.[0]?.textContent?.trim() || "",
+                peso: Number(peso?.value || 0),
+                tempo: tempo?.value || "00:00"
+            };
+        }).filter(item => item.peso > 0);
+    }
+
+    function duoV6Atualizar() {
+        if (!duoV6Modelo || duoV6Atualizando) return;
+
+        duoV6Atualizando = true;
+
+        try {
+            const area = $("duoIAResultado");
+            if (!area) return;
+
+            const custo = duoV6Moeda(
+                $("resCustoTotal")?.textContent
+            );
+
+            const sugerido = duoV6Moeda(
+                $("resVendaUnid")?.textContent
+            );
+
+            const total = duoV6Moeda(
+                $("resVendaTotal")?.textContent
+            );
+
+            const bandejas = duoV6LerBandejas();
+
+            const pesoTotal = bandejas.reduce(
+                (soma, item) => soma + item.peso,
+                0
+            );
+
+            const minutos = bandejas.reduce(
+                (soma, item) => {
+                    const partes = item.tempo.split(":");
+                    return soma +
+                        (Number(partes[0]) || 0) * 60 +
+                        (Number(partes[1]) || 0);
+                },
+                0
+            );
+
+            let resumo = $("duoV6Resumo");
+
+            if (!resumo) {
+                resumo = document.createElement("div");
+                resumo.id = "duoV6Resumo";
+                area.appendChild(resumo);
+            }
+
+            resumo.style.marginTop = "12px";
+
+            resumo.replaceChildren();
+
+            const tituloResumo = document.createElement("strong");
+            tituloResumo.textContent = "ORÇAMENTO ATUALIZADO";
+
+            const detalhes = document.createElement("p");
+            detalhes.textContent =
+                bandejas.length + " PLACAS | " +
+                pesoTotal.toLocaleString("pt-BR") + " G | " +
+                Math.floor(minutos / 60) + "H" +
+                String(minutos % 60).padStart(2, "0") +
+                "MIN";
+
+            const custoResumo = document.createElement("p");
+            custoResumo.textContent =
+                "Custo Produção Total: " + custo;
+
+            const valorResumo = document.createElement("p");
+            valorResumo.textContent =
+                "Valor Unitário Sugerido: " + sugerido;
+
+            const totalResumo = document.createElement("p");
+            totalResumo.textContent =
+                "Total do Orçamento: " + total;
+
+            resumo.append(
+                tituloResumo,
+                detalhes,
+                custoResumo,
+                valorResumo,
+                totalResumo
+            );
+
+            let caixa = $("duoV6WhatsApp");
+
+            if (!caixa) {
+                caixa = document.createElement("div");
+                caixa.id = "duoV6WhatsApp";
+
+                caixa.style.cssText = [
+                    "margin-top:16px",
+                    "padding:12px",
+                    "border:1px solid #cbd5e1",
+                    "border-radius:8px",
+                    "background:#f8fafc"
+                ].join(";");
+
+                const titulo = document.createElement("strong");
+                titulo.textContent = "MENSAGEM PARA WHATSAPP";
+                titulo.style.cssText =
+                    "display:block;margin-bottom:10px;color:#003640";
+
+                const textarea = document.createElement("textarea");
+                textarea.id = "duoV6TextoWhatsApp";
+                textarea.rows = 5;
+                textarea.readOnly = true;
+
+                textarea.style.cssText = [
+                    "width:100%",
+                    "box-sizing:border-box",
+                    "padding:10px",
+                    "border:1px solid #cbd5e1",
+                    "border-radius:6px",
+                    "background:white",
+                    "color:#17243a",
+                    "font:14px Arial,sans-serif",
+                    "resize:vertical"
+                ].join(";");
+
+                const copiar = document.createElement("button");
+                copiar.type = "button";
+                copiar.textContent = "COPIAR PARA WHATSAPP";
+                copiar.className = $("duoIAAnalisar")?.className || "";
+
+                copiar.style.cssText =
+                    "width:100%;margin-top:10px";
+
+                copiar.addEventListener("click", async () => {
+                    const texto = $("duoV6TextoWhatsApp")?.value || "";
+
+                    try {
+                        await navigator.clipboard.writeText(texto);
+                    } catch {
+                        textarea.focus();
+                        textarea.select();
+
+                        const copiado = document.execCommand("copy");
+
+                        if (!copiado) {
+                            status(
+                                "NAO FOI POSSIVEL COPIAR A MENSAGEM.",
+                                true
+                            );
+                            return;
+                        }
+                    }
+
+                    status("MENSAGEM COPIADA PARA WHATSAPP.");
+                });
+
+                caixa.append(titulo, textarea, copiar);
+                area.appendChild(caixa);
+            }
+
+            const linkAtual = $("duoIALink")?.value.trim() ||
+                duoV6Modelo.link;
+
+            const tituloAtual = duoV6Titulo(linkAtual);
+
+            const mensagem = [
+                "*" + tituloAtual + "*",
+                "Custo Produção Total: " + custo,
+                "Valor Unitário Sugerido: " + sugerido,
+                duoV6Link(linkAtual)
+            ].filter(Boolean).join("\n");
+
+            $("duoV6TextoWhatsApp").value = mensagem;
+
+            // Remove mensagens antigas ou duplicadas.
+            [
+                "duoIAMensagemWhatsApp",
+                "duoIAWhatsApp",
+                "duoWhatsAppResultado"
+            ].forEach(id => {
+                const antigo = $(id);
+
+                if (
+                    antigo &&
+                    !caixa.contains(antigo)
+                ) {
+                    const bloco = antigo.closest(
+                        ".duo-ia-whatsapp, .duo-whatsapp-box"
+                    );
+
+                    if (bloco && area.contains(bloco)) {
+                        bloco.hidden = true;
+                    } else {
+                        antigo.hidden = true;
+                    }
+                }
+            });
+
+            // Atualiza tambem o texto legado do resultado.
+            [...area.querySelectorAll("p")].forEach(p => {
+                if (
+                    p !== detalhes &&
+                    p !== custoResumo &&
+                    p !== valorResumo &&
+                    p !== totalResumo &&
+                    /^ORCAMENTO ATUALIZADO:/i.test(
+                        p.textContent.trim()
+                    )
+                ) {
+                    p.textContent =
+                        "ORÇAMENTO ATUALIZADO: " + total;
+                }
+            });
+
+        } finally {
+            duoV6Atualizando = false;
+        }
+    }
+
+    function duoV6InstalarSincronizacao() {
+        if (document.documentElement.dataset.duoV6Sync) {
+            return;
+        }
+
+        document.documentElement.dataset.duoV6Sync = "1";
+
+        let agendado = false;
+
+        function atualizarDepois() {
+            if (!duoV6Modelo || agendado) return;
+
+            agendado = true;
+
+            requestAnimationFrame(() => {
+                agendado = false;
+                duoV6Atualizar();
+            });
+        }
+
+        // Captura alteracoes inclusive em campos criados dinamicamente.
+        document.addEventListener("input", evento => {
+            if (
+                evento.target.closest?.(
+                    "#duoIAResultado, #duoV6WhatsApp"
+                )
+            ) return;
+
+            atualizarDepois();
+        }, true);
+
+        document.addEventListener("change", evento => {
+            if (
+                evento.target.closest?.(
+                    "#duoIAResultado, #duoV6WhatsApp"
+                )
+            ) return;
+
+            atualizarDepois();
+        }, true);
+
+        document.addEventListener("click", evento => {
+            if (
+                evento.target.closest?.(
+                    "#duoIAResultado, #duoV6WhatsApp"
+                )
+            ) return;
+
+            atualizarDepois();
+        }, true);
+
+        // Os resultados financeiros sao a fonte oficial.
+        // Observa apenas os campos de saida, sem loop no resumo.
+        const observar = [
+            "resCustoTotal",
+            "resVendaUnid",
+            "resVendaTotal"
+        ];
+
+        const observador = new MutationObserver(
+            atualizarDepois
+        );
+
+        observar.forEach(id => {
+            const elemento = $(id);
+
+            if (elemento) {
+                observador.observe(elemento, {
+                    childList: true,
+                    characterData: true,
+                    subtree: true
+                });
+            }
+        });
+
+        // Permite reprocessar apos novas analises.
+        window.duoV6Sincronizar = atualizarDepois;
+    }
+
+    function duoV6Ativar(link) {
+        duoV6Modelo = {
+            link: link || $("duoIALink")?.value.trim() || ""
+        };
+
+        duoV6InstalarSincronizacao();
+        duoV6Atualizar();
+    }
+
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
