@@ -1063,3 +1063,58 @@ if (document.readyState === 'loading') {
 }
 
 
+
+/* DUOLAB RECARREGAMENTO CADASTROS V1 */
+(function () {
+    const CHAVES = [
+        "duolab_filamentos_v2",
+        "duolab_adicionais_v2",
+        "duolab_opcoes_fixos_v1",
+        "duolab_opcoes_ativas_v1",
+        "duolab_canais_v1"
+    ];
+
+    let assinatura = "";
+
+    function obterAssinatura() {
+        return CHAVES.map(chave =>
+            localStorage.getItem(chave) || ""
+        ).join("\u001f");
+    }
+
+    function verificarAtualizacoes() {
+        const atual = obterAssinatura();
+
+        if (atual !== assinatura) {
+            window.location.reload();
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        assinatura = obterAssinatura();
+    });
+
+    window.addEventListener("pageshow", () => {
+        if (!assinatura) {
+            assinatura = obterAssinatura();
+            return;
+        }
+
+        verificarAtualizacoes();
+    });
+
+    window.addEventListener("focus", verificarAtualizacoes);
+
+    document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) verificarAtualizacoes();
+    });
+
+    window.addEventListener("storage", evento => {
+        if (
+            CHAVES.includes(evento.key) ||
+            evento.key === "duolab_cadastros_atualizados"
+        ) {
+            verificarAtualizacoes();
+        }
+    });
+})();

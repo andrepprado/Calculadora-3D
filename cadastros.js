@@ -402,3 +402,27 @@ $("cancelarAdi").addEventListener("click", evento => {
 });
 
 render();
+/* DUOLAB SINCRONIZACAO CADASTROS V1 */
+(function () {
+    const original = Storage.prototype.setItem;
+
+    Storage.prototype.setItem = function(chave, valor) {
+        const resultado = original.call(this, chave, valor);
+
+        if (
+            this === localStorage &&
+            (
+                chave === "duolab_filamentos_v2" ||
+                chave === "duolab_adicionais_v2"
+            )
+        ) {
+            original.call(
+                this,
+                "duolab_cadastros_atualizados",
+                String(Date.now())
+            );
+        }
+
+        return resultado;
+    };
+})();

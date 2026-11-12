@@ -295,3 +295,28 @@
     renderCanais();
 
 })();
+/* DUOLAB SINCRONIZACAO CADASTROS V1 */
+(function () {
+    const original = Storage.prototype.setItem;
+
+    Storage.prototype.setItem = function(chave, valor) {
+        const resultado = original.call(this, chave, valor);
+
+        if (
+            this === localStorage &&
+            (
+                chave === "duolab_opcoes_fixos_v1" ||
+                chave === "duolab_opcoes_ativas_v1" ||
+                chave === "duolab_canais_v1"
+            )
+        ) {
+            original.call(
+                this,
+                "duolab_cadastros_atualizados",
+                String(Date.now())
+            );
+        }
+
+        return resultado;
+    };
+})();
