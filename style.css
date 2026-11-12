@@ -5049,3 +5049,13 @@ table {
     max-width: 100%;
 }
 /* FIM BOTOES IA PADRAO PLANNER */
+/* DUOLAB IA BOTOES UPPERCASE V3 */
+#duoIA button,
+#duoIA button *,
+#duoIAAnalisar,
+#duoIAVisualBotao,
+#duoIAResultado button,
+.duo-ia-visual-botao {
+    text-transform: uppercase !important;
+}
+/* FIM DUOLAB IA BOTOES UPPERCASE V3 */
