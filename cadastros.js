@@ -1,5 +1,7 @@
 "use strict";
 
+/* DUOLAB CADASTROS V4 - ACOES INDEPENDENTES */
+
 const FKEY = "duolab_filamentos_v2";
 const AKEY = "duolab_adicionais_v2";
 const $ = id => document.getElementById(id);
@@ -26,319 +28,376 @@ const padraoF = [
 ["VOOLT - PLA DOURADO V-SILK HIGH SPEED",96.18,"#C8A44B"]
 ].map(([nome,custo,cor]) => ({nome,custo,cor}));
 
+
 const padraoA = [
     {
-        id:"vela-led-natal",
-        nome:"Vela LED - Natal",
-        custo:1.39,
-        ativo:true
+        id: "vela-led-natal",
+        nome: "Vela LED - Natal",
+        custo: 1.39,
+        ativo: true
     }
 ];
 
-function ler(chave,padrao) {
+function ler(chave, padrao) {
     try {
-        const valor = JSON.parse(localStorage.getItem(chave));
-        return Array.isArray(valor) ? valor : padrao;
+        const dados = JSON.parse(localStorage.getItem(chave));
+        return Array.isArray(dados) ? dados : padrao;
     } catch {
         return padrao;
     }
 }
 
-let fil = ler(FKEY,padraoF);
-let adi = ler(AKEY,padraoA);
+let fil = ler(FKEY, padraoF);
+let adi = ler(AKEY, padraoA);
+
 let editF = -1;
 let editA = null;
-let exclusaoPendente = null;
+let confirmacao = null;
 
-const moeda = valor => Number(valor).toLocaleString("pt-BR",{
-    style:"currency",
-    currency:"BRL"
+const moeda = valor => Number(valor).toLocaleString("pt-BR", {
+    style: "currency",
+    currency: "BRL"
 });
 
-function mensagem(texto,tipo="sucesso") {
+function mensagem(texto, erro = false) {
     const el = $("statusCadastro");
     if (!el) return;
+
     el.textContent = texto;
-    el.style.padding = "14px 18px";
-    el.style.margin = "16px 0";
-    el.style.borderRadius = "9px";
-    el.style.fontWeight = "600";
-    el.style.background = tipo==="erro" ? "#fff0f0" : "#e8f7f3";
-    el.style.color = tipo==="erro" ? "#a32020" : "#006b58";
-    el.style.border = tipo==="erro"
-        ? "1px solid #efb5b5"
-        : "1px solid #a6dccc";
+    el.style.cssText = [
+        "padding:12px 16px",
+        "margin:15px 0",
+        "border-radius:8px",
+        "font-weight:600",
+        erro
+            ? "background:#fff0f0;color:#a32020"
+            : "background:#e8f7f3;color:#006b58"
+    ].join(";");
 }
 
-function salvar(texto="Cadastros atualizados com sucesso.") {
+function salvar(texto) {
     try {
-        localStorage.setItem(FKEY,JSON.stringify(fil));
-        localStorage.setItem(AKEY,JSON.stringify(adi));
+        localStorage.setItem(FKEY, JSON.stringify(fil));
+        localStorage.setItem(AKEY, JSON.stringify(adi));
         render();
         mensagem(texto);
-    } catch(e) {
-        mensagem("Nao foi possivel salvar: "+e.message,"erro");
+    } catch (erro) {
+        mensagem("Erro ao salvar: " + erro.message, true);
     }
 }
 
-function td(tr,conteudo) {
-    const celula=document.createElement("td");
-    if(conteudo instanceof Node) celula.appendChild(conteudo);
-    else celula.textContent=String(conteudo);
-    tr.appendChild(celula);
-    return celula;
-}
+function criarBotao(texto, acao, estilo = "") {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = texto;
 
-function botao(texto,acao,classe="") {
-    const b=document.createElement("button");
-    b.type="button";
-    b.textContent=texto;
-    if(classe) b.className=classe;
-    b.addEventListener("click",function(evento) {
+    if (estilo) b.style.cssText = estilo;
+
+    b.addEventListener("click", evento => {
         evento.preventDefault();
         evento.stopPropagation();
         acao();
     });
+
     return b;
 }
 
-function confirmarExclusao(tipo, identificador, nome, tr) {
-    if (exclusaoPendente) {
-        exclusaoPendente.remove();
-        exclusaoPendente = null;
+function celula(tr, conteudo) {
+    const td = document.createElement("td");
+
+    if (conteudo instanceof Node) {
+        td.appendChild(conteudo);
+    } else {
+        td.textContent = String(conteudo);
     }
+
+    tr.appendChild(td);
+    return td;
+}
+
+function fecharConfirmacao() {
+    if (confirmacao) {
+        confirmacao.remove();
+        confirmacao = null;
+    }
+}
+
+function confirmarExclusao(tipo, indice, nome, linhaOriginal) {
+    fecharConfirmacao();
 
     const linha = document.createElement("tr");
     linha.className = "duo-confirmacao-inline";
 
-    const celula = document.createElement("td");
-    celula.colSpan = 4;
-    celula.style.cssText =
-        "padding:18px;background:#fff5ed;border:1px solid #efcfb3;";
+    const td = document.createElement("td");
+    td.colSpan = 4;
+    td.style.cssText =
+        "padding:18px;background:#fff5ed;border-left:4px solid #d97706;";
 
     const titulo = document.createElement("strong");
-    titulo.textContent = "Confirmar exclusão: " + nome;
+    titulo.textContent = "Excluir " + nome + "?";
+
+    const descricao = document.createElement("p");
+    descricao.textContent =
+        "Esta ação removerá o item do cadastro.";
+    descricao.style.margin = "8px 0 12px";
 
     const acoes = document.createElement("div");
     acoes.style.cssText =
-        "display:flex;gap:10px;margin-top:12px;flex-wrap:wrap;";
+        "display:flex;gap:10px;flex-wrap:wrap";
 
-    const confirmar = document.createElement("button");
-    confirmar.type = "button";
-    confirmar.textContent = "Sim, excluir";
-    confirmar.style.cssText =
-        "background:#b42318;color:white;padding:10px 16px;";
+    const confirmar = criarBotao(
+        "Sim, excluir",
+        () => {
+            if (tipo === "filamento") {
+                const atual = fil[indice];
 
-    const cancelar = document.createElement("button");
-    cancelar.type = "button";
-    cancelar.textContent = "Cancelar";
+                if (!atual || atual !== referencia) {
+                    fecharConfirmacao();
+                    mensagem("A lista foi alterada. Selecione o item novamente.", true);
+                    return;
+                }
 
-    confirmar.addEventListener("click", function(evento) {
-        evento.preventDefault();
-        evento.stopPropagation();
+                fil.splice(indice, 1);
+                editF = -1;
+                $("formFil").reset();
+            } else {
+                const pos = adi.findIndex(a => a.id === referencia.id);
 
-        if (tipo === "filamento") {
-            const indice = fil.findIndex(f => f.nome === identificador);
+                if (pos < 0) {
+                    fecharConfirmacao();
+                    mensagem("Adicional não encontrado.", true);
+                    return;
+                }
 
-            if (indice < 0) {
-                mensagem("Filamento nao encontrado.","erro");
-                return;
+                adi.splice(pos, 1);
+                editA = null;
+                $("formAdi").reset();
             }
 
-            fil.splice(indice,1);
-            editF = -1;
-            $("formFil").reset();
-        } else {
-            const indice = adi.findIndex(a => a.id === identificador);
+            fecharConfirmacao();
+            salvar("Excluído com sucesso: " + nome);
+        },
+        "background:#b42318;color:#fff;padding:10px 16px"
+    );
 
-            if (indice < 0) {
-                mensagem("Adicional nao encontrado.","erro");
-                return;
-            }
+    const cancelar = criarBotao(
+        "Cancelar",
+        () => {
+            fecharConfirmacao();
+            mensagem("Exclusão cancelada.");
+        },
+        "background:#e5e7eb;color:#222;padding:10px 16px"
+    );
 
-            adi.splice(indice,1);
-            editA = null;
-            $("formAdi").reset();
-        }
+    // Guarda a referencia exata, sem depender do nome.
+    const referencia = tipo === "filamento"
+        ? fil[indice]
+        : adi[indice];
 
-        exclusaoPendente = null;
-        salvar("Item excluido com sucesso: " + nome);
-    });
+    acoes.append(confirmar, cancelar);
+    td.append(titulo, descricao, acoes);
+    linha.appendChild(td);
 
-    cancelar.addEventListener("click", function(evento) {
-        evento.preventDefault();
-        evento.stopPropagation();
-        linha.remove();
-        exclusaoPendente = null;
-        mensagem("Exclusao cancelada.");
-    });
-
-    acoes.append(confirmar,cancelar);
-    celula.append(titulo,acoes);
-    linha.appendChild(celula);
-
-    tr.insertAdjacentElement("afterend",linha);
-    exclusaoPendente = linha;
-
-    linha.scrollIntoView({
-        behavior:"smooth",
-        block:"nearest"
-    });
+    linhaOriginal.insertAdjacentElement("afterend", linha);
+    confirmacao = linha;
 }
+
 function render() {
-    const tabelaF=$("tabelaFil");
-    const tabelaA=$("tabelaAdi");
+    const tabelaF = $("tabelaFil");
+    const tabelaA = $("tabelaAdi");
 
     tabelaF.replaceChildren();
     tabelaA.replaceChildren();
-    exclusaoPendente=null;
+    confirmacao = null;
 
-    fil.forEach((f,i)=>{
-        const tr=document.createElement("tr");
-        td(tr,f.nome);
-        td(tr,moeda(f.custo));
+    fil.forEach((f, indice) => {
+        const tr = document.createElement("tr");
 
-        const cor=document.createElement("input");
-        cor.type="color";
-        cor.value=/^#[0-9a-f]{6}$/i.test(f.cor)
-            ? f.cor : "#888888";
-        cor.disabled=true;
-        td(tr,cor);
+        celula(tr, f.nome);
+        celula(tr, moeda(f.custo));
 
-        const acoes=document.createElement("div");
-        acoes.style.display="flex";
-        acoes.style.gap="6px";
+        const cor = document.createElement("input");
+        cor.type = "color";
+        cor.value = /^#[0-9a-f]{6}$/i.test(f.cor)
+            ? f.cor
+            : "#888888";
+        cor.disabled = true;
 
-        acoes.append(
-            botao("Editar",()=>{
-                editF=i;
-                $("filNome").value=f.nome;
-                $("filCusto").value=f.custo;
-                $("filCor").value=cor.value;
-                $("filNome").focus();
-                $("formFil").scrollIntoView({
-                    behavior:"smooth",
-                    block:"center"
-                });
-                mensagem("Editando filamento: "+f.nome);
-            }),
-            botao("Excluir",()=>{
-                confirmarExclusao("filamento",f.nome,f.nome,tr);
-            })
-        );
+        celula(tr, cor);
 
-        td(tr,acoes);
+        const acoes = document.createElement("div");
+        acoes.style.cssText =
+            "display:flex;gap:6px;flex-wrap:wrap";
+
+        const editar = criarBotao("Editar", () => {
+            fecharConfirmacao();
+
+            editF = indice;
+            editA = null;
+
+            $("filNome").value = f.nome;
+            $("filCusto").value = f.custo;
+            $("filCor").value = cor.value;
+
+            $("filNome").focus();
+
+            $("formFil").scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            mensagem("Editando: " + f.nome);
+        });
+
+        const excluir = criarBotao("Excluir", () => {
+            confirmarExclusao(
+                "filamento",
+                indice,
+                f.nome,
+                tr
+            );
+        });
+
+        acoes.append(editar, excluir);
+        celula(tr, acoes);
         tabelaF.appendChild(tr);
     });
 
-    adi.forEach(a=>{
-        const tr=document.createElement("tr");
-        td(tr,a.nome);
-        td(tr,moeda(a.custo));
-        td(tr,a.ativo?"Ativo":"Inativo");
+    adi.forEach((a, indice) => {
+        const tr = document.createElement("tr");
 
-        const acoes=document.createElement("div");
-        acoes.style.display="flex";
-        acoes.style.gap="6px";
-        acoes.style.flexWrap="wrap";
+        celula(tr, a.nome);
+        celula(tr, moeda(a.custo));
+        celula(tr, a.ativo ? "Ativo" : "Inativo");
 
-        acoes.append(
-            botao("Editar",()=>{
-                editA=a.id;
-                $("adiNome").value=a.nome;
-                $("adiCusto").value=a.custo;
-                $("adiAtivo").value=String(a.ativo);
-                $("adiNome").focus();
-                $("formAdi").scrollIntoView({
-                    behavior:"smooth",
-                    block:"center"
-                });
-                mensagem("Editando adicional: "+a.nome);
-            }),
-            botao(a.ativo?"Desativar":"Ativar",()=>{
-                a.ativo=!a.ativo;
-                salvar("Disponibilidade atualizada: "+a.nome);
-            }),
-            botao("Excluir",()=>{
-                confirmarExclusao("adicional",a.id,a.nome,tr);
-            })
+        const acoes = document.createElement("div");
+        acoes.style.cssText =
+            "display:flex;gap:6px;flex-wrap:wrap";
+
+        const editar = criarBotao("Editar", () => {
+            fecharConfirmacao();
+
+            editA = a.id;
+            editF = -1;
+
+            $("adiNome").value = a.nome;
+            $("adiCusto").value = a.custo;
+            $("adiAtivo").value = String(a.ativo);
+
+            $("adiNome").focus();
+
+            $("formAdi").scrollIntoView({
+                behavior: "smooth",
+                block: "center"
+            });
+
+            mensagem("Editando: " + a.nome);
+        });
+
+        const alternar = criarBotao(
+            a.ativo ? "Desativar" : "Ativar",
+            () => {
+                a.ativo = !a.ativo;
+                salvar("Disponibilidade atualizada: " + a.nome);
+            }
         );
 
-        td(tr,acoes);
+        const excluir = criarBotao("Excluir", () => {
+            confirmarExclusao(
+                "adicional",
+                indice,
+                a.nome,
+                tr
+            );
+        });
+
+        acoes.append(editar, alternar, excluir);
+        celula(tr, acoes);
         tabelaA.appendChild(tr);
     });
 }
 
-$("formFil").addEventListener("submit",e=>{
-    e.preventDefault();
+$("formFil").addEventListener("submit", evento => {
+    evento.preventDefault();
 
-    const nome=$("filNome").value.trim();
-    const custo=Number($("filCusto").value);
+    const nome = $("filNome").value.trim();
+    const custo = Number($("filCusto").value);
+    const cor = $("filCor").value;
 
-    if(!nome||!Number.isFinite(custo)||custo<0) {
-        mensagem("Preencha os dados do filamento corretamente.","erro");
+    if (!nome || !Number.isFinite(custo) || custo < 0) {
+        mensagem("Dados inválidos para o filamento.", true);
         return;
     }
 
-    const item={
-        nome,
-        custo,
-        cor:$("filCor").value
-    };
+    const item = { nome, custo, cor };
 
-    if(editF>=0) fil[editF]=item;
-    else fil.push(item);
+    if (editF >= 0 && editF < fil.length) {
+        fil[editF] = item;
+    } else {
+        fil.push(item);
+    }
 
-    editF=-1;
-    e.target.reset();
-    salvar("Filamento salvo: "+nome);
+    editF = -1;
+    evento.target.reset();
+    salvar("Filamento salvo: " + nome);
 });
 
-$("formAdi").addEventListener("submit",e=>{
-    e.preventDefault();
+$("formAdi").addEventListener("submit", evento => {
+    evento.preventDefault();
 
-    const nome=$("adiNome").value.trim();
-    const custo=Number($("adiCusto").value);
+    const nome = $("adiNome").value.trim();
+    const custo = Number($("adiCusto").value);
 
-    if(!nome||!Number.isFinite(custo)||custo<0) {
-        mensagem("Preencha os dados do adicional corretamente.","erro");
+    if (!nome || !Number.isFinite(custo) || custo < 0) {
+        mensagem("Dados inválidos para o adicional.", true);
         return;
     }
 
-    const id=editA||(
-        "adicional-"+Date.now().toString(36)+
-        "-"+Math.random().toString(36).slice(2,8)
+    const id = editA || (
+        "adicional-" +
+        Date.now().toString(36) +
+        "-" +
+        Math.random().toString(36).slice(2, 8)
     );
 
-    const item={
+    const item = {
         id,
         nome,
         custo,
-        ativo:$("adiAtivo").value==="true"
+        ativo: $("adiAtivo").value === "true"
     };
 
-    if(editA) {
-        const indice=adi.findIndex(a=>a.id===editA);
-        if(indice>=0) adi[indice]=item;
+    if (editA) {
+        const indice = adi.findIndex(a => a.id === editA);
+
+        if (indice >= 0) {
+            adi[indice] = item;
+        } else {
+            adi.push(item);
+        }
     } else {
         adi.push(item);
     }
 
-    editA=null;
-    e.target.reset();
-    salvar("Adicional salvo: "+nome);
+    editA = null;
+    evento.target.reset();
+    salvar("Adicional salvo: " + nome);
 });
 
-$("cancelarFil").addEventListener("click",()=>{
-    editF=-1;
+$("cancelarFil").addEventListener("click", evento => {
+    evento.preventDefault();
+    editF = -1;
     $("formFil").reset();
-    mensagem("Edicao de filamento cancelada.");
+    fecharConfirmacao();
+    mensagem("Edição cancelada.");
 });
 
-$("cancelarAdi").addEventListener("click",()=>{
-    editA=null;
+$("cancelarAdi").addEventListener("click", evento => {
+    evento.preventDefault();
+    editA = null;
     $("formAdi").reset();
-    mensagem("Edicao de adicional cancelada.");
+    fecharConfirmacao();
+    mensagem("Edição cancelada.");
 });
 
 render();
