@@ -8,6 +8,122 @@
 <link rel="icon" type="image/svg+xml" href="img/LOGO_SFUNDO.svg">
 <link rel="stylesheet" href="duolab-responsive.css?v=1794499560">
 <script defer src="duolab-responsive.js?v=1794499232"></script>
+<!-- DUOLAB_CADASTROS_THEME_V2_START -->
+<style>
+/* Identidade visual oficial Duo.Lab */
+body {
+    --duo-primary: #2563eb;
+    --duo-primary-hover: #1d4ed8;
+    --duo-navy: #1e293b;
+    --duo-border: #cbd5e1;
+    --duo-background: #f1f5f9;
+    --duo-text: #334155;
+    --duo-danger: #dc2626;
+}
+
+/* Todos os botoes principais */
+button[type="submit"],
+button.btn-primary,
+button.primary,
+button.salvar,
+button[class*="save"],
+button[id*="salvar"],
+button[id*="Salvar"],
+.btn-success,
+.btn-save,
+.btn-salvar,
+button[style*="#00A091"],
+button[style*="#00a091"],
+button[style*="#009688"],
+button[style*="#00a091"],
+button[style*="teal"] {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* Botoes verdes gerados dinamicamente */
+button:not(.app-menu-toggle):not(.btn-danger):not(.danger) {
+    --success: #2563eb !important;
+    --primary: #2563eb !important;
+    --accent: #2563eb !important;
+}
+
+/* Acoes de salvar nas tabelas */
+table button:not(.danger):not(.btn-danger),
+table .btn-success,
+table button[onclick*="salvar"],
+table button[onclick*="Salvar"],
+table button[onclick*="save"],
+table button[onclick*="Save"] {
+    background: #2563eb !important;
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+table button:not(.danger):not(.btn-danger):hover,
+button[type="submit"]:hover,
+button.btn-primary:hover,
+button.primary:hover,
+button.salvar:hover {
+    background: #1d4ed8 !important;
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}
+
+/* Campos de formulario */
+input[type="checkbox"],
+input[type="radio"] {
+    accent-color: #2563eb !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: #2563eb !important;
+    outline-color: #2563eb !important;
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, .12) !important;
+}
+
+/* Links e indicadores */
+main a:not(.app-nav a) {
+    color: #2563eb;
+}
+
+progress,
+meter {
+    accent-color: #2563eb !important;
+}
+
+/* Cabecalhos das tabelas */
+table thead,
+table thead tr,
+table th {
+    background: #1e293b !important;
+    color: #ffffff !important;
+}
+
+/* Responsividade */
+@media (max-width: 767px) {
+    main {
+        max-width: 100%;
+        min-width: 0;
+    }
+
+    table {
+        max-width: 100%;
+    }
+
+    input,
+    select,
+    textarea {
+        max-width: 100%;
+    }
+}
+</style>
+<!-- DUOLAB_CADASTROS_THEME_V2_END -->
 </head>
 <body>
 <header class="app-header no-print">
