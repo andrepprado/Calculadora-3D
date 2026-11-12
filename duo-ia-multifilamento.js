@@ -1318,7 +1318,7 @@ function lerPeso(texto) {
 
             try {
                 const itens = preencher(dados);
-                resultado(dados, itens, link);
+                resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link);
                 status("ANALISE CONCLUIDA. CALCULADORA ATUALIZADA.");
             } catch {
                 revisarLeitura(dados, validas, link);
@@ -1747,7 +1747,7 @@ function lerPeso(texto) {
             };
 
             const itens = preencher(dados);
-            resultado(dados, itens, link);
+            resultado(dados, itens, link); duoMostrarResultadoWhatsApp(dados, itens, link);
 
             status(
                 "ANALISE CONCLUIDA: " +
@@ -1771,6 +1771,199 @@ function lerPeso(texto) {
             botao.disabled = false;
         }
     }
+    // DUOLAB_WHATSAPP_INICIO
+
+    function duoFormatarMoedaWhatsApp(valor) {
+        const numero = Number(valor);
+
+        return Number.isFinite(numero)
+            ? numero.toLocaleString("pt-BR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })
+            : "0,00";
+    }
+
+    function duoGerarMensagemWhatsApp(titulo, custo, sugerido, link) {
+        const nome = String(titulo || "Modelo 3D").trim();
+
+        return [
+            "*" + nome + "*",
+            "Custo Produção Total: R$ " +
+                duoFormatarMoedaWhatsApp(custo),
+            "Valor Unitário Sugerido: R$ " +
+                duoFormatarMoedaWhatsApp(sugerido),
+            String(link || "").trim()
+        ].filter(Boolean).join("\n");
+    }
+
+    function duoMostrarResultadoWhatsApp(dados, itens, link) {
+        const secao = $("duoIAResultado");
+
+        if (!secao) return;
+
+        const tituloInput = document.querySelector(
+            "#nomeProduto, #nomeModelo, #tituloProduto, " +
+            "#descricaoProduto, #nomePeca"
+        );
+
+        let titulo = tituloInput?.value?.trim() || "";
+
+        if (!titulo && link) {
+            try {
+                const url = new URL(link);
+
+                const trecho = url.pathname
+                    .split("/")
+                    .filter(Boolean)
+                    .pop() || "";
+
+                titulo = trecho
+                    .replace(/^\d+-/, "")
+                    .replace(/-/g, " ")
+                    .replace(/\b\w/g, letra => letra.toUpperCase());
+            } catch {}
+        }
+
+        if (!titulo) titulo = "Modelo 3D";
+
+        const custoElementos = [
+            "#custoProducaoTotal",
+            "#custoTotal",
+            "#custoProducao",
+            "[data-custo-producao]"
+        ];
+
+        const sugeridoElementos = [
+            "#valorUnitarioSugerido",
+            "#precoSugerido",
+            "#precoVenda",
+            "[data-preco-sugerido]"
+        ];
+
+        function lerValor(seletores) {
+            for (const seletor of seletores) {
+                const elemento = document.querySelector(seletor);
+
+                if (!elemento) continue;
+
+                const texto = String(
+                    elemento.value || elemento.textContent || ""
+                );
+
+                const encontrado = texto.match(
+                    /(?:R\$\s*)?([\d.]+,\d{2}|\d+(?:\.\d{1,2})?)/
+                );
+
+                if (!encontrado) continue;
+
+                const numero = Number(
+                    encontrado[1]
+                        .replace(/\./g, "")
+                        .replace(",", ".")
+                );
+
+                if (Number.isFinite(numero)) return numero;
+            }
+
+            return null;
+        }
+
+        const custo = lerValor(custoElementos);
+        const sugerido = lerValor(sugeridoElementos);
+
+        let linkFinal = String(link || "").trim();
+
+        try {
+            const url = new URL(linkFinal);
+            const id = url.pathname.match(/models\/(\d+)/)?.[1];
+
+            if (id && url.hostname.endsWith("makerworld.com")) {
+                linkFinal =
+                    "https://makerworld.com/models/" +
+                    id +
+                    "?appSharePlatform=copy";
+            }
+        } catch {}
+
+        const mensagem = duoGerarMensagemWhatsApp(
+            titulo,
+            custo,
+            sugerido,
+            linkFinal
+        );
+
+        let area = document.getElementById(
+            "duoIAWhatsAppResultado"
+        );
+
+        if (!area) {
+            area = document.createElement("div");
+            area.id = "duoIAWhatsAppResultado";
+
+            area.style.marginTop = "18px";
+            area.style.padding = "14px";
+            area.style.border = "1px solid #d6e0e8";
+            area.style.borderRadius = "10px";
+            area.style.background = "#f7fafc";
+
+            secao.appendChild(area);
+        }
+
+        area.replaceChildren();
+
+        const tituloArea = document.createElement("strong");
+        tituloArea.textContent = "MENSAGEM PARA WHATSAPP";
+        tituloArea.style.display = "block";
+        tituloArea.style.marginBottom = "10px";
+        tituloArea.style.color = "#003640";
+
+        const texto = document.createElement("textarea");
+        texto.id = "duoIAMensagemWhatsApp";
+        texto.value = mensagem;
+        texto.readOnly = true;
+        texto.rows = 5;
+
+        texto.style.width = "100%";
+        texto.style.boxSizing = "border-box";
+        texto.style.padding = "12px";
+        texto.style.border = "1px solid #cbd5e1";
+        texto.style.borderRadius = "8px";
+        texto.style.resize = "vertical";
+        texto.style.fontFamily = "inherit";
+        texto.style.fontSize = "14px";
+
+        const copiar = document.createElement("button");
+        copiar.type = "button";
+        copiar.textContent = "COPIAR PARA WHATSAPP";
+        copiar.className = $("duoIAAnalisar")?.className || "";
+        copiar.style.width = "100%";
+        copiar.style.marginTop = "10px";
+
+        copiar.addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(texto.value);
+                copiar.textContent = "MENSAGEM COPIADA!";
+            } catch {
+                texto.focus();
+                texto.select();
+                document.execCommand("copy");
+                copiar.textContent = "MENSAGEM COPIADA!";
+            }
+
+            setTimeout(() => {
+                copiar.textContent = "COPIAR PARA WHATSAPP";
+            }, 2000);
+        });
+
+        area.append(
+            tituloArea,
+            texto,
+            copiar
+        );
+    }
+
+    // DUOLAB_WHATSAPP_FIM
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
