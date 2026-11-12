@@ -1118,3 +1118,125 @@ if (document.readyState === 'loading') {
         }
     });
 })();
+
+
+/* DUOLAB_ADICIONAIS_SYNC_V1_START */
+(function () {
+    "use strict";
+
+    const normalizar = valor => String(valor || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+
+    function numero(valor) {
+        const texto = String(valor ?? "").replace(/[^\d,.-]/g, "");
+        if (!texto) return 0;
+        const ajustado = texto.includes(",")
+            ? texto.replace(/\./g, "").replace(",", ".")
+            : texto;
+        return Number(ajustado) || 0;
+    }
+
+    function encontrarOpcao(nome) {
+        const raiz = document.getElementById("duoAdicionaisDinamicos");
+        if (!raiz) return null;
+
+        const elementos = [...raiz.querySelectorAll(
+            "label, tr, .adicional-item, .opcao-adicional, .form-check"
+        )];
+
+        const candidatos = elementos.filter(elemento => {
+            const texto = normalizar(elemento.textContent);
+            return texto === nome ||
+                texto.startsWith(nome + " ") ||
+                texto.startsWith(nome + "\n");
+        });
+
+        candidatos.sort((a, b) =>
+            a.querySelectorAll("*").length - b.querySelectorAll("*").length
+        );
+
+        return candidatos.find(elemento =>
+            elemento.querySelector('input[type="checkbox"]')
+        ) || null;
+    }
+
+    function checkbox(nome) {
+        const opcao = encontrarOpcao(nome);
+        return opcao?.querySelector('input[type="checkbox"]') || null;
+    }
+
+    function custoConfigurado(nome) {
+        const raiz = document.getElementById("duoAdicionaisDinamicos");
+        const opcao = encontrarOpcao(nome);
+
+        if (!raiz || !opcao) return 0;
+
+        const input = opcao.querySelector(
+            'input[type="number"], input[data-custo]'
+        );
+
+        if (input) {
+            return numero(input.value || input.dataset.custo);
+        }
+
+        const dados = [
+            opcao.dataset.custo,
+            opcao.dataset.valor,
+            opcao.querySelector("[data-custo]")?.dataset.custo,
+            opcao.querySelector("[data-valor]")?.dataset.valor
+        ];
+
+        for (const valor of dados) {
+            if (valor !== undefined && valor !== null && valor !== "") {
+                return numero(valor);
+            }
+        }
+
+        return 0;
+    }
+
+    function custoSelecionado(nome) {
+        const campo = checkbox(nome);
+        return campo?.checked ? custoConfigurado(nome) : 0;
+    }
+
+    window.duoCustoImaChaveiro = function () {
+        return {
+            ima: custoSelecionado("ima"),
+            chaveiro: custoSelecionado("chaveiro")
+        };
+    };
+
+    function recalcular() {
+        if (typeof window.calcular === "function") {
+            window.calcular();
+        }
+
+        document.dispatchEvent(new CustomEvent(
+            "duolab:adicionais-alterados",
+            { detail: window.duoCustoImaChaveiro() }
+        ));
+    }
+
+    document.addEventListener("change", evento => {
+        if (
+            evento.target.closest?.("#duoAdicionaisDinamicos") &&
+            evento.target.matches('input[type="checkbox"], input')
+        ) {
+            queueMicrotask(recalcular);
+        }
+    });
+
+    document.addEventListener("input", evento => {
+        if (
+            evento.target.closest?.("#duoAdicionaisDinamicos") &&
+            evento.target.matches('input[type="number"]')
+        ) {
+            queueMicrotask(recalcular);
+        }
+    });
+})();
+/* DUOLAB_ADICIONAIS_SYNC_V1_END */
