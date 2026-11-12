@@ -356,3 +356,33 @@ img[data-duolab-loaded="true"] {
 }
 
 /* DUOLAB_HEADER_GRID_AND_IMAGES_V3_END */
+/* DUOLAB_VERTICAL_SPACING_V5_START */
+
+/* Desktop: distancia entre header e conteudo */
+@media (min-width: 992px) {
+    body:has(#duolab-desktop-header) main {
+        padding-top: 32px !important;
+    }
+
+    /* Distancia entre a calculadora e a IA */
+    #duo-ia-multifilamento,
+    #duoIAContainer,
+    .duo-ia-multifilamento {
+        margin-top: 32px !important;
+    }
+}
+
+/* Mobile: espacamento vertical proporcional */
+@media (max-width: 991.98px) {
+    main {
+        padding-top: 16px;
+    }
+
+    #duo-ia-multifilamento,
+    #duoIAContainer,
+    .duo-ia-multifilamento {
+        margin-top: 20px !important;
+    }
+}
+
+/* DUOLAB_VERTICAL_SPACING_V5_END */
