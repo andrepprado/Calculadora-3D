@@ -176,7 +176,7 @@ module.exports = async function handler(req, res) {
 
         // Lazy loading keeps dependency errors inside try/catch.
         const playwright = require("playwright-core");
-        const pacote = await import("@sparticuz/chromium");
+        const pacote = require("@sparticuz/chromium");
         const chromium = pacote.default || pacote;
 
         etapa = "launching Chromium";
