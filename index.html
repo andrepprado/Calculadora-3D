@@ -539,6 +539,414 @@
 <script src="vendor/ocr/tesseract.min.js"></script>
 <script src="duo-ia-multifilamento.js?v=1794494014"></script>
 
+<!-- DUOLAB_RESPONSIVE_HEADER_V1_START -->
+<style id="duolab-responsive-header-style">
+    :root {
+        --duolab-header-height: 70px;
+    }
+
+    #duolab-desktop-header {
+        display: none;
+    }
+
+    @media screen and (min-width: 992px) {
+        html {
+            scroll-padding-top: calc(var(--duolab-header-height) + 16px);
+        }
+
+        body {
+            padding-top: var(--duolab-header-height) !important;
+        }
+
+        #duolab-desktop-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2147483000;
+
+            height: var(--duolab-header-height);
+            box-sizing: border-box;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+
+            padding: 0 32px;
+
+            background: #003640;
+            color: #ffffff;
+
+            border-bottom: 3px solid #00a091;
+            box-shadow: 0 3px 14px rgba(0, 0, 0, 0.16);
+        }
+
+        #duolab-desktop-header .duolab-header-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        #duolab-desktop-header .duolab-header-brand img {
+            display: block;
+            width: auto;
+            max-width: 120px;
+            max-height: 42px;
+            object-fit: contain;
+        }
+
+        #duolab-desktop-header .duolab-header-nav {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            gap: 6px;
+
+            min-width: 0;
+        }
+
+        #duolab-desktop-header .duolab-header-nav a,
+        #duolab-desktop-header .duolab-header-nav button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+
+            min-height: 38px;
+            padding: 8px 13px;
+            box-sizing: border-box;
+
+            border: 0;
+            border-radius: 7px;
+
+            background: transparent;
+            color: #ffffff;
+
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            line-height: 1.2;
+
+            text-decoration: none;
+            cursor: pointer;
+
+            transition: background 0.15s ease;
+        }
+
+        #duolab-desktop-header .duolab-header-nav a:hover,
+        #duolab-desktop-header .duolab-header-nav button:hover,
+        #duolab-desktop-header .duolab-header-nav a:focus-visible,
+        #duolab-desktop-header .duolab-header-nav button:focus-visible {
+            background: #00a091;
+            outline-offset: 2px;
+        }
+
+        #duolab-desktop-header .duolab-header-nav .active,
+        #duolab-desktop-header .duolab-header-nav [aria-current="page"] {
+            background: #00a091;
+        }
+
+        .app-menu-toggle {
+            display: none !important;
+        }
+    }
+
+    @media screen and (max-width: 991.98px) {
+        body {
+            padding-top: 0;
+        }
+
+        #duolab-desktop-header {
+            display: none !important;
+        }
+
+        .app-menu-toggle {
+            display: flex;
+        }
+    }
+</style>
+
+<script id="duolab-responsive-header-script">
+(function () {
+    "use strict";
+
+    if (window.__duolabResponsiveHeaderV1) return;
+    window.__duolabResponsiveHeaderV1 = true;
+
+    const BREAKPOINT = 992;
+    const HEADER_ID = "duolab-desktop-header";
+
+    function normalizar(texto) {
+        return String(texto || "")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+
+    function obterToggle() {
+        return document.querySelector(".app-menu-toggle");
+    }
+
+    function obterPainel(toggle) {
+        if (!toggle) return null;
+
+        const controles = toggle.getAttribute("aria-controls");
+
+        if (controles) {
+            const painel = document.getElementById(controles);
+            if (painel) return painel;
+        }
+
+        const alvo = toggle.getAttribute("data-target") ||
+                     toggle.getAttribute("data-bs-target");
+
+        if (alvo) {
+            try {
+                const painel = document.querySelector(alvo);
+                if (painel) return painel;
+            } catch (_) {}
+        }
+
+        const candidatos = [
+            ".app-menu",
+            ".app-menu-panel",
+            ".app-menu-dropdown",
+            ".app-menu-content",
+            ".app-menu-items",
+            ".app-sidebar",
+            "#app-menu",
+            "#appMenu",
+            ".mobile-menu",
+            ".menu-dropdown"
+        ];
+
+        for (const seletor of candidatos) {
+            const painel = document.querySelector(seletor);
+
+            if (painel && !painel.contains(toggle)) {
+                return painel;
+            }
+        }
+
+        const pai = toggle.parentElement;
+
+        if (pai) {
+            const vizinhos = [...pai.children].filter(elemento =>
+                elemento !== toggle &&
+                elemento.querySelectorAll("a, button").length > 0
+            );
+
+            if (vizinhos.length === 1) {
+                return vizinhos[0];
+            }
+        }
+
+        return null;
+    }
+
+    function obterOpcoes(toggle, painel) {
+        const raiz = painel || document;
+
+        const candidatos = [
+            ...raiz.querySelectorAll("a[href], button")
+        ].filter(elemento => {
+            if (elemento === toggle) return false;
+            if (elemento.closest("#" + HEADER_ID)) return false;
+            if (elemento.classList.contains("app-menu-toggle")) return false;
+
+            const texto = normalizar(
+                elemento.textContent ||
+                elemento.getAttribute("aria-label") ||
+                elemento.getAttribute("title")
+            );
+
+            if (!texto) return false;
+
+            if (elemento.tagName === "BUTTON") {
+                if (
+                    elemento.type === "submit" ||
+                    elemento.closest("form")
+                ) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        const vistos = new Set();
+
+        return candidatos.filter(elemento => {
+            const texto = normalizar(
+                elemento.textContent ||
+                elemento.getAttribute("aria-label") ||
+                elemento.getAttribute("title")
+            );
+
+            const destino = elemento.getAttribute("href") || "";
+            const chave = texto.toLowerCase() + "|" + destino;
+
+            if (vistos.has(chave)) return false;
+
+            vistos.add(chave);
+            return true;
+        });
+    }
+
+    function criarCabecalho() {
+        if (document.getElementById(HEADER_ID)) return;
+
+        const toggle = obterToggle();
+
+        if (!toggle) {
+            console.warn(
+                "[DUOLAB HEADER] .app-menu-toggle nao encontrado."
+            );
+            return;
+        }
+
+        const painel = obterPainel(toggle);
+        const opcoes = obterOpcoes(toggle, painel);
+
+        if (!opcoes.length) {
+            console.warn(
+                "[DUOLAB HEADER] Opcoes do menu nao encontradas."
+            );
+            return;
+        }
+
+        const header = document.createElement("header");
+        header.id = HEADER_ID;
+        header.setAttribute("role", "banner");
+
+        const marca = document.createElement("a");
+        marca.className = "duolab-header-brand";
+        marca.href = "index.html";
+        marca.setAttribute("aria-label", "Duo.Lab - Inicio");
+
+        const logoOriginal = document.querySelector(
+            ".app-logo img, .logo img, .brand img, header img"
+        );
+
+        if (logoOriginal) {
+            const imagem = logoOriginal.cloneNode(true);
+            imagem.removeAttribute("id");
+            marca.appendChild(imagem);
+        } else {
+            marca.textContent = "Duo.Lab";
+        }
+
+        const nav = document.createElement("nav");
+        nav.className = "duolab-header-nav";
+        nav.setAttribute("aria-label", "Menu principal");
+
+        for (const original of opcoes) {
+            const texto = normalizar(
+                original.textContent ||
+                original.getAttribute("aria-label") ||
+                original.getAttribute("title")
+            );
+
+            let item;
+
+            if (original.tagName === "A") {
+                item = document.createElement("a");
+
+                item.href = original.getAttribute("href") || "#";
+
+                if (original.target) {
+                    item.target = original.target;
+                }
+
+                if (original.rel) {
+                    item.rel = original.rel;
+                }
+
+                if (original.hasAttribute("download")) {
+                    item.setAttribute(
+                        "download",
+                        original.getAttribute("download")
+                    );
+                }
+            } else {
+                item = document.createElement("button");
+                item.type = "button";
+
+                item.addEventListener("click", function () {
+                    original.click();
+                });
+            }
+
+            item.textContent = texto;
+
+            if (original.classList.contains("active")) {
+                item.classList.add("active");
+            }
+
+            if (original.getAttribute("aria-current")) {
+                item.setAttribute(
+                    "aria-current",
+                    original.getAttribute("aria-current")
+                );
+            }
+
+            nav.appendChild(item);
+        }
+
+        header.append(marca, nav);
+
+        document.body.insertBefore(
+            header,
+            document.body.firstChild
+        );
+
+        console.info(
+            "[DUOLAB HEADER] Header desktop criado com",
+            opcoes.length,
+            "opcoes."
+        );
+    }
+
+    function atualizar() {
+        if (window.innerWidth >= BREAKPOINT) {
+            criarCabecalho();
+        }
+    }
+
+    function iniciar() {
+        atualizar();
+
+        window.addEventListener(
+            "resize",
+            atualizar,
+            { passive: true }
+        );
+
+        window.addEventListener(
+            "orientationchange",
+            atualizar,
+            { passive: true }
+        );
+    }
+
+    if (document.readyState === "loading") {
+        document.addEventListener(
+            "DOMContentLoaded",
+            iniciar,
+            { once: true }
+        );
+    } else {
+        iniciar();
+    }
+})();
+</script>
+<!-- DUOLAB_RESPONSIVE_HEADER_V1_END -->
 </body>
 
 </html>
