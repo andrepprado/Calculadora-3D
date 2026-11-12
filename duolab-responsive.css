@@ -386,3 +386,175 @@ img[data-duolab-loaded="true"] {
 }
 
 /* DUOLAB_VERTICAL_SPACING_V5_END */
+
+
+/* DUOLAB_ADMIN_THEME_V1_START */
+
+/* Identidade visual Duo.Lab: azul, branco e azul-marinho */
+body:has(main.duo-admin) {
+    --primary: #2563eb;
+    --success: #10b981;
+    --bg-base: #f1f5f9;
+    --dark-card: #1e293b;
+    --text: #1e293b;
+
+    background-color: #f1f5f9 !important;
+    color: #1e293b !important;
+}
+
+/* Cabecalho */
+body:has(main.duo-admin) .app-header {
+    background: #1e293b !important;
+    border-bottom: 1px solid #334155 !important;
+}
+
+body:has(main.duo-admin) .app-nav {
+    background: transparent !important;
+}
+
+body:has(main.duo-admin) .app-nav a {
+    color: #ffffff !important;
+}
+
+body:has(main.duo-admin) .app-nav a:hover {
+    background: #334155 !important;
+}
+
+body:has(main.duo-admin) .app-nav a.active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* Conteudo principal */
+body:has(main.duo-admin) main.duo-admin {
+    width: min(100% - 32px, 1200px);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 32px 0 56px;
+    color: #1e293b !important;
+}
+
+body:has(main.duo-admin) main.duo-admin h1 {
+    color: #1e293b !important;
+}
+
+body:has(main.duo-admin) main.duo-admin h2,
+body:has(main.duo-admin) main.duo-admin h3 {
+    color: #2563eb !important;
+}
+
+body:has(main.duo-admin) main.duo-admin p,
+body:has(main.duo-admin) main.duo-admin label {
+    color: #475569 !important;
+}
+
+/* Cards */
+body:has(main.duo-admin) main.duo-admin > section {
+    background: #ffffff !important;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 14px !important;
+    padding: 24px !important;
+    margin-bottom: 24px !important;
+    box-shadow: 0 4px 15px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Formularios */
+body:has(main.duo-admin) main.duo-admin input:not([type="checkbox"]):not([type="color"]),
+body:has(main.duo-admin) main.duo-admin select {
+    background: #ffffff !important;
+    color: #1e293b !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 8px !important;
+    accent-color: #2563eb;
+}
+
+body:has(main.duo-admin) main.duo-admin input:focus,
+body:has(main.duo-admin) main.duo-admin select:focus {
+    outline-color: #2563eb !important;
+    border-color: #2563eb !important;
+}
+
+body:has(main.duo-admin) main.duo-admin input[type="checkbox"] {
+    accent-color: #2563eb !important;
+}
+
+/* Botoes principais */
+body:has(main.duo-admin) main.duo-admin button[type="submit"] {
+    background: #2563eb !important;
+    border: 1px solid #2563eb !important;
+    color: #ffffff !important;
+    border-radius: 8px !important;
+    font-weight: 700 !important;
+    cursor: pointer;
+}
+
+body:has(main.duo-admin) main.duo-admin button[type="submit"]:hover {
+    background: #1d4ed8 !important;
+}
+
+/* Botoes secundarios */
+body:has(main.duo-admin) #cancelarFil,
+body:has(main.duo-admin) #cancelarAdi {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #475569 !important;
+    border-radius: 8px !important;
+}
+
+/* Tabelas */
+body:has(main.duo-admin) main.duo-admin table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff !important;
+    color: #1e293b !important;
+}
+
+body:has(main.duo-admin) main.duo-admin thead,
+body:has(main.duo-admin) main.duo-admin th {
+    background: #1e293b !important;
+    color: #ffffff !important;
+}
+
+body:has(main.duo-admin) main.duo-admin td {
+    background: #ffffff !important;
+    color: #334155 !important;
+    border-bottom: 1px solid #e2e8f0 !important;
+}
+
+body:has(main.duo-admin) main.duo-admin tbody tr:hover td {
+    background: #eff6ff !important;
+}
+
+/* Links */
+body:has(main.duo-admin) main.duo-admin a {
+    color: #2563eb !important;
+}
+
+/* Tabelas responsivas */
+body:has(main.duo-admin) .duo-opcoes-table-wrap {
+    max-width: 100%;
+    overflow-x: auto;
+}
+
+/* Mobile */
+@media (max-width: 767px) {
+    body:has(main.duo-admin) main.duo-admin {
+        width: calc(100% - 24px);
+        padding-top: 20px;
+    }
+
+    body:has(main.duo-admin) main.duo-admin > section {
+        padding: 16px !important;
+        margin-bottom: 20px !important;
+    }
+
+    body:has(main.duo-admin) main.duo-admin table {
+        min-width: 560px;
+    }
+
+    body:has(main.duo-admin) .app-menu-toggle {
+        display: flex;
+    }
+}
+
+/* DUOLAB_ADMIN_THEME_V1_END */
