@@ -1789,6 +1789,197 @@ function lerPeso(texto) {
             .sort((a, b) => b[1] - a[1])[0]?.[0] || null;
     }
 
+    function duoV4DetectarCorVisual(canvas, y0, y1, tipo) {
+        const largura = canvas.width;
+        const altura = canvas.height;
+        const ctx = canvas.getContext("2d", {
+            willReadFrequently: true
+        });
+
+        const inicioY = Math.max(0, Math.floor(y0));
+        const fimY = Math.min(altura, Math.ceil(y1));
+        const h = fimY - inicioY;
+
+        if (h < 12) return null;
+
+        const dados = ctx.getImageData(
+            0, inicioY, largura, h
+        ).data;
+
+        function pixel(x, y) {
+            const pos = ((y * largura) + x) * 4;
+            return [
+                dados[pos],
+                dados[pos + 1],
+                dados[pos + 2]
+            ];
+        }
+
+        function classificar(r, g, b) {
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            const delta = max - min;
+
+            if (r >= 218 && g >= 218 && b >= 218 &&
+                delta < 32) return "branco";
+
+            if (r <= 24 && g <= 24 && b <= 24)
+                return "preto";
+
+            if (r > 165 && g >= 65 && g < 175 &&
+                b < 100 && r > g * 1.5)
+                return "laranja";
+
+            if (r > 115 && r > g * 1.65 &&
+                r > b * 1.6 && g < 120)
+                return "vermelho";
+
+            if (r >= 65 && r < 175 &&
+                g >= 32 && g < 125 &&
+                b < 100 && r > g * 1.18 &&
+                g > b * 1.05)
+                return "marrom";
+
+            if (r > 145 && g > 105 && b > 65 &&
+                r > g * 1.08 && g > b * 1.05)
+                return "bege";
+
+            if (b > 90 && b > r * 1.35 &&
+                b > g * 1.15)
+                return "azul";
+
+            if (g > 85 && g > r * 1.3 &&
+                g > b * 1.15)
+                return "verde";
+
+            return null;
+        }
+
+        const inicioX = Math.floor(
+            largura * (tipo === "computador" ? 0.12 : 0.19)
+        );
+        const fimX = Math.min(
+            largura - 1,
+            Math.floor(largura * 0.52)
+        );
+
+        // Procurar o retangulo colorido da etiqueta PLA.
+        // A cor deve ocupar uma area continua, nao apenas texto.
+        const pontos = [];
+
+        const passoX = Math.max(2, Math.floor(largura / 180));
+        const passoY = Math.max(2, Math.floor(h / 90));
+
+        const raioX = Math.max(7, Math.floor(largura * 0.018));
+        const raioY = Math.max(4, Math.floor(h * 0.035));
+
+        for (
+            let y = Math.floor(h * 0.24);
+            y < Math.floor(h * 0.94);
+            y += passoY
+        ) {
+            for (
+                let x = inicioX;
+                x < fimX;
+                x += passoX
+            ) {
+                const [r, g, b] = pixel(x, y);
+                const cor = classificar(r, g, b);
+
+                if (!cor) continue;
+
+                let iguais = 0;
+                let total = 0;
+
+                for (let dy = -raioY; dy <= raioY; dy += 2) {
+                    for (let dx = -raioX; dx <= raioX; dx += 3) {
+                        const xx = x + dx;
+                        const yy = y + dy;
+
+                        if (
+                            xx < 0 || xx >= largura ||
+                            yy < 0 || yy >= h
+                        ) continue;
+
+                        const rgb = pixel(xx, yy);
+                        total++;
+
+                        if (classificar(...rgb) === cor) {
+                            iguais++;
+                        }
+                    }
+                }
+
+                const uniformidade = total
+                    ? iguais / total
+                    : 0;
+
+                if (uniformidade < 0.72) continue;
+
+                // Confirmar que a etiqueta difere do fundo ao redor.
+                const margemX = Math.min(
+                    largura - 1,
+                    x + raioX * 3
+                );
+
+                const fundo = pixel(margemX, y);
+                const contraste = Math.max(
+                    Math.abs(r - fundo[0]),
+                    Math.abs(g - fundo[1]),
+                    Math.abs(b - fundo[2])
+                );
+
+                if (contraste < 11) continue;
+
+                pontos.push({
+                    cor,
+                    x,
+                    y,
+                    score: uniformidade * 100 + contraste * 0.35
+                });
+            }
+        }
+
+        if (!pontos.length) return null;
+
+        const grupos = new Map();
+
+        for (const ponto of pontos) {
+            const atual = grupos.get(ponto.cor) || {
+                quantidade: 0,
+                melhor: 0,
+                pontos: []
+            };
+
+            atual.quantidade++;
+            atual.melhor = Math.max(atual.melhor, ponto.score);
+            atual.pontos.push(ponto);
+
+            grupos.set(ponto.cor, atual);
+        }
+
+        const candidatos = [...grupos.entries()]
+            .map(([cor, info]) => ({
+                cor,
+                quantidade: info.quantidade,
+                score: info.melhor
+            }))
+            .sort((a, b) =>
+                b.quantidade - a.quantidade ||
+                b.score - a.score
+            );
+
+        const escolhido = candidatos[0];
+
+        console.log("[DUOLAB OCR] Cor por pixels:", {
+            tipo,
+            placaY: inicioY,
+            candidatos: candidatos.slice(0, 5),
+            escolhida: escolhido?.cor || null
+        });
+
+        return escolhido?.cor || null;
+    }
     async function duoV4LerPlacas(worker, canvas) {
         const largura = canvas.width;
         const altura = canvas.height;
@@ -1967,6 +2158,18 @@ function lerPeso(texto) {
                 );
             }
 
+            // Recuperar cor diretamente dos pixels da etiqueta.
+            // Suporta prints do celular e do computador.
+            const corVisual = duoV4DetectarCorVisual(
+                canvas,
+                y0,
+                y1,
+                cabecalhos[i].tipo
+            );
+
+            if (corVisual) {
+                cor = corVisual;
+            }
             console.log(
                 "[DUOLAB OCR] Placa",
                 i + 1,
