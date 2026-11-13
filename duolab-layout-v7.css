@@ -1,0 +1,242 @@
+/* DUOLAB RESPONSIVE LAYOUT V7
+   Keep existing branding and application logic intact. */
+
+html {
+  width: 100%;
+  max-width: 100%;
+}
+
+body {
+  min-width: 0 !important;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+:where(main, section, article, aside, form, fieldset,
+       .container, .wrapper, .card, .panel, .grid,
+       .input-row, .input-group, .app-header-inner,
+       .app-nav, .duo-admin, .duo-modeling-shell) {
+  min-width: 0;
+}
+
+:where(input, select, textarea, button) {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+}
+
+:where(input:not([type="checkbox"]):not([type="radio"]),
+       select, textarea) {
+  width: 100%;
+}
+
+:where(label, p, h1, h2, h3, h4, a, button, td, th) {
+  overflow-wrap: break-word;
+}
+
+:where(img, video, svg) {
+  max-width: 100%;
+  height: auto;
+}
+
+:where(canvas) {
+  max-width: 100%;
+}
+
+:where(.input-row, .fields, .form-row, .form-grid,
+       .duo-adicionais-grid, .chk-grid) > * {
+  min-width: 0;
+}
+
+.input-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 12px;
+}
+
+.input-row > .input-group {
+  flex: 1 1 150px;
+  min-width: 0;
+}
+
+.input-row.equal-inputs > .input-group {
+  flex: 1 1 120px;
+}
+
+.input-group label {
+  display: block;
+  max-width: 100%;
+  line-height: 1.4;
+}
+
+.input-group input,
+.input-group select,
+.input-group textarea {
+  display: block;
+  max-width: 100%;
+}
+
+:where(.chk-grid, .duo-adicionais-grid) {
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 150px), 1fr));
+  gap: 10px;
+}
+
+:where(.chk-grid, .duo-adicionais-grid) label {
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.4;
+}
+
+:where(.table-responsive, .table-container,
+       .table-wrapper, .table-scroll) {
+  max-width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+table {
+  max-width: 100%;
+}
+
+.app-header-inner,
+#duolab-desktop-header {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.app-brand,
+.duolab-header-brand {
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.app-nav,
+.duolab-header-nav {
+  min-width: 0;
+}
+
+.app-nav a,
+.duolab-header-nav a {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.duo-modeling-shell {
+  width: 100% !important;
+  max-width: 1800px;
+  margin-inline: auto;
+  padding: clamp(10px, 2vw, 24px) !important;
+}
+
+.duo-modeling-hero {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: center;
+}
+
+.duo-modeling-hero > div {
+  min-width: 0;
+  flex: 1 1 280px;
+}
+
+.duo-modeling-hero h1 {
+  font-size: clamp(19px, 2.3vw, 27px);
+  line-height: 1.25;
+}
+
+.duo-modeling-frame {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 1050px;
+  min-height: 650px;
+  border: 1px solid #dce9f3;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 1199.98px) {
+  #duolab-desktop-header .duolab-header-nav {
+    gap: 4px !important;
+  }
+
+  #duolab-desktop-header .duolab-header-nav a {
+    padding: 8px 9px !important;
+    font-size: 12px !important;
+  }
+}
+
+@media (max-width: 991.98px) {
+  :where(.container, .wrapper, main, .duo-admin) {
+    max-width: 100%;
+  }
+
+  .input-row {
+    flex-wrap: wrap !important;
+  }
+
+  .input-row > .input-group {
+    flex: 1 1 180px;
+  }
+
+  .duo-modeling-hero {
+    padding: 16px !important;
+  }
+
+  .duo-modeling-frame {
+    min-height: 650px;
+  }
+}
+
+@media (max-width: 599.98px) {
+  .input-row,
+  .input-row.equal-inputs {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .input-row > .input-group {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  :where(.fields, .form-grid) {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  :where(.chk-grid, .duo-adicionais-grid) {
+    grid-template-columns:
+      repeat(auto-fit, minmax(min(100%, 125px), 1fr)) !important;
+  }
+
+  .duo-modeling-shell {
+    padding: 9px !important;
+  }
+
+  .duo-modeling-hero {
+    gap: 9px !important;
+    margin-bottom: 10px !important;
+  }
+
+  .duo-modeling-badge {
+    max-width: 100%;
+  }
+
+  .duo-modeling-frame {
+    border-radius: 9px;
+  }
+
+  :where(input, select, textarea) {
+    font-size: 16px;
+  }
+}

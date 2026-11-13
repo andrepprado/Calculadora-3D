@@ -1,0 +1,216 @@
+/* DUOLAB STUDIO RESPONSIVE V7 */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body > header {
+  height: auto;
+  min-height: 65px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+body > main {
+  display: grid;
+  grid-template-columns: minmax(270px, 340px) minmax(0, 1fr);
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  height: auto;
+  align-items: start;
+}
+
+body > main > aside {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  max-height: none !important;
+  height: auto !important;
+  overflow: visible !important;
+  padding: clamp(12px, 2vw, 22px);
+}
+
+body > main > .workspace {
+  width: 100%;
+  min-width: 0;
+  min-height: 650px;
+  padding: clamp(12px, 2vw, 22px);
+}
+
+body > main > aside section {
+  min-width: 0;
+}
+
+body > main :where(input,select,textarea) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+body > main :where(button) {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+body > main .fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+body > main .fields > div {
+  min-width: 0;
+}
+
+body > main .image-gallery {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fit, minmax(min(100%, 84px), 1fr));
+  gap: 8px;
+}
+
+body > main .image-thumb {
+  min-width: 0;
+  width: 100%;
+}
+
+body > main .image-thumb img {
+  width: 100%;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+body > main .reference-panel {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+body > main .workspaceTitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  align-items: center;
+}
+
+body > main .workspaceTitle > div {
+  min-width: 0;
+  flex: 1 1 190px;
+}
+
+body > main #viewport {
+  flex: none;
+  width: 100%;
+  min-width: 0;
+  height: clamp(400px, 58vh, 750px);
+  min-height: 400px;
+  overflow: hidden;
+}
+
+body > main #viewport canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+body > main .bottomPanel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+body > main .bottomPanel #message {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+body > main .exports {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+body > main .exports button {
+  flex: 1 1 auto;
+}
+
+.duolab-local-banner {
+  margin: 12px;
+  min-width: 0;
+}
+
+@media(max-width: 1099.98px) {
+  body > main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body > main > aside {
+    max-height: none !important;
+  }
+
+  body > main > .workspace {
+    min-height: 550px;
+  }
+
+  body > main #viewport {
+    height: 500px;
+  }
+}
+
+@media(max-width: 599.98px) {
+  body > header {
+    padding: 11px 13px;
+  }
+
+  body > main > aside,
+  body > main > .workspace {
+    padding: 12px;
+  }
+
+  body > main .fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  body > main .image-gallery {
+    grid-template-columns:
+      repeat(3, minmax(0, 1fr));
+  }
+
+  body > main .workspaceTitle h1 {
+    font-size: 18px;
+  }
+
+  body > main #viewport {
+    height: 380px;
+    min-height: 300px;
+  }
+
+  body > main .bottomPanel {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  body > main .exports {
+    width: 100%;
+  }
+
+  body > main .exports button {
+    min-width: 0;
+  }
+
+  .duolab-local-banner {
+    margin: 9px;
+  }
+}
