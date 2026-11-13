@@ -2170,6 +2170,115 @@ function lerPeso(texto) {
             if (corVisual) {
                 cor = corVisual;
             }
+            // Correct OCR errors commonly found in desktop screenshots.
+            // Examples:
+            // 022h -> 2.2h -> 132 minutes
+            // 16h  -> 1.6h -> 96 minutes
+            // 19h  -> 1.9h -> 114 minutes
+            // 14min / 1g -> 14 minutes / 1 gram
+            // Ig, |g, lg, Mig -> 1g when supported by context.
+
+            const textoOCR = String(texto || "")
+                .replace(/\u00a0/g, " ")
+                .replace(/\r/g, "");
+
+            const temposOCR = [];
+
+            const regexTempo = /(^|[^\d])([0-9Oo]{1,3}(?:[.,][0-9Oo]+)?)\s*(h|hrs?|min(?:utos?)?)\b/gi;
+
+            for (const match of textoOCR.matchAll(regexTempo)) {
+                const bruto = match[2]
+                    .replace(/[Oo]/g, "0")
+                    .replace(",", ".");
+
+                const unidade = match[3].toLowerCase();
+                let valor = Number(bruto);
+
+                if (!Number.isFinite(valor) || valor <= 0) {
+                    continue;
+                }
+
+                if (unidade.startsWith("h")) {
+                    if (!bruto.includes(".") &&
+                        /^0?[1-9][0-9]$/.test(bruto) &&
+                        Number(bruto) <= 99) {
+                        // OCR may discard the decimal separator.
+                        valor = Number(bruto) / 10;
+                    }
+
+                    valor *= 60;
+                }
+
+                temposOCR.push(Math.round(valor));
+            }
+
+            // Prefer a repeated, plausible duration over a malformed
+            // OCR result such as 1320, 960 or 1140 minutes.
+            if (temposOCR.length) {
+                const frequencias = new Map();
+
+                for (const valor of temposOCR) {
+                    if (valor > 0 && valor <= 14400) {
+                        frequencias.set(
+                            valor,
+                            (frequencias.get(valor) || 0) + 1
+                        );
+                    }
+                }
+
+                const candidatos = [...frequencias.entries()]
+                    .sort((a, b) => b[1] - a[1]);
+
+                if (candidatos.length) {
+                    const melhorTempo = candidatos[0][0];
+
+                    if (!(minutos > 0) ||
+                        minutos >= melhorTempo * 5 ||
+                        Math.abs(minutos - melhorTempo) > 300) {
+                        minutos = melhorTempo;
+                    }
+                }
+            }
+
+            // Restore missing unit digits in OCR text.
+            // The gram unit must be present to avoid confusing
+            // nozzle size (0.4mm) with filament weight.
+            if (!(peso > 0)) {
+                const pesosNormais = [
+                    ...textoOCR.matchAll(
+                        /(^|[^\d.,])([0-9]+(?:[.,][0-9]+)?)\s*g\b/gi
+                    )
+                ].map(m => Number(m[2].replace(",", ".")))
+                 .filter(v => Number.isFinite(v) && v > 0);
+
+                if (pesosNormais.length) {
+                    peso = pesosNormais[0];
+                }
+            }
+
+            if (!(peso > 0)) {
+                // 1g can be recognized as Ig, lg, |g, !g or Mig.
+                const pesoUm = /(?:^|[\s@©®(])(?:[1Il|!]\s*g|M[iIl1]\s*g)(?=$|[\s:;,.])/im;
+
+                if (pesoUm.test(textoOCR)) {
+                    peso = 1;
+                }
+            }
+
+            // Final conservative fallback for a 1g plate when OCR
+            // reads the numeral as i/l and the duration is clear.
+            if (!(peso > 0) &&
+                minutos > 0 &&
+                /(?:\b(?:i|l)\s*g\b|[|!]g\b)/i.test(textoOCR)) {
+                peso = 1;
+            }
+
+            console.log("[DUOLAB OCR] Desktop correction", {
+                placa: i + 1,
+                minutos,
+                peso,
+                candidatosTempo: temposOCR
+            });
             console.log(
                 "[DUOLAB OCR] Placa",
                 i + 1,
