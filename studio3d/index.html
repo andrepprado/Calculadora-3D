@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>3D Studio Local</title>
+  <script type="module" crossorigin src="/studio3d/assets/index-Gc2kClJY.js"></script>
+  <link rel="stylesheet" crossorigin href="/studio3d/assets/index-BJ7Mr0Tn.css">
+<link rel="stylesheet" href="/studio3d/duolab-theme.css">
+</head>
+<body>
+<header>
+  <div class="brand">
+    <div class="logo">3D</div>
+    <div>
+      <strong>3D Studio Local</strong>
+      <small>Imagem para impressão 3D</small>
+    </div>
+  </div>
+  <div id="aiStatus" class="status">Verificando IA...</div>
+</header>
+
+<div class="duolab-local-banner" id="duolabLocalBanner">
+  <span>
+    <strong>Modelagem 3D Duo.Lab</strong>
+    <span id="duolabEngineStatus">
+      Preview e exportação funcionam aqui.
+      Para utilizar Ollama e pesquisa pelo backend do Windows,
+      abra o motor local.
+    </span>
+  </span>
+  <a href="http://127.0.0.1:3870" target="_blank" rel="noopener noreferrer">
+    ABRIR MOTOR LOCAL
+  </a>
+</div>
+<main>
+  <aside>
+    <section>
+      <h2>01 / Imagem de referência</h2>
+      <label id="dropzone" class="dropzone">
+        <input id="file" type="file" multiple accept="image/png,image/jpeg,image/webp,.zip,application/zip">
+        <span class="uploadIcon">+</span>
+        <strong>Selecione várias fotos ou um arquivo ZIP</strong>
+        <small>PNG, JPG, WEBP ou ZIP • Vários ângulos da peça</small>
+        <img id="sourcePreview" hidden>
+<div id="imageCount" class="image-count" hidden></div>
+      </label>
+      <div id="imageGallery" class="image-gallery"></div>
+    </section>
+
+    <section>
+      <h2>02 / Descreva sua peça</h2>
+      <div class="reference-panel">
+  <h2>Pesquisa automática na internet</h2>
+
+  <label for="referenceURL">Link do modelo ou nome da peça</label>
+
+  <input
+    id="referenceURL"
+    type="text"
+    placeholder="Cole MakerWorld, Printables, Thingiverse ou o nome da peça"
+    autocomplete="off"
+  >
+
+  <button id="researchButton" type="button" class="secondary">
+    PESQUISAR E IDENTIFICAR PEÇA
+  </button>
+
+  <div id="researchResult" class="research-result"></div>
+</div>
+      <textarea id="prompt" rows="5" placeholder="Ex.: Quero um chaveiro de 80 mm com o desenho em alto-relevo, base de 3 mm e detalhes de 5 mm."></textarea>
+      <label>Modelo de IA visual local</label>
+      <select id="aiModel"><option value="">Sem modelo visual instalado</option></select>
+      <button id="analyze" class="secondary">Analisar imagem com IA local</button>
+      <p id="aiExplanation" class="hint"></p>
+    </section>
+
+    <section>
+      <h2>03 / Configurações da geometria</h2>
+
+      <label>Tipo de peça</label>
+      <select id="mode">
+        <option value="relief">Alto-relevo 3D</option>
+        <option value="silhouette">Silhueta extrudada 2.5D</option>
+        <option value="lithophane">Litofania</option>
+      </select>
+
+      <div class="fields">
+        <div>
+          <label>Largura (mm)</label>
+          <input id="width" type="number" value="100" min="30" max="250">
+        </div>
+        <div>
+          <label>Base (mm)</label>
+          <input id="base" type="number" value="2" min="0.8" max="10" step="0.2">
+        </div>
+        <div>
+          <label>Altura (mm)</label>
+          <input id="height" type="number" value="8" min="1" max="25" step="0.5">
+        </div>
+        <div>
+          <label>Detalhe</label>
+          <select id="detail">
+            <option value="64">Rápido</option>
+            <option value="128" selected>Normal</option>
+            <option value="256">Detalhado</option>
+          </select>
+        </div>
+      </div>
+
+      <label class="check">
+        <input id="invert" type="checkbox">
+        Inverter profundidade
+      </label>
+
+      <label class="check">
+        <input id="wireframe" type="checkbox">
+        Mostrar malha
+      </label>
+
+      <button id="generate" class="primary">GERAR MODELO 3D</button>
+      <button id="reset" class="outline">LIMPAR TUDO</button>
+    </section>
+  </aside>
+
+  <div class="workspace">
+    <div class="workspaceTitle">
+      <div>
+        <h1>Visualização tridimensional</h1>
+        <p>Arraste para girar • Scroll para aproximar</p>
+      </div>
+      <span id="meshStatus">Nenhum modelo</span>
+    </div>
+
+    <div id="viewport"></div>
+
+    <div class="bottomPanel">
+      <div id="message">Envie uma imagem para começar.</div>
+      <div class="exports">
+        <button id="downloadSTL" disabled>BAIXAR STL</button>
+        <button id="downloadGLB" disabled>BAIXAR GLB</button>
+      </div>
+    </div>
+
+    <p class="disclaimer">
+      Relevo, litofania e silhueta geram geometria a partir da imagem.
+      Uma reconstrução 3D completa de 360° exige um motor generativo adicional.
+    </p>
+  </div>
+</main>
+
+</body>
+</html>

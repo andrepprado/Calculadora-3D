@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Modelagem 3D | Duo.Lab</title>
+<link rel="icon" type="image/svg+xml" href="img/LOGO_SFUNDO.svg">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="duolab-responsive.css">
+<style>
+body {
+  margin:0;
+  background:#f3f7fc;
+}
+.duo-modeling-shell {
+  width:100%;
+  max-width:1800px;
+  margin:0 auto;
+  padding:20px;
+}
+.duo-modeling-hero {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:15px;
+  padding:22px 25px;
+  background:#fff;
+  border:1px solid #deebf4;
+  border-radius:14px;
+  margin-bottom:16px;
+}
+.duo-modeling-hero h1 {
+  margin:0 0 7px;
+  color:#003640;
+  font-size:25px;
+}
+.duo-modeling-hero p {
+  margin:0;
+  color:#617a8f;
+  font-size:13px;
+}
+.duo-modeling-badge {
+  padding:9px 14px;
+  border:1px solid #bce5dd;
+  border-radius:30px;
+  color:#008b7f;
+  background:#effbf7;
+  font-size:12px;
+  font-weight:700;
+}
+.duo-modeling-frame {
+  width:100%;
+  min-height:780px;
+  height:calc(100vh - 220px);
+  border:1px solid #dce9f3;
+  border-radius:14px;
+  background:#fff;
+  display:block;
+}
+@media(max-width:760px) {
+  .duo-modeling-shell {padding:10px}
+  .duo-modeling-hero {padding:16px}
+  .duo-modeling-hero h1 {font-size:20px}
+  .duo-modeling-frame {min-height:900px;height:calc(100dvh - 160px)}
+}
+</style>
+</head>
+<body>
+<header class="app-header no-print">
+  <div class="app-header-inner">
+    <button type="button"
+      class="app-menu-toggle"
+      aria-label="Abrir menu"
+      aria-expanded="false"
+      aria-controls="duo-menu-principal">
+      <span class="app-menu-toggle-line"></span>
+      <span class="app-menu-toggle-line"></span>
+      <span class="app-menu-toggle-line"></span>
+    </button>
+    <a href="index.html" class="app-brand" aria-label="Duo.Lab">
+      <img src="img/LOGO_SFUNDO.svg" alt="Duo.Lab">
+    </a>
+    <nav id="duo-menu-principal" class="app-nav"
+      aria-label="Navegação principal">
+      <a href="index.html">Calculadora</a>
+      <a href="planner.html">Planner de Pedidos</a>
+      <a href="cadastros.html">Cadastros e Configurações</a>
+      <a href="modelagem3d.html" class="active" aria-current="page">
+        Modelagem 3D
+      </a>
+    </nav>
+  </div>
+</header>
+<main class="duo-modeling-shell">
+  <div class="duo-modeling-hero">
+    <div>
+      <h1>Modelagem 3D com IA</h1>
+      <p>
+        Fotos, múltiplas referências, pesquisa de modelos,
+        visualização 3D e exportação STL/GLB.
+      </p>
+    </div>
+    <span class="duo-modeling-badge">DUO.LAB STUDIO</span>
+  </div>
+  <iframe
+    class="duo-modeling-frame"
+    src="studio3d/index.html"
+    title="Estúdio de modelagem 3D"
+    allow="fullscreen"
+    loading="eager">
+  </iframe>
+</main>
+<script src="mobile-menu.js"></script>
+<script src="duolab-responsive.js"></script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+:root {
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  color: #203147;
+  background: #f3f7fc;
+}
+
+body {
+  background: #f3f7fc !important;
+  color: #203147 !important;
+}
+
+header {
+  background: #ffffff !important;
+  color: #183651 !important;
+  border-bottom: 1px solid #dce7f1 !important;
+}
+
+.brand strong {
+  color: #003640 !important;
+}
+
+.brand small,
+.workspaceTitle p,
+.disclaimer,
+.hint {
+  color: #647b91 !important;
+}
+
+.status {
+  border-color: #c7d8e8 !important;
+  color: #007f78 !important;
+}
+
+aside {
+  background: #ffffff !important;
+  border-right: 1px solid #dce7f1 !important;
+}
+
+section {
+  border-bottom-color: #e5edf5 !important;
+}
+
+section h2 {
+  color: #1976d2 !important;
+}
+
+label {
+  color: #435c73 !important;
+}
+
+input,
+textarea,
+select {
+  background: #f8fbff !important;
+  color: #17344b !important;
+  border-color: #cbdbe9 !important;
+}
+
+.dropzone {
+  border-color: #9ab7d6 !important;
+  background: #f4f9ff !important;
+  color: #173b57 !important;
+}
+
+.dropzone small {
+  color: #688099 !important;
+}
+
+.image-thumb,
+.reference-panel {
+  background: #f3f8fe !important;
+  color: #203c54 !important;
+  border-color: #c6dbed !important;
+}
+
+.image-thumb span,
+.reference-result,
+.reference-result strong {
+  color: #233d55 !important;
+}
+
+.reference-panel h2 {
+  color: #1976d2 !important;
+}
+
+button.primary,
+button.secondary,
+.exports button {
+  background: #1976d2 !important;
+  color: #ffffff !important;
+}
+
+button.outline {
+  color: #1976d2 !important;
+  border-color: #9cbadd !important;
+}
+
+.workspace {
+  background: #f3f7fc !important;
+}
+
+.workspaceTitle h1 {
+  color: #003640 !important;
+}
+
+#meshStatus {
+  color: #1976d2 !important;
+}
+
+#viewport {
+  border-color: #cbdce9 !important;
+}
+
+#message {
+  color: #3b5b73 !important;
+}
+
+.duolab-local-banner {
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:13px 17px;
+  border:1px solid #c9dceb;
+  border-radius:11px;
+  background:#eaf5ff;
+  color:#234964;
+  font-size:12px;
+  line-height:1.5;
+}
+
+.duolab-local-banner a {
+  display:inline-block;
+  padding:10px 14px;
+  border-radius:8px;
+  background:#1976d2;
+  color:white;
+  text-decoration:none;
+  font-weight:700;
+}
+
+@media(max-width:850px) {
+  .duolab-local-banner {
+    align-items:stretch;
+  }
+
+  .duolab-local-banner a {
+    text-align:center;
+  }
+}
