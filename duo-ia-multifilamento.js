@@ -2907,6 +2907,130 @@ function lerPeso(texto) {
         duoV6Atualizar();
     }
 
+    // Clear the entire calculator and AI form.
+    function duoLimparFormularioCompleto() {
+        // Disable live AI synchronization before resetting fields.
+        duoV6Modelo = null;
+        duoV6Atualizando = false;
+
+        const get = id => document.getElementById(id);
+
+        // Clear the AI upload and model URL.
+        const imagem = get("duoIAImagem");
+        const link = get("duoIALink");
+
+        if (imagem) imagem.value = "";
+        if (link) link.value = "";
+
+        // Clear AI feedback and generated results.
+        const statusIA = get("duoIAStatus");
+        const resultadoIA = get("duoIAResultado");
+
+        if (statusIA) {
+            statusIA.textContent = "";
+            statusIA.removeAttribute("class");
+        }
+
+        if (resultadoIA) {
+            resultadoIA.replaceChildren();
+            resultadoIA.hidden = true;
+        }
+
+        // Reset calculator fields using its official reset routine.
+        if (typeof resetarCalculadora === "function") {
+            resetarCalculadora();
+        } else {
+            const botaoOriginal = get("btnLimparCalculadora");
+
+            if (botaoOriginal) {
+                botaoOriginal.click();
+            } else {
+                const campos = document.querySelectorAll(
+                    ".calculator input, .calculator select"
+                );
+
+                campos.forEach(campo => {
+                    if (campo.type === "checkbox" ||
+                        campo.type === "radio") {
+                        campo.checked = campo.defaultChecked;
+                    } else if (campo.tagName === "SELECT") {
+                        campo.selectedIndex = 0;
+                    } else {
+                        campo.value = campo.defaultValue || "";
+                    }
+                });
+
+                if (typeof calcular === "function") {
+                    calcular();
+                }
+            }
+        }
+
+        // Ensure AI state is not restored by live update callbacks.
+        duoV6Modelo = null;
+
+        // Remove remaining AI-generated WhatsApp fields.
+        const whatsapp = get("duoV6TextoWhatsApp");
+
+        if (whatsapp) {
+            const container = whatsapp.closest(
+                ".duo-ia-whatsapp, .duo-whatsapp-box"
+            );
+
+            if (container) {
+                container.remove();
+            } else {
+                whatsapp.value = "";
+            }
+        }
+
+        // Recalculate the restored default calculator state.
+        if (typeof calcular === "function") {
+            calcular();
+        }
+
+        console.log(
+            "[DUOLAB] Full calculator and AI form reset completed."
+        );
+    }
+
+    function duoInstalarBotaoLimparIA() {
+        const analisar = document.getElementById("duoIAAnalisar");
+
+        if (!analisar) return;
+
+        if (document.getElementById("duoIALimparTudo")) {
+            return;
+        }
+
+        const limpar = document.createElement("button");
+
+        limpar.type = "button";
+        limpar.id = "duoIALimparTudo";
+        limpar.className = "btn-limpar-calculadora no-print";
+        limpar.textContent = "LIMPAR TODO O FORMULARIO";
+        limpar.setAttribute(
+            "aria-label",
+            "Limpar todos os dados da calculadora e da IA"
+        );
+
+        limpar.style.cssText = [
+            "display:block",
+            "width:100%",
+            "margin-top:10px",
+            "padding:12px 16px",
+            "cursor:pointer",
+            "border-radius:8px",
+            "font-weight:700"
+        ].join(";");
+
+        analisar.insertAdjacentElement("afterend", limpar);
+
+        limpar.addEventListener(
+            "click",
+            duoLimparFormularioCompleto
+        );
+    }
     function iniciar() {
         const antigo = $("duoIAAnalisar");
         if (!antigo) return;
@@ -2915,6 +3039,7 @@ function lerPeso(texto) {
         antigo.replaceWith(novo);
 
         novo.addEventListener("click", analisarImagemDuolab);
+        duoInstalarBotaoLimparIA();
     }
 
     if (document.readyState === "loading") {
