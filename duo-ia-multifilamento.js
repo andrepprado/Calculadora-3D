@@ -1792,96 +1792,79 @@ function lerPeso(texto) {
     async function duoV4LerPlacas(worker, canvas) {
         const largura = canvas.width;
         const altura = canvas.height;
-        const escala = 3;
 
-        const reconhecer = async (
-            x, y, w, h, modo = "11", fator = escala
-        ) => {
-            const imagem = duoV4Recorte(
+        async function ler(x, y, w, h, modo = "11", fator = 3) {
+            const recorte = duoV4Recorte(
                 canvas, x, y, w, h, fator
             );
-            if (!imagem) return { data: { text: "", lines: [], words: [] } };
 
             await worker.setParameters({
                 tessedit_pageseg_mode: modo
             });
 
-            return worker.recognize(imagem);
-        };
+            const resultado = await worker.recognize(recorte);
 
-        const normalizar = texto => String(texto || "")
-            .replace(/[|]/g, "1")
-            .replace(/[º°]/g, "o")
-            .replace(/\u00a0/g, " ");
+            return {
+                texto: String(resultado.data?.text || ""),
+                linhas: resultado.data?.lines || [],
+                palavras: resultado.data?.words || [],
+                fator
+            };
+        }
 
-        console.log("[DUOLAB IA] Iniciando OCR multiplacas", {
-            largura, altura
-        });
+        const gerais = [];
 
-        // Leituras independentes para layouts mobile e desktop.
-        const leiturasGerais = [];
-
-        for (const modo of ["11", "3", "6"]) {
+        for (const modo of ["11", "6", "3"]) {
             try {
-                const resultado = await reconhecer(
-                    0, 0, largura, altura, modo, 2
+                gerais.push(
+                    await ler(0, 0, largura, altura, modo, 3)
                 );
-                leiturasGerais.push(resultado.data || {});
             } catch (erro) {
-                console.warn("[DUOLAB IA] Tentativa OCR:", erro);
+                console.warn("[DUOLAB OCR]", erro);
             }
         }
 
-        if (!leiturasGerais.length) {
-            throw new Error("Falha ao processar a imagem.");
+        if (!gerais.length) {
+            throw new Error("Nao foi possivel processar a imagem.");
         }
 
-        const textoGeral = leiturasGerais
-            .map(r => r.text || "")
+        const textoGeral = gerais
+            .map(r => r.texto)
             .join("\n");
 
-        const esperado = Number(
+        const quantidade = Number(
             textoGeral.match(
-                /placas?\s*de\s*impress[aã]o\s*[\(:]?\s*(\d+)/i
+                /(\d+)\s*placas?\s*(?:\d+\s*cores?)?/i
             )?.[1] ||
             textoGeral.match(
-                /(?:total|quantidade)\s*(?:de)?\s*placas?\s*[:=]?\s*(\d+)/i
-            )?.[1] ||
-            textoGeral.match(
-                /(\d+)\s*placas?\b/i
+                /placas?\s*de\s*impress[aã]o\s*\(\s*(\d+)\s*\)/i
             )?.[1] || 0
         );
 
         const marcadores = [];
 
-        const padrao = /\b(?:placa|mesa|plate|build\s*plate)\s*[-:#.]?\s*(\d+)\b/i;
+        for (const geral of gerais) {
+            for (const linha of geral.linhas) {
+                const texto = String(linha.text || "")
+                    .trim()
+                    .replace(/\s+/g, " ");
 
-        for (const resultado of leiturasGerais) {
-            for (const linha of resultado.lines || []) {
-                const texto = normalizar(linha.text);
-                const match = texto.match(padrao);
-                if (!match || !linha.bbox) continue;
+                const celular = /^mesa\b/i.test(texto);
+                const computador = /^placa\s*\d+\b/i.test(texto);
 
-                // As coordenadas OCR pertencem ao canvas ampliado.
-                const y = linha.bbox.y0 / 2;
+                if (!celular && !computador) continue;
+                if (!linha.bbox) continue;
+
+                const y = linha.bbox.y0 / geral.fator;
 
                 if (!Number.isFinite(y)) continue;
 
                 marcadores.push({
-                    numero: Number(match[1]),
-                    y: Math.max(0, Math.min(altura, y)),
-                    texto
+                    y,
+                    texto,
+                    tipo: celular ? "celular" : "computador"
                 });
             }
-        }
-
-        // Detectar cabecalhos mesmo quando OCR perde a palavra.
-        if (!marcadores.length) {
-            const linhas = textoGeral.split(/\r?\n/);
-            console.warn(
-                "[DUOLAB IA] Cabecalhos nao detectados",
-                linhas
-            );
         }
 
         marcadores.sort((a, b) => a.y - b.y);
@@ -1889,158 +1872,109 @@ function lerPeso(texto) {
         const cabecalhos = [];
 
         for (const item of marcadores) {
-            const duplicado = cabecalhos.some(
-                anterior =>
-                    anterior.numero === item.numero &&
-                    Math.abs(anterior.y - item.y) < 35
+            const repetido = cabecalhos.some(
+                anterior => Math.abs(anterior.y - item.y) < 25
             );
-            if (!duplicado) cabecalhos.push(item);
-        }
 
-        // Ordenar fisicamente, independente da numeracao.
-        cabecalhos.sort((a, b) => a.y - b.y);
+            if (!repetido) cabecalhos.push(item);
+        }
 
         if (!cabecalhos.length) {
             throw new Error(
-                "Nao consegui separar as placas do print. " +
-                "Envie a imagem completa com os cabecalhos visiveis."
+                "Nao consegui identificar os blocos Mesa ou Placa."
             );
         }
+
+        console.log(
+            "[DUOLAB OCR] Placas identificadas:",
+            cabecalhos.length,
+            cabecalhos
+        );
 
         const placas = [];
         const pendencias = [];
 
         for (let i = 0; i < cabecalhos.length; i++) {
-            const atual = cabecalhos[i];
-            const proximo = cabecalhos[i + 1];
+            const y0 = Math.max(0, Math.floor(cabecalhos[i].y));
 
-            const y0 = Math.floor(atual.y);
-            const y1 = proximo
-                ? Math.floor(proximo.y)
+            const y1 = cabecalhos[i + 1]
+                ? Math.floor(cabecalhos[i + 1].y)
                 : altura;
 
             const h = Math.max(1, y1 - y0);
 
-            let minutos = null;
-            let peso = null;
-            let textoCompleto = "";
+            let minutos = 0;
+            let peso = 0;
+            let texto = "";
             let palavras = [];
+            let fatorPalavras = 3;
 
-            // Diferentes segmentacoes e ampliacoes.
             for (const tentativa of [
                 { modo: "6", fator: 3 },
                 { modo: "11", fator: 4 },
-                { modo: "3", fator: 2 },
-                { modo: "12", fator: 3 }
+                { modo: "3", fator: 2 }
             ]) {
                 try {
-                    const resultado = await reconhecer(
+                    const r = await ler(
                         0, y0, largura, h,
                         tentativa.modo,
                         tentativa.fator
                     );
 
-                    const texto = normalizar(
-                        resultado.data?.text || ""
-                    );
+                    texto += "\n" + r.texto;
 
-                    textoCompleto += "\n" + texto;
+                    const t = duoV4Minutos(r.texto);
+                    const p = duoV4Peso(r.texto);
 
-                    const tempoLido = duoV4Minutos(texto);
-                    const pesoLido = duoV4Peso(texto);
+                    if (!(minutos > 0) && t > 0) minutos = t;
+                    if (!(peso > 0) && p > 0) peso = p;
 
-                    if (
-                        !(minutos > 0) &&
-                        Number.isFinite(tempoLido) &&
-                        tempoLido > 0
-                    ) minutos = tempoLido;
-
-                    if (
-                        !(peso > 0) &&
-                        Number.isFinite(pesoLido) &&
-                        pesoLido > 0
-                    ) peso = pesoLido;
-
-                    if (
-                        !palavras.length &&
-                        resultado.data?.words?.length
-                    ) {
-                        palavras = resultado.data.words.map(p => ({
-                            ...p,
-                            fator: tentativa.fator
-                        }));
+                    if (!palavras.length && r.palavras.length) {
+                        palavras = r.palavras;
+                        fatorPalavras = r.fator;
                     }
 
                     if (minutos > 0 && peso > 0) break;
                 } catch (erro) {
                     console.warn(
-                        "[DUOLAB IA] Tentativa placa",
-                        atual.numero,
+                        "[DUOLAB OCR] Placa " + (i + 1),
                         erro
                     );
                 }
             }
 
-            // Segunda estrategia: procurar dados em linhas individuais.
-            if (!(minutos > 0 && peso > 0)) {
-                const linhas = textoCompleto.split(/\r?\n/);
-
-                for (const linha of linhas) {
-                    if (!(minutos > 0)) {
-                        const t = duoV4Minutos(linha);
-                        if (Number.isFinite(t) && t > 0) minutos = t;
-                    }
-
-                    if (!(peso > 0)) {
-                        const p = duoV4Peso(linha);
-                        if (Number.isFinite(p) && p > 0) peso = p;
-                    }
-                }
-            }
-
-            const material = textoCompleto.match(
+            const material = texto.match(
                 /\b(PLA|PETG|ABS|ASA|TPU)\b/i
             )?.[1]?.toUpperCase() || "PLA";
 
             let cor = null;
 
             const etiqueta = palavras.find(p =>
-                /\b(PLA|PETG|ABS|ASA|TPU)\b/i.test(p.text || "")
+                /\b(PLA|PETG|ABS|ASA|TPU)\b/i.test(
+                    String(p.text || "")
+                )
             );
 
             if (etiqueta?.bbox) {
                 const b = etiqueta.bbox;
-                const fator = etiqueta.fator || 3;
-                const x = b.x0 / fator;
-                const y = y0 + b.y0 / fator;
-                const hh = Math.max(8, (b.y1 - b.y0) / fator);
 
                 cor = duoV4CorEtiqueta(
                     canvas,
-                    Math.max(0, x - hh * 1.5),
-                    Math.max(y0, y),
-                    Math.max(10, hh * 1.3),
-                    hh
+                    b.x0 / fatorPalavras,
+                    y0 + b.y0 / fatorPalavras,
+                    Math.max(12, (b.x1 - b.x0) / fatorPalavras),
+                    Math.max(8, (b.y1 - b.y0) / fatorPalavras)
                 );
             }
 
-            // Nao atribuir uma cor inventada por amostragem
-            // de areas aleatorias do print.
-            if (!cor) {
-                console.warn(
-                    "[DUOLAB IA] Cor requer conferencia:",
-                    atual.numero
-                );
-            }
+            console.log(
+                "[DUOLAB OCR] Placa",
+                i + 1,
+                { minutos, peso, material, cor, texto }
+            );
 
             if (!(minutos > 0 && peso > 0 && cor)) {
-                pendencias.push({
-                    placa: atual.numero,
-                    peso,
-                    minutos,
-                    cor,
-                    texto: textoCompleto.slice(0, 350)
-                });
+                pendencias.push(i + 1);
                 continue;
             }
 
@@ -2050,38 +1984,25 @@ function lerPeso(texto) {
                 peso,
                 minutos
             });
+        }
 
-            console.log(
-                "[DUOLAB IA] Placa reconhecida",
-                atual.numero,
-                { material, cor, peso, minutos }
+        if (quantidade > 0 && cabecalhos.length !== quantidade) {
+            throw new Error(
+                "Identifiquei " + cabecalhos.length +
+                " de " + quantidade + " placas."
             );
         }
 
         if (pendencias.length) {
-            console.table(pendencias);
-
             throw new Error(
-                "Leitura parcial: " +
-                placas.length + " placa(s) completas. " +
-                "Confira as placas " +
-                pendencias.map(p => p.placa).join(", ") +
-                ". Consulte o console para detalhes."
-            );
-        }
-
-        if (esperado > 0 && placas.length !== esperado) {
-            throw new Error(
-                "Foram identificadas " + placas.length +
-                " de " + esperado +
-                " placas. Nenhum calculo parcial foi aplicado."
+                "Dados incompletos nas placas: " +
+                pendencias.join(", ") +
+                ". Consulte o console."
             );
         }
 
         if (!placas.length) {
-            throw new Error(
-                "Nao foi possivel extrair dados completos."
-            );
+            throw new Error("Nenhuma placa completa identificada.");
         }
 
         console.table(placas);
