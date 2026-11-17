@@ -2355,6 +2355,89 @@ function lerPeso(texto) {
                 valido: minutos > 0 && peso > 0 && !!cor,
                 textoOCR: blocoOCR
             });
+            // DUOLAB OCR V6 - Recuperacao visual da cor da etiqueta.
+            // Somente placas sem cor identificada.
+
+            if (!cor) {
+                const imagem = document.createElement("canvas");
+                imagem.width = canvas.width;
+                imagem.height = canvas.height;
+
+                const contexto = imagem.getContext("2d", {
+                    willReadFrequently: true
+                });
+
+                contexto.drawImage(canvas, 0, 0);
+
+                const largura = imagem.width;
+                const altura = imagem.height;
+
+                // Busca a faixa de etiqueta colorida dentro da placa.
+                // A faixa fica normalmente na regiao inferior.
+                const topo = Math.max(0, Math.floor(y0));
+                const fundo = Math.min(altura, Math.ceil(y1));
+
+                const cores = {
+                    amarelo: 0,
+                    azul: 0,
+                    vermelho: 0,
+                    verde: 0,
+                    laranja: 0,
+                    roxo: 0
+                };
+
+                const xInicio = Math.floor(largura * 0.12);
+                const xFim = Math.floor(largura * 0.85);
+
+                const dados = contexto.getImageData(
+                    xInicio,
+                    topo,
+                    Math.max(1, xFim - xInicio),
+                    Math.max(1, fundo - topo)
+                );
+
+                for (let p = 0; p < dados.data.length; p += 4) {
+                    const r = dados.data[p];
+                    const g = dados.data[p + 1];
+                    const b = dados.data[p + 2];
+
+                    const max = Math.max(r, g, b);
+                    const min = Math.min(r, g, b);
+
+                    if (max - min < 55) continue;
+
+                    if (r > 175 && g > 150 && b < 125) {
+                        cores.amarelo++;
+                    } else if (b > r * 1.25 && b > g * 1.12) {
+                        cores.azul++;
+                    } else if (r > 150 && r > g * 1.5 && r > b * 1.4) {
+                        cores.vermelho++;
+                    } else if (g > 110 && g > r * 1.25 && g > b * 1.15) {
+                        cores.verde++;
+                    } else if (r > 175 && g > 70 && g < 165 && b < 100) {
+                        cores.laranja++;
+                    } else if (r > 75 && b > 95 && b > g * 1.25) {
+                        cores.roxo++;
+                    }
+                }
+
+                const ranking = Object.entries(cores)
+                    .sort((a, b) => b[1] - a[1]);
+
+                const melhor = ranking[0];
+
+                if (melhor && melhor[1] >= 15) {
+                    cor = melhor[0];
+                }
+
+                console.log("[DUOLAB OCR V6] Cor recuperada", {
+                    placa: i + 1,
+                    cor,
+                    cores,
+                    faixa: { topo, fundo },
+                    pixels: dados.data.length / 4
+                });
+            }
             if (!(minutos > 0 && peso > 0 && cor)) {
                 pendencias.push(i + 1);
                 continue;
