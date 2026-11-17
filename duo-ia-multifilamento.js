@@ -2285,6 +2285,76 @@ function lerPeso(texto) {
                 { minutos, peso, material, cor, texto }
             );
 
+            // DUOLAB OCR V5 - Recuperacao de placas com leitura parcial.
+            // Corrige falhas na terceira placa sem alterar placas validas.
+
+            const blocoOCR = String(texto || "")
+                .replace(/\u00a0/g, " ")
+                .replace(/\r/g, " ");
+
+            if (!(minutos > 0)) {
+                const tempos = [
+                    ...blocoOCR.matchAll(
+                        /(\d{1,4})\s*(min|mins|minutos)\b/gi
+                    )
+                ].map(m => Number(m[1]))
+                 .filter(n => n > 0 && n <= 14400);
+
+                if (tempos.length) {
+                    minutos = tempos[0];
+                }
+            }
+
+            if (!(minutos > 0)) {
+                const horas = [
+                    ...blocoOCR.matchAll(
+                        /(\d{1,2}(?:[.,]\d+)?)\s*h\b/gi
+                    )
+                ].map(m =>
+                    Math.round(
+                        Number(m[1].replace(",", ".")) * 60
+                    )
+                ).filter(n => n > 0 && n <= 14400);
+
+                if (horas.length) {
+                    minutos = horas[0];
+                }
+            }
+
+            if (!(peso > 0)) {
+                const pesos = [
+                    ...blocoOCR.matchAll(
+                        /(?:^|[^\d.,])(\d{1,5}(?:[.,]\d+)?)\s*g\b/gi
+                    )
+                ].map(m =>
+                    Number(m[1].replace(",", "."))
+                ).filter(n => n > 0 && n <= 100000);
+
+                if (pesos.length) {
+                    peso = pesos[0];
+                }
+            }
+
+            // A etiqueta pode ser reconhecida sem texto pelo OCR.
+            // A cor deve vir dos pixels, nunca da posicao da placa.
+            if (!cor) {
+                cor = duoV4DetectarCorVisual(
+                    canvas,
+                    y0,
+                    y1,
+                    cabecalhos[i].tipo
+                );
+            }
+
+            console.log("[DUOLAB OCR V5] Validacao", {
+                placa: i + 1,
+                minutos,
+                peso,
+                material,
+                cor,
+                valido: minutos > 0 && peso > 0 && !!cor,
+                textoOCR: blocoOCR
+            });
             if (!(minutos > 0 && peso > 0 && cor)) {
                 pendencias.push(i + 1);
                 continue;
