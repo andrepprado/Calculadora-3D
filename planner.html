@@ -513,14 +513,26 @@ body.duo-planner-embedded #pedidoModal form {
                     </div>
 
                     <div class="planner-field">
+                        <label for="pedidoValorUnitario">Valor unitário</label>
+                        <input
+                            type="text"
+                            id="pedidoValorUnitario"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            placeholder="R$ 0,00"
+                        >
+                    </div>
+
+                    <div class="planner-field">
                         <label for="pedidoValor">Valor do pedido</label>
                         <input
-    type="text"
-    id="pedidoValor"
-    inputmode="decimal"
-    autocomplete="off"
-    placeholder="R$ 0,00"
->
+                            type="text"
+                            id="pedidoValor"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            placeholder="R$ 0,00"
+                            readonly
+                        >
                     </div>
 
                     <div class="planner-field">

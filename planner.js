@@ -80,6 +80,9 @@
         valor:
             document.getElementById("pedidoValor"),
 
+        valorUnitario:
+            document.getElementById("pedidoValorUnitario"),
+
         data:
             document.getElementById("pedidoData"),
 
@@ -2497,6 +2500,8 @@ function formatarData(data) {
     }
 
     function limparFormulario() {
+        elements.valorUnitario.value = "";
+        elements.valor.value = "";
         elements.form.reset();
         elements.id.value = "";
         elements.quantidade.value = "1";
@@ -2567,7 +2572,16 @@ function formatarData(data) {
         elements.cor.value =
             pedido.cor || "";
 
-        elements.valor.value = pedido.valor ? formatarMoeda(pedido.valor) : "";
+        elements.valorUnitario.value = formatarMoeda(
+            pedido.valorUnitario != null
+                ? Number(pedido.valorUnitario) || 0
+                : (Number(pedido.valor) || 0) /
+                  Math.max(1, Number(pedido.quantidade) || 1)
+        );
+
+        elements.valor.value = formatarMoeda(
+            Number(pedido.valor) || 0
+        );
 
         elements.data.value = dataISOParaBR(pedido.data);
 
@@ -3120,13 +3134,23 @@ function formatarData(data) {
             cor:
                 elements.cor.value.trim(),
 
-            valor:
+            valorUnitario:
                 Math.max(
                     0,
-                    moedaParaNumero(
-                        elements.valor.value
-                    )
+                    moedaParaNumero(elements.valorUnitario.value)
                 ),
+
+            valor:
+                Math.round(
+                    Math.max(
+                        1,
+                        parseInt(elements.quantidade.value, 10) || 1
+                    ) *
+                    Math.max(
+                        0,
+                        moedaParaNumero(elements.valorUnitario.value)
+                    ) * 100
+                ) / 100,
 
             data:
                 dataPedidoFormatada ||
@@ -3427,6 +3451,11 @@ function formatarData(data) {
                 Math.max(1, Number(draft.quantidade) || 1)
             );
 
+            elements.valorUnitario.value = formatarMoeda(
+                (Number(draft.valor) || 0) /
+                Math.max(1, Number(draft.quantidade) || 1)
+            );
+
             elements.valor.value = formatarMoeda(
                 Number(draft.valor) || 0
             );
@@ -3526,6 +3555,48 @@ elements.btnNovo.addEventListener(
     );
 
     /* PLANNER_MASK_EVENTS_START */
+
+    function calcularValorPedido() {
+        const quantidade = Math.max(
+            1,
+            parseInt(elements.quantidade.value, 10) || 1
+        );
+
+        const unitario = Math.max(
+            0,
+            moedaParaNumero(elements.valorUnitario.value)
+        );
+
+        elements.valor.value = formatarMoeda(
+            Math.round(quantidade * unitario * 100) / 100
+        );
+    }
+
+    elements.quantidade.addEventListener(
+        "input",
+        calcularValorPedido
+    );
+
+    elements.valorUnitario.addEventListener(
+        "input",
+        function () {
+            aplicarMascaraMoeda(elements.valorUnitario);
+            calcularValorPedido();
+        }
+    );
+
+    elements.valorUnitario.addEventListener(
+        "blur",
+        function () {
+            if (elements.valorUnitario.value) {
+                elements.valorUnitario.value = formatarMoeda(
+                    moedaParaNumero(elements.valorUnitario.value)
+                );
+            }
+
+            calcularValorPedido();
+        }
+    );
 
     if (elements.valor) {
 
