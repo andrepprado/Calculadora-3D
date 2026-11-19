@@ -14,7 +14,7 @@
 
     const STATUS_LABELS = {
         modelar: "Modelar",
-        produzir: "Backlog",
+        produzir: "A Produzir",
         producao: "Em Produção",
         backlog: "Backlog",
         receber: "Concluído / Receber",
@@ -52,6 +52,9 @@
 
         btnExcluir:
             document.getElementById("btnExcluirPedido"),
+
+        btnDuplicar:
+            document.getElementById("btnDuplicarPedido"),
 
         form:
             document.getElementById("pedidoForm"),
@@ -2495,22 +2498,13 @@ function formatarData(data) {
 
     function limparFormulario() {
         elements.form.reset();
-
         elements.id.value = "";
-
-        elements.quantidade.value =
-            "1";
-
-        elements.prioridade.value =
-            "media";
-
-        elements.status.value =
-            "produzir";
-
+        elements.quantidade.value = "1";
+        elements.prioridade.value = "media";
+        elements.status.value = "produzir";
         elements.data.value = dataISOParaBR(hojeISO());
-
-        elements.btnExcluir.hidden =
-            true;
+        elements.btnExcluir.hidden = true;
+        elements.btnDuplicar.hidden = true;
     }
 
     function abrirNovoPedido(
@@ -2588,11 +2582,9 @@ function formatarData(data) {
         elements.observacoes.value =
             pedido.observacoes || "";
 
-        elements.modalTitulo.textContent =
-            "Editar Pedido";
-
-        elements.btnExcluir.hidden =
-            false;
+        elements.modalTitulo.textContent = "Editar Pedido";
+        elements.btnExcluir.hidden = false;
+        elements.btnDuplicar.hidden = false;
 
         elements.modal.hidden =
             false;
@@ -2600,6 +2592,20 @@ function formatarData(data) {
         document.body.classList.add(
             "modal-open"
         );
+    }
+
+    function duplicarPedido() {
+        const idOriginal = elements.id.value;
+
+        if (!idOriginal || !pedidos.some(item => item.id === idOriginal)) {
+            return;
+        }
+
+        elements.id.value = "";
+        elements.modalTitulo.textContent = "Duplicar Pedido";
+        elements.btnExcluir.hidden = true;
+        elements.btnDuplicar.hidden = true;
+        elements.cliente.focus();
     }
 
     function fecharModal() {
@@ -3502,6 +3508,11 @@ elements.btnNovo.addEventListener(
     elements.btnCancelarModal.addEventListener(
         "click",
         fecharModal
+    );
+
+    elements.btnDuplicar.addEventListener(
+        "click",
+        duplicarPedido
     );
 
     elements.btnExcluir.addEventListener(
